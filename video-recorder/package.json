@@ -1,0 +1,24 @@
+{
+  "name": "video-recorder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeJjang/video-recorder.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CodeJjang/video-recorder/issues"
+  },
+  "homepage": "https://github.com/CodeJjang/video-recorder#readme",
+  "dependencies": {
+    "express": "^4.13.4",
+    "moment": "^2.13.0",
+    "mongoose": "^4.4.19"
+  }
+}
