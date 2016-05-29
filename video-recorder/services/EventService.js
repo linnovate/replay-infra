@@ -1,4 +1,3 @@
-
 /*
 	This Service is only for the event managment.
 */

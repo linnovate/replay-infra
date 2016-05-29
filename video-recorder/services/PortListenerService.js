@@ -1,6 +1,6 @@
 /*
-	This Service is for the port listener.
-	It will listen to the port until some data will stream, after that it will emit event and stop listening.
+    This Service is for the port listener.
+    It will listen to the port until some data will stream, after that it will emit event and stop listening.
 */
 
 // require packege needed.
@@ -46,8 +46,8 @@ module.exports.StartListenToPort = (Params) => {
         // binding the server to listen to the address that given.
         server.bind({ port: PortToListen, address: IpToListen, exclusive: false }, () => {
 
-        	// Check if the port is not 0.0.0.0
-        	if(IpToListen != '0.0.0.0') server.addMembership(IpToListen);
+            // Check if the port is not 0.0.0.0
+            if (IpToListen != '0.0.0.0') server.addMembership(IpToListen);
 
             console.log('Binding To : ', IpToListen, ':', PortToListen, ' succeed');
 
