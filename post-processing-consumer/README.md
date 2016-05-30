@@ -18,8 +18,11 @@ Run app (default parameters will be used):
 ```
 STORAGE_PATH=/tmp QUEUE_NAME=DEFAULT_TASKS_QUEUE node index.js
 ```
+
 Job types are found under the /job-types folder.
+
 Environment variables to config the app:
+```
 QUEUE_NAME // mandatory
 JOB_TYPE
 STORAGE_PATH
@@ -32,14 +35,16 @@ ELASTIC_INDEX
 REDIS_HOST
 REDIS_PORT
 REDIS_PASSWORD
-
+```
 
 ## Job types
 Job should be constructed in the following way:
-| Property      | type          |      Example     |       |
-| ------------- |:-------------:|-----------------:|
+
+| Property      | type          |      Example     |
+|:------------- |:--------------|:-----------------|
 | type          | string        | 'MetadataParser' |
 | params        | json          | someJson         |
+
 ```
 someJson:
 {
