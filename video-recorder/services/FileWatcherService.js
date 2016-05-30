@@ -7,10 +7,10 @@ var fs = require('fs'),
     event = require('./EventService');
 
 // globals
-var TimeToWait = 3000,
-    CurrentFileSize,
-    Timer,
-    FilePath;
+var TimeToWait = 3000;
+
+// Const
+const ServiceName = 'FileWatcherService';
 
 /*
 	This func start watch given file,
@@ -20,42 +20,77 @@ var TimeToWait = 3000,
 */
 exports.StartWatchFile = function(params) {
 
-    // Reset The Current file size.
-    CurrentFileSize = -1;
+    const MethodName = 'StartWatchFile';
 
-    // Set the file path.
-    FilePath = params.Path;
+    console.log(ServiceName, '.', MethodName, ' start running...');
+
+    // Check if there is path.
+    if (!params.Path) {
+        event.emit('error', 'Error accured in ', ServiceName, '.', MethodName, ' : Path cannot be undefined.');
+        return null;
+    }
+
+    // Reset The Current file size.
+    var CurrentFileSize = -1,
+        Timer;
+
+    // Callback function, when the file stop grow it will activate.
+    var FileStoppedGrow = function(timer) {
+        clearInterval(timer);
+        event.emit('FileWatchStop');
+    };
+
+    console.log(ServiceName, '.', MethodName, ' Init new interval...');
 
     // Start Timer to follow the file.
-    Timer = setInterval(CheckFileSize, TimeToWait);
+    Timer = setInterval(function() { CheckFileSize(params.Path, CurrentFileSize, Timer, FileStoppedGrow); }, TimeToWait);
+
+    console.log(ServiceName, '.', MethodName, ' Finished...');
+
+    return Timer;
 };
 
 /*
 	This func stop the follow of the file when it needed.
 */
-exports.StopWatchFile = function(){
-	clearInterval(Timer);
+exports.StopWatchFile = function(timer) {
+
+    const MethodName = 'StopWatchFile';
+
+    console.log(ServiceName, '.', MethodName, ' start running...');
+
+    clearInterval(Timer);
+
+    console.log(ServiceName, '.', MethodName, ' Finished...');
 };
 
 
-// Check the file Size.
-var CheckFileSize = function() {
+// Check the file Size, when it 
+var CheckFileSize = function(path, filesize, timer, callback) {
+
+    const MethodName = 'CheckFileSize';
+
+    console.log(ServiceName, '.', MethodName, ' start running...');
 
     // Get the State Of the file.
-    fs.stat(FilePath, function(err, stat) {
+    fs.stat(path, function(err, stat) {
+
+        console.log(ServiceName, '.', MethodName, ' CurrentFileSize: ', stat.size, ' | LastFileSize: ', filesize);
 
         // Check if the file size is bigger than the last check.
-        if (stat.size > CurrentFileSize) {
+        if (stat.size > filesize) {
 
             // Update the file size.
-            CurrentFileSize = stat.size;
+            filesize = stat.size;
 
         } else {
 
-            // Stop the timer and emit event.
-            clearInterval(Timer);
-            event.emit('FileWatchStop');
+            // Callback called when the file stopped grow.
+            callback(timer);
 
         }
+
+        console.log(ServiceName, '.', MethodName, ' Finished...');
+
     });
 };

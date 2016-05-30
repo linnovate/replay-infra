@@ -7,39 +7,43 @@
 var event = require('./EventService'),
     dgram = require('dgram');
 
-// Define some global vaireble.
-var PortToListen,
-    IpToListen,
-    server = dgram.createSocket('udp4');
 
-// Defiend the const.
-const ServiceName = 'PortListenerService';
+// Defiend the Service name.
+const SERVICENAME = 'PortListenerService',
+    LOCALHOST = '0.0.0.0';
 
 // Function That Start listen to address and wait until there is some data flow.
 // It should get an object with Ip and Port.
-module.exports.StartListenToPort = (Params) => {
+exports.StartListenToPort = (params) => {
 
     // define the method name.
-    const MethodName = 'StartListenToPort';
+    const METHODNAME = 'StartListenToPort';
+
+    console.log(SERVICENAME, '.', METHODNAME, ' start running...');
+
+    // init variables.
+    var PortToListen,
+        IpToListen,
+        server = dgram.createSocket('udp4');
 
     // Check if there is port to listen to, if there isn't port it will emmit error.
-    if (!Params.Port) {
+    if (!params.Port) {
 
-        event.emit('error', 'Error on ', ServiceName, '.', MethodName, ' : There Is no Port To listen');
+        event.emit('error', 'Error on ', SERVICENAME, '.', METHODNAME, ' : There Is no Port To listen');
         return;
 
     } else {
 
-        PortToListen = Params.Port;
+        PortToListen = params.Port;
 
         // Check if there is some ip to listen to, if there isn't ip it will listen to localhost.
-        if (!Params.Ip) {
+        if (!params.Ip) {
 
-            IpToListen = '0.0.0.0';
+            IpToListen = LOCALHOST;
 
         } else {
 
-            IpToListen = Params.Ip;
+            IpToListen = params.Ip;
 
         }
 
@@ -47,7 +51,7 @@ module.exports.StartListenToPort = (Params) => {
         server.bind({ port: PortToListen, address: IpToListen, exclusive: false }, () => {
 
             // Check if the port is not 0.0.0.0
-            if (IpToListen != '0.0.0.0') server.addMembership(IpToListen);
+            if (IpToListen != LOCALHOST) server.addMembership(IpToListen);
 
             console.log('Binding To : ', IpToListen, ':', PortToListen, ' succeed');
 
@@ -55,24 +59,25 @@ module.exports.StartListenToPort = (Params) => {
 
     }
 
+
+    // When there is some data flow.
+    server.on('message', (msg, rinfo) => {
+
+        console.log('Data Was detected at ', IpToListen, ':', PortToListen, ' !');
+
+        // Close the server so that the port will be open for the ffmpeg process to recording.
+        server.close();
+
+        // emmit an event so it could go next processing
+        event.emit('StreamingData');
+
+    });
+
+    // when unexcepted error eccured.
+    server.on('error', (err) => {
+
+        event.emit('error', 'Unexcepted Error eccured while trying listen to the address ' + IpToListen + ':' + PortToListen + ' at ' + SERVICENAME + ' : ' + err);
+
+    });
+
 };
-
-// When there is some data flow.
-server.on('message', (msg, rinfo) => {
-
-    console.log('Data Was detected at ', IpToListen, ':', PortToListen, ' !');
-
-    // Close the server so that the port will be open for the ffmpeg process to recording.
-    server.close();
-
-    // emmit an event so it could go next processing
-    event.emit('StreamingData');
-
-});
-
-// when unexcepted error eccured.
-server.on('error', (err) => {
-
-    event.emit('error', 'Unexcepted Error eccured while trying listen to the address ' + IpToListen + ':' + PortToListen + ' at ' + ServiceName + ' : ' + err);
-
-});

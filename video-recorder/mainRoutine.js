@@ -48,6 +48,8 @@ function getVideoParams(index) {
 */
 function handleVideoSavingProcess(videoParam) {
 
+    var FileWatcherTimer;
+
     console.log('Start listen to port: '); // still not finished.
 
     // Starting Listen to the address.
@@ -102,7 +104,7 @@ function handleVideoSavingProcess(videoParam) {
         */
 
         // Start to watch the file that the ffmpeg will create.
-        FileWatcher.StartWatchFile({ Path: CurrentPath });
+        FileWatcherTimer = FileWatcher.StartWatchFile({ Path: CurrentPath });
 
     });
 
@@ -111,12 +113,11 @@ function handleVideoSavingProcess(videoParam) {
 
         // Stop the file watcher.
         console.log('ffmpeg done his progress.');
-        FileWatcher.StopWatchFile();
+        FileWatcher.StopWatchFile(FileWatcherTimer);
 
         // Start the whole process again by listening to the address again.
         console.log('Start to listen the address again');
         PortListener.StartListenToPort({ Port: 1234, Ip: '225.0.0.1' }); /*Just For now HardCoded address*/
-
 
     });
 
