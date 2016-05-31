@@ -1,5 +1,7 @@
 var Promise = require('bluebird'),
-	fs = Promise.promisifyAll(require('fs'));
+	fs = Promise.promisifyAll(require('fs')),
+	_ = require('lodash'),
+	VideoMetadata = require('../../../schemas/VideoMetadata');
 
 module.exports.start = function(params){
 	console.log('MetadataParserService started.');
@@ -25,7 +27,9 @@ module.exports.start = function(params){
 	.then(function(data){
 		return dataToObjects(method, data);
 	})
-	.then(saveToElastic)
+	.then(function(xmls){
+		return saveToDatabases(xmls, params);
+	})
 	.catch(handleErrors);
 }
 
@@ -48,10 +52,43 @@ function dataToObjects(method, data){
 	});
 }
 
-function saveToElastic(xmls){
-	console.log('xmls are ', xmls);
+// async save to databases
+// I do not want to stop everything if one save has failed,
+// so I resolve anyway, and log errors to console.
+function saveToDatabases(xmls, params){
+	return new Promise(function(resolve, reject){
+		console.log('Saving to databases.');
+
+		saveToMongo(xmls, params);
+		saveToElastic(xmls, params);
+
+		resolve();
+	});
 }
 
 function handleErrors(err){	
 	if(err) console.log(err);
+}
+
+function saveToMongo(xmls, params){
+	// convert xmls to list of VideoMetadata
+	var videoMetadatas = _.map(xmls, function(xml){
+		return new VideoMetadata({
+			sourceId: xml.VideoSource.PlatformID,
+			videoId: params.videoId,
+			receivingMethod: params.method,
+			data: xml
+		})
+	});
+
+	VideoMetadata.insertMany(videoMetadatas, function(err, objs){
+		if(err)
+			console.log(err);
+		else
+			console.log('Bulk insertion to mongo succeed.');
+	});
+}
+
+function saveToElastic(xmls, params){
+
 }

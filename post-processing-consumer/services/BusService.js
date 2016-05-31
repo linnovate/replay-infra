@@ -38,9 +38,7 @@ function consume(queueName, callback){
 	  });
 	  q.on('message', function(message, id) {
 	  	// call the callback, and when it finishes, detach from queue
-	  	callback(message, function(){
-	  		q.detach();
-	  	});
+	  	callback(message);
 	  });
 	  q.attach();
 	  // the 'message' event will be fired when a message is retrieved

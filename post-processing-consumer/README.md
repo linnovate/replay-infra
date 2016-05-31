@@ -16,7 +16,7 @@ redis-server
 ```
 Run app (default parameters will be used):
 ```
-STORAGE_PATH=/tmp QUEUE_NAME=DEFAULT_TASKS_QUEUE node index.js
+MONGO_DATABASE=replay_dev STORAGE_PATH=/tmp QUEUE_NAME=DEFAULT_TASKS_QUEUE node index.js
 ```
 
 Job types are found under the /job-types folder.
@@ -25,13 +25,12 @@ Environment variables to config the app:
 ```
 QUEUE_NAME // mandatory
 JOB_TYPE
-STORAGE_PATH
+STORAGE_PATH // mandatory
 MONGO_HOST
 MONGO_PORT
-MONGO_DATABASE
+MONGO_DATABASE // mandatory
 ELASTIC_HOST
 ELASTIC_PORT
-ELASTIC_INDEX
 REDIS_HOST
 REDIS_PORT
 REDIS_PASSWORD

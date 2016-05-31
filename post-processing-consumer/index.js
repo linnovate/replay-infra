@@ -1,4 +1,6 @@
-var BusService = require('./services/BusService')
+var BusService = require('./services/BusService'),
+	mongoose = require('mongoose'),
+	elasticsearch = require('elasticsearch'),
 	fs = require('fs'),
     _ = require('lodash');
 
@@ -8,6 +10,8 @@ console.log('Consumer is up!');
 if(!isInputValid()){
 	return "Bad input was received.";
 }
+// connect to our databases once so the service won't have to re-create connection each time
+connectDatabases();
 
 // create bus
 // BusService = new BusService();
@@ -22,9 +26,7 @@ handleMessage({
 			version: 1.0
 		}
 	}
-}, function(){
-	console.log("Service is started.");
-})
+});
 
 
 // enforces basic validations on the environment input passed to process,
@@ -37,18 +39,17 @@ function isInputValid(){
 	console.log('Mongo database: ', process.env.MONGO_DATABASE);
 	console.log('Elastic host: ', process.env.ELASTIC_HOST);
 	console.log('Elastic port: ', process.env.ELASTIC_PORT);
-	console.log('Elastic index: ', process.env.ELASTIC_INDEX);
 	console.log('Files storage path: ', process.env.STORAGE_PATH);
 	console.log('Queue is: ', process.env.QUEUE_NAME);
 
-	// queue name is a mandatory parameter
-	if(!process.env.QUEUE_NAME)
+	// check mandatory parameter we can't continue without
+	if(!process.env.QUEUE_NAME || !process.env.MONGO_DATABASE || !process.env.STORAGE_PATH)
 		return false;
 
 	return true;
 }
 
-function handleMessage(message, done) {
+function handleMessage(message) {
 	// read job types file
 	var jobTypes = getJobTypesJson();
 
@@ -59,7 +60,7 @@ function handleMessage(message, done) {
     if ((jobType && !isKnownJobType(jobTypes, jobType)) ||
     	!isKnownJobType(jobTypes, message.type)) {
         console.log('Bad job type was inserted');
-        return done();
+        return;
     }
 
     // in case we are handling all job types, or,
@@ -71,7 +72,7 @@ function handleMessage(message, done) {
         	service.start(message.params);
         else
         	console.log('Bad service name');
-        return done();
+        return;
     }
 }
 
@@ -93,4 +94,47 @@ function getServiceName(jobTypes, jobType){
 
 function getJobTypesJson(){
 	return JSON.parse(fs.readFileSync('./job-types/types.json', "utf8"));
+}
+
+function connectDatabases(){
+	connectMongo();
+	connectElasticSearch();
+}
+
+function connectMongo(){
+	var host = process.env.MONGO_HOST || 'localhost';
+	var port = process.env.MONGO_PORT || 27017;
+
+	var keepAliveInSeconds = 60 * 60 * 24 * 30; // 30 days
+	// initialize options
+	var options = {
+		server: {
+			socketOptions: {
+				keepAlive: keepAliveInSeconds
+			}
+		},
+		replset: {
+			socketOptions: {
+				keepAlive: keepAliveInSeconds
+			}
+		}
+	};
+
+	var uri = 'mongodb://' + host + ':' + port + '/' + process.env.MONGO_DATABASE;
+	// connect to mongo
+	mongoose.connect(uri, options);
+	global.mongoose = mongoose;
+}
+
+function connectElasticSearch(){
+	var host = process.env.ELASTIC_HOST || 'localhost';
+	var port = process.env.ELASTIC_PORT || 9200;
+
+	var uri = host + ':' + port;
+	// connect to elastic
+	// keep-alive is true by default, which means forever
+	global.elasticsearch = new elasticsearch.Client({
+	  host: uri,
+	  log: 'trace'
+	});
 }

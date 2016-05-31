@@ -1,5 +1,6 @@
 var xml2js = require('xml2js');
 
+// parses the raw data from the metadata file into objects
 module.exports.parse = function(data) {
     var result = [];
 
@@ -20,11 +21,11 @@ module.exports.parse = function(data) {
             	explicitArray: false,
             	explicitRoot: false,
             	ignoreAttrs: true
-            }, function(err, xml) {
+            }, function(err, xmlObj) {
                 if (err)
                 	throw err;
-                else if (xml)
-                	result.push(JSON.stringify(xml));
+                else if (xmlObj)
+                    result.push(xmlObj);
             });
         }
     });
