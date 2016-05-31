@@ -135,6 +135,6 @@ function connectElasticSearch(){
 	// keep-alive is true by default, which means forever
 	global.elasticsearch = new elasticsearch.Client({
 	  host: uri,
-	  log: 'trace'
+	  log: ['error', 'warning']
 	});
 }

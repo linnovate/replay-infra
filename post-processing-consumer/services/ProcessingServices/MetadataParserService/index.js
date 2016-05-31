@@ -72,15 +72,8 @@ function handleErrors(err){
 
 function saveToMongo(xmls, params){
 	// convert xmls to list of VideoMetadata
-	var videoMetadatas = _.map(xmls, function(xml){
-		return new VideoMetadata({
-			sourceId: xml.VideoSource.PlatformID,
-			videoId: params.videoId,
-			receivingMethod: params.method,
-			data: xml
-		})
-	});
-
+	var videoMetadatas = xmlObjectsToVideoMetadata(xmls, params);
+	
 	VideoMetadata.insertMany(videoMetadatas, function(err, objs){
 		if(err)
 			console.log(err);
@@ -89,6 +82,55 @@ function saveToMongo(xmls, params){
 	});
 }
 
-function saveToElastic(xmls, params){
+function xmlObjectsToVideoMetadata(xmls, params){
+	return _.map(xmls, function(xml){
+		return new VideoMetadata({
+			sourceId: xml.VideoSource.PlatformID,
+			videoId: params.videoId,
+			receivingMethod: params.method,
+			data: xml
+		})
+	});
+}
 
+function saveToElastic(xmls, params){
+	// convert xmls to bulk request object for elastic
+	var bulkRequest = xmlObjectsToElasticBulkRequest(xmls, params);
+
+	global.elasticsearch.bulk({
+	    body : bulkRequest
+	}, function (err, resp) {
+	  if(err)
+	  	console.log(err);
+	  else
+	  	console.log('Bulk insertion to elastic succeed.');
+	});
+}
+
+function xmlObjectsToElasticBulkRequest(xmls, params){
+	var bulkRequest = [];
+
+	xmls.forEach(function(xml){
+		var videoMetadata = new VideoMetadata({
+			sourceId: xml.VideoSource.PlatformID,
+			videoId: params.videoId,
+			receivingMethod: params.method,
+			data: xml
+		});
+		// efficient way to remove auto generated _id
+		videoMetadata['_id'] = undefined;
+
+		// push action
+		bulkRequest.push({
+			index: {
+				_index: 'videometadatas',
+				_type: 'videometadata'
+			}
+		});
+
+		// push document
+		bulkRequest.push(videoMetadata);
+	});
+
+	return bulkRequest;
 }
