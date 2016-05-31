@@ -19,7 +19,7 @@ exports.StartListenToPort = (params) => {
     // define the method name.
     const METHODNAME = 'StartListenToPort';
 
-    console.log(SERVICENAME, '.', METHODNAME, ' start running...');
+    console.log(SERVICENAME, '.', METHODNAME, ' start running...\n params: ',JSON.stringify(params));
 
     // init variables.
     var PortToListen,

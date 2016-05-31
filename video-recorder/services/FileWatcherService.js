@@ -10,7 +10,35 @@ var fs = require('fs'),
 var TimeToWait = 3000;
 
 // Const
-const ServiceName = 'FileWatcherService';
+const SERVICENAME = 'FileWatcherService';
+
+module.exports = FileWatcher;
+
+function FileWatcher() {
+    var _CurrentFileSize = -1,
+        _FileTimer;
+
+    var _CheckFileSize = function(){
+
+    };
+
+    var _StopTimer = function(){
+
+        if(_FileTimer){
+
+            clearInterval(_FileTimer);
+            
+        }
+    };
+
+    this.StartWatchFile = function(){
+
+    };
+
+    this.StopWatchFile = function(){
+
+    };
+};
 
 /*
 	This func start watch given file,
@@ -20,13 +48,13 @@ const ServiceName = 'FileWatcherService';
 */
 exports.StartWatchFile = function(params) {
 
-    const MethodName = 'StartWatchFile';
+    const METHODNAME = 'StartWatchFile';
 
-    console.log(ServiceName, '.', MethodName, ' start running...');
+    console.log(SERVICENAME, '.', METHODNAME, ' start running...');
 
     // Check if there is path.
     if (!params.Path) {
-        event.emit('error', 'Error accured in ', ServiceName, '.', MethodName, ' : Path cannot be undefined.');
+        event.emit('error', 'Error accured in ', SERVICENAME, '.', METHODNAME, ' : Path cannot be undefined.');
         return null;
     }
 
@@ -40,12 +68,13 @@ exports.StartWatchFile = function(params) {
         event.emit('FileWatchStop');
     };
 
-    console.log(ServiceName, '.', MethodName, ' Init new interval...');
+    console.log(SERVICENAME, '.', METHODNAME, ' Init new interval...');
+    console.log(SERVICENAME,'.',METHODNAME,' Start checking at:',params.Path);
 
     // Start Timer to follow the file.
-    Timer = setInterval(function() { CheckFileSize(params.Path, CurrentFileSize, Timer, FileStoppedGrow); }, TimeToWait);
+    Timer = setInterval(function() { CurrentFileSize = CheckFileSize(params.Path, CurrentFileSize, Timer, FileStoppedGrow); }, TimeToWait);
 
-    console.log(ServiceName, '.', MethodName, ' Finished...');
+    console.log(SERVICENAME, '.', METHODNAME, ' Finished...');
 
     return Timer;
 };
@@ -55,42 +84,49 @@ exports.StartWatchFile = function(params) {
 */
 exports.StopWatchFile = function(timer) {
 
-    const MethodName = 'StopWatchFile';
+    const METHODNAME = 'StopWatchFile';
 
-    console.log(ServiceName, '.', MethodName, ' start running...');
+    console.log(SERVICENAME, '.', METHODNAME, ' start running...');
 
     clearInterval(Timer);
 
-    console.log(ServiceName, '.', MethodName, ' Finished...');
+    console.log(SERVICENAME, '.', METHODNAME, ' Finished...');
 };
 
 
 // Check the file Size, when it 
 var CheckFileSize = function(path, filesize, timer, callback) {
 
-    const MethodName = 'CheckFileSize';
+    const METHODNAME = 'CheckFileSize';
 
-    console.log(ServiceName, '.', MethodName, ' start running...');
+    console.log(SERVICENAME, '.', METHODNAME, ' start running...');
 
     // Get the State Of the file.
     fs.stat(path, function(err, stat) {
 
-        console.log(ServiceName, '.', MethodName, ' CurrentFileSize: ', stat.size, ' | LastFileSize: ', filesize);
+        if(err){
+            event.emit('error','Error accured in :' + SERVICENAME + '.' + METHODNAME + ': ' + err);
+            callback(timer);
+        }
+
+        console.log(SERVICENAME, '.', METHODNAME, ' CurrentFileSize: ', stat.size, ' | LastFileSize: ', filesize);
 
         // Check if the file size is bigger than the last check.
         if (stat.size > filesize) {
 
             // Update the file size.
-            filesize = stat.size;
+            //filesize = stat.size;
+            return stat.size;
 
         } else {
 
             // Callback called when the file stopped grow.
+            console.log('taking down timer!')
             callback(timer);
 
         }
 
-        console.log(ServiceName, '.', MethodName, ' Finished...');
+        console.log(SERVICENAME, '.', METHODNAME, ' Finished...');
 
     });
 };
