@@ -7,77 +7,99 @@
 var event = require('./EventService'),
     dgram = require('dgram');
 
-
 // Defiend the Service name.
-const SERVICENAME = 'PortListenerService',
+const SERVICE_NAME = 'PortListenerService',
     LOCALHOST = '0.0.0.0';
 
-// Function That Start listen to address and wait until there is some data flow.
-// It should get an object with Ip and Port.
-exports.StartListenToPort = (params) => {
+// export our service.
+module.exports = PortListener;
 
-    // define the method name.
-    const METHODNAME = 'StartListenToPort';
+// Port Listener Service.
+function PortListener() {
 
-    console.log(SERVICENAME, '.', METHODNAME, ' start running...\n params: ',JSON.stringify(params));
+    // some private variables.
+    var _Ip,
+        _Port,
+        _Server;
 
-    // init variables.
-    var PortToListen,
-        IpToListen,
-        server = dgram.createSocket('udp4');
+    // Function That Start listen to address and wait until there is some data flow.
+    // It should get an object with Ip and Port.
+    var StartListenToPort = function(params) {
 
-    // Check if there is port to listen to, if there isn't port it will emmit error.
-    if (!params.Port) {
+        // define the method name.
+        const METHODNAME = 'StartListenToPort';
 
-        event.emit('error', 'Error on ', SERVICENAME, '.', METHODNAME, ' : There Is no Port To listen');
-        return;
+        console.log(SERVICE_NAME, '.', METHODNAME, ' start running...\n params: ', JSON.stringify(params));
 
-    } else {
+        // Check if there is port to listen to, if there isn't port it will emmit error.
+        if (!params.Port) {
 
-        PortToListen = params.Port;
-
-        // Check if there is some ip to listen to, if there isn't ip it will listen to localhost.
-        if (!params.Ip) {
-
-            IpToListen = LOCALHOST;
+            event.emit('error', 'Error on ' + SERVICE_NAME + '.' + METHODNAME + ' : There Is no Port To listen');
+            return;
 
         } else {
 
-            IpToListen = params.Ip;
+            _Port = params.Port;
+
+            // Check if there is some ip to listen to, if there isn't ip it will listen to localhost.
+            if (!params.Ip) {
+
+                _Ip = LOCALHOST;
+
+            } else {
+
+                _Ip = params.Ip;
+
+            }
+
+            _Server = dgram.createSocket({ type: 'udp4', reuseAddr: true });
+
+            try {
+
+                // binding the server to listen to the address that given.
+                _Server.bind({ port: _Port, address: _Ip, exclusive: false }, () => {
+
+                    // Check if the port is not 0.0.0.0
+                    if (_Ip != LOCALHOST) _Server.addMembership(_Ip);
+
+                    console.log('Binding To : ', _Ip, ':', _Port, ' succeed');
+
+                });
+            } catch (err) {
+                event.emit('error', 'Error on ' + SERVICE_NAME + '.' + METHODNAME + ' : ' + err);
+                return;
+            }
 
         }
 
-        // binding the server to listen to the address that given.
-        server.bind({ port: PortToListen, address: IpToListen, exclusive: false }, () => {
 
-            // Check if the port is not 0.0.0.0
-            if (IpToListen != LOCALHOST) server.addMembership(IpToListen);
+        // When there is some data flow.
+        _Server.on('message', (msg, rinfo) => {
 
-            console.log('Binding To : ', IpToListen, ':', PortToListen, ' succeed');
+            console.log('Data Was detected at ', _Ip, ':', _Port, ' !');
+
+            // Close the server so that the port will be open for the ffmpeg process to recording.
+            _Server.close();
+
+            // emmit an event so it could go next processing
+            event.emit('StreamingData');
 
         });
 
-    }
+        // when unexcepted error eccured.
+        _Server.on('error', (err) => {
+
+            event.emit('error', 'Unexcepted Error eccured while trying listen to the address ' + _Ip + ':' + _Port + ' at ' + SERVICE_NAME + ' : ' + err);
+            _Server.close();
+
+        });
+
+        return;
+    };
 
 
-    // When there is some data flow.
-    server.on('message', (msg, rinfo) => {
 
-        console.log('Data Was detected at ', IpToListen, ':', PortToListen, ' !');
-
-        // Close the server so that the port will be open for the ffmpeg process to recording.
-        server.close();
-
-        // emmit an event so it could go next processing
-        event.emit('StreamingData');
-
-    });
-
-    // when unexcepted error eccured.
-    server.on('error', (err) => {
-
-        event.emit('error', 'Unexcepted Error eccured while trying listen to the address ' + IpToListen + ':' + PortToListen + ' at ' + SERVICENAME + ' : ' + err);
-
-    });
-
+    return {
+        StartListenToPort: StartListenToPort
+    };
 };

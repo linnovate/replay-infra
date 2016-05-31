@@ -21,6 +21,7 @@
     "bluebirds": "0.0.6",
     "express": "^4.13.4",
     "fluent-ffmpeg": "^2.1.0",
+    "mkdirp": "^0.5.1",
     "moment": "^2.13.0",
     "mongoose": "^4.4.19"
   }

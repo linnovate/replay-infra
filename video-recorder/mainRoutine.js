@@ -5,8 +5,8 @@ var mongoose = require('mongoose'),
     VideoParams = require('./schemas/VideoParams'),
     FFmpegService = require('./services/FFmpegService'),
     Event = require('./services/EventService'),
-    FileWatcher = require('./services/FileWatcherService'),
-    PortListener = require('./services/PortListenerService');
+    FileWatcher = require('./services/FileWatcherService')(),
+    PortListener = require('./services/PortListenerService')();
 
 module.exports = function() {
     console.log("Video recorder service is up.");
@@ -39,7 +39,7 @@ function getVideoParams(index) {
                 return Promise.reject("VideoParams has no object at index ", index);
 
             return Promise.resolve(videoParams[index]);
-        })
+        });
 };
 
 /*
@@ -70,12 +70,24 @@ function handleVideoSavingProcess(videoParam) {
             TODO: Handle the error.
         */
         console.log(err);
+
+        if (command) {
+            command.kill('SIGKILL');
+        }
+
+        setTimeout(function() {
+
+            PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' });
+
+        }, 2000);
+
+
     });
 
     // When the PortListenerService found some streaming data in the address.
     Event.on('StreamingData', function() {
 
-        var CurrentPath = PathBuilder({KaronId:239});
+        var CurrentPath = PathBuilder({ KaronId: 239 });
 
         // First build are path for our new file.
 
@@ -103,23 +115,24 @@ function handleVideoSavingProcess(videoParam) {
             inputs: ['udp://239.0.0.1:1234'],
             duration: 10,
             dir: CurrentPath,
-            file:now
+            file: now
         }
 
 
         // Starting the ffmpeg process.
         console.log('Record new video at: ', CurrentPath);
-        
-        FFmpegService.captureMuxedVideoTelemetry(hardcodedParameters).then(function(res){
-            command = res;
-            CurrentPath +='/'+ now+'.mp4';
 
-            setTimeout(function(){
-                            // Start to watch the file that the ffmpeg will create.
-            FileWatcherTimer = FileWatcher.StartWatchFile({ Path: CurrentPath });
-        },5000)
-        },function(rej) {
-            
+        FFmpegService.captureMuxedVideoTelemetry(hardcodedParameters).then(function(res) {
+            command = res;
+            CurrentPath += '/' + now + '.mp4';
+
+            setTimeout(function() {
+                // Start to watch the file that the ffmpeg will create.
+                FileWatcherTimer = FileWatcher.StartWatchFile({ Path: CurrentPath });
+
+            }, 5000)
+        }, function(rej) {
+
         });
 
     });
@@ -145,13 +158,13 @@ function handleVideoSavingProcess(videoParam) {
 
         command.kill('SIGKILL');
 
-        setTimeout(function(){
+        setTimeout(function() {
 
-        // Start the whole process again by listening to the address again.
-        console.log('Start to listen the address again');
-        PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' }); /*Just For now HardCoded address*/
+            // Start the whole process again by listening to the address again.
+            console.log('Start to listen the address again');
+            PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' }); /*Just For now HardCoded address*/
 
-        },5000);
+        }, 1);
     });
 
     /*
