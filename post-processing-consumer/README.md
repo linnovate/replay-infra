@@ -14,6 +14,8 @@ Run redis:
 ```
 redis-server
 ```
+Make sure to have MongoDB and Elasticsearch installed locally, else you may configure them via the environment variables .
+
 Run app (default parameters will be used):
 ```
 MONGO_DATABASE=replay_dev STORAGE_PATH=/tmp QUEUE_NAME=DEFAULT_TASKS_QUEUE node index.js

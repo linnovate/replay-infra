@@ -1,0 +1,10 @@
+[
+	{
+		"type": "MetadataParser",
+		"service": "MetadataParserService"
+	},
+	{
+		"type": "OnVideoFinish",
+		"service": "OnVideoFinishService"
+	}
+]

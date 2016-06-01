@@ -110,13 +110,9 @@ function saveToElastic(xmls, params){
 function xmlObjectsToElasticBulkRequest(xmls, params){
 	var bulkRequest = [];
 
-	xmls.forEach(function(xml){
-		var videoMetadata = new VideoMetadata({
-			sourceId: xml.VideoSource.PlatformID,
-			videoId: params.videoId,
-			receivingMethod: params.method,
-			data: xml
-		});
+	videoMetadatas = xmlObjectsToVideoMetadata(xmls, params);
+
+	videoMetadatas.forEach(function(videoMetadata){
 		// efficient way to remove auto generated _id
 		videoMetadata['_id'] = undefined;
 

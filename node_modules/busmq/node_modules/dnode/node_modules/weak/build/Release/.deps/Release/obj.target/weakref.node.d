@@ -1,0 +1,1 @@
+cmd_Release/obj.target/weakref.node := g++ -shared -pthread -rdynamic -m64  -Wl,-soname=weakref.node -o Release/obj.target/weakref.node -Wl,--start-group Release/obj.target/weakref/src/weakref.o -Wl,--end-group 
