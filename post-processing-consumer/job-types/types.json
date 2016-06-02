@@ -1,0 +1,6 @@
+[
+	{
+		"type": "MetadataParser",
+		"service": "MetadataParserService"
+	}
+]
