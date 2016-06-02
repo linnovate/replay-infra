@@ -158,13 +158,24 @@ function handleVideoSavingProcess(videoParam) {
 
         command.kill('SIGKILL');
 
-        setTimeout(function() {
 
-            // Start the whole process again by listening to the address again.
-            console.log('Start to listen the address again');
-            PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' }); /*Just For now HardCoded address*/
+        // Start the whole process again by listening to the address again.
+        console.log('Start to listen the address again');
+        PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' }); /*Just For now HardCoded address*/
 
-        }, 1);
+    });
+
+    // Kill the ffmpeg, will emit when something happen to the node process and we want to clean up things.
+    Event.on('KillFFmpeg', function(cb) {
+
+        console.log('Killing ffmpeg...');
+
+        if (command) {
+
+            command.kill('SIGKILL');
+
+        }
+
     });
 
     /*
@@ -217,6 +228,40 @@ function checkTime(i) {
     }
     return i;
 };
+
+/*
+    =======================================================================================
+    =======================================================================================
+*/
+
+/*
+    =======================================================================================
+                                        Exit Handler
+    =======================================================================================
+*/
+
+
+/*
+    this will clean up the ffmpeg process before the node process will close somehow.
+*/
+
+process.stdin.resume();//so the program will not close instantly
+
+function exitHandler(options, err) {
+    if (options.cleanup) Event.emit('KillFFmpeg');
+    if (err) console.log(err.stack);
+    if (options.exit) process.exit();
+}
+
+//do something when app is closing
+process.on('exit', exitHandler.bind(null,{cleanup:true}));
+
+//catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
+
 
 /*
     =======================================================================================

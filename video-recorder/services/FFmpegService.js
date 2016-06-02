@@ -1,5 +1,6 @@
 var ffmpeg = require('fluent-ffmpeg');
-var promise = require('bluebird');
+var promise = require('bluebird'),
+	event = require('./EventService');
 //var TelemetryEnum = require('./TelemetryEnum.js');
 
 const FFMPEGTIMEOUT =  30 * 60 * 1000;
@@ -107,8 +108,10 @@ module.exports = {
 
 function SetEvents(command){	
 	command.on('end', function() {
+		event.emit('FFmpegDone');
    		console.log('Processing finished !');
    		command.kill('SIGKILL');
+
    	})
    	.on('start', function(commandLine) {
     console.log('Spawned Ffmpeg with command: ' + commandLine);
