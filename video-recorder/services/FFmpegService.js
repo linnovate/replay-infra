@@ -107,14 +107,14 @@ function SetEvents(command, params) {
 			}
 		})
 		.on('end', function() {
-			command.kill('SIGKILL');
+			// command.kill('SIGKILL');
 			console.log('Processing finished !');
 			event.emit('FFmpegDone');
 		})
 		.on('error', function(err) {
 			console.log(err);
-			command.kill('SIGKILL');
-			event.emit('error');
+			// command.kill('SIGKILL');
+			event.emit('FFmpegError');
 		});
 
 	command.run();

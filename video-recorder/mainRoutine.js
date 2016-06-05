@@ -1,6 +1,7 @@
 // requires
 var mongoose = require('mongoose'),
     fs = require('fs'),
+    promise = require('bluebird')
     mkdirp = require('mkdirp'),
     StreamingSource = require('./schemas/StreamingSource'),
     FFmpegService = require('./services/FFmpegService'),
@@ -73,18 +74,21 @@ function handleVideoSavingProcess(StreamingSource) {
     // When Error eccured in one of the services.
     Event.on('error', function(err) {        
         // TODO: Handle the error.
-        console.log(err);
+        console.log("Error: " + err);
         if (command) {
-        	console.log("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-            command.kill('SIGKILL');
+            promise.resolve()
+            .then(function(){
+                command.kill('SIGKILL');
+            })
+            .then(function(){
+                FileWatcher.StopWatchFile(FileWatcherTimer);
+                StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
+                /***** Just For now HardCoded Address *****/
+                /*     Should be:                         */
+                /*  startStreamListener(StreamingSource)  */
+                /******************************************/
+            })
         }
-        setTimeout(function() {
-            StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
-            /***** Just For now HardCoded Address *****/
-            /*     Should be:                         */
-            /*  startStreamListener(StreamingSource)  */
-            /******************************************/
-        }, 2000);
     });
 
     // When the StreamListenerService found some streaming data in the address.
@@ -126,13 +130,14 @@ function handleVideoSavingProcess(StreamingSource) {
         FFmpegService.captureMuxedVideoTelemetry(hardcodedParameters)
             .then(function(res) {
                 command = res;
-                CurrentPath += '/' + now + '.mp4';
+                // CurrentPath += '/' + now + '.mp4';
 
             }, function(rej) {
                 // TODO...
             });
     });
 
+    // Start file watcher on data start flowing
     Event.on('CapturingBegan', function(filePath) {
      // start to watch the file that the ffmpeg will create
      FileWatcherTimer = FileWatcher.StartWatchFile({ Path: filePath });
@@ -140,31 +145,41 @@ function handleVideoSavingProcess(StreamingSource) {
 
     // when FFmpeg done his progress
     Event.on('FFmpegDone', function() {
-        // stop the file watcher
-        console.log('ffmpeg done his progress.');
-        FileWatcher.StopWatchFile(FileWatcherTimer);
-
-        // start the whole process again by listening to the address again.
-        console.log('Start to listen the address again');
-        StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
-        /***** Just For now HardCoded Address *****/
-        /*     Should be:                         */
-        /*  startStreamListener(StreamingSource)  */
-        /******************************************/
+        promise.resolve()
+        .then(function(){
+            // Stop the file watcher.
+            console.log('ffmpeg done his progress.');
+            FileWatcher.StopWatchFile(FileWatcherTimer);
+        })
+        .then(function(){
+            // Start the whole process again by listening to the address again.
+            console.log('Start to listen the address again');
+            StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
+            /***** Just For now HardCoded Address *****/
+            /*     Should be:                         */
+            /*  startStreamListener(StreamingSource)  */
+            /******************************************/
+        });
     });
 
     // When the source stop stream data.
     Event.on('FileWatchStop', function() {
         // kill The FFmpeg Process.
         console.log('The Source stop stream data, Killing the ffmpeg process');
-        command.kill('SIGKILL');
-        // start the whole process again by listening to the address again.
-        console.log('Start to listen the address again');
-        StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
-        /***** Just For now HardCoded Address *****/
-        /*     Should be:                         */
-        /*  startStreamListener(StreamingSource)  */
-        /******************************************/
+        promise.resolve()
+        .then(function(){
+           command.kill('SIGKILL');
+           console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA') ;
+        })
+        .then(function(){
+            // Start the whole process again by listening to the address again.
+            console.log('Start to listen the address again');
+            StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
+            /***** Just For now HardCoded Address *****/
+            /*     Should be:                         */
+            /*  startStreamListener(StreamingSource)  */
+            /******************************************/
+        });       
     });
 
     // kill the ffmpeg, will emit when something happen to the node process and we want to clean up things
