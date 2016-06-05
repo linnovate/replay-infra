@@ -12,14 +12,18 @@ module.exports = {
 	captureMuxedVideoTelemetry: function(params){
 
 		console.log('capturing muxed!!!!!');
+	 	
 	 	// Building the FFmpeg command	
 	 	var builder = new promise(function(resolve,reject){
+			
 			// FFmpeg command initialization
 			var command = ffmpeg();
+	 		
 	 		// Resolving the command forward
 	 		resolve(command);
 	 	});
 
+	 	// Start building command
 	 	builder	 	
 
 	 	.then(function(command){
@@ -43,21 +47,25 @@ module.exports = {
 	 	})	 
 	 	
 	 	.then(function(command){
-	 		return SetEvents(command);
+	 		return SetEvents(command,params);
 	 	});	 
 
 	 	return builder;		 	
 	},	
 
 	captureVideoWithoutTelemetry: function(params){		
+		
 		// Building the FFmpeg command	
 	 	var builder = new promise(function(resolve,reject){
+		
 			// FFmpeg command initialization
 			var command = ffmpeg();
+	 	
 	 		// Resolving the command forward
 	 		resolve(command);
 	 	});
 
+	 	// Start building command
 	 	builder	 	
 
 	 	.then(function(command){
@@ -77,19 +85,23 @@ module.exports = {
 	 	})
 
 	 	.then(function(command){
-	 		return SetEvents(command);
+	 		return SetEvents(command,params);
 	 	})	 		
 	},
 
 	captureTelemetryWithoutVideo: function(params){
+		
 		// Building the FFmpeg command	
 	 	var builder = new promise(function(resolve,reject){
+		
 			// FFmpeg command initialization
 			var command = ffmpeg();
+	 	
 	 		// Resolving the command forward
 	 		resolve(command);
 	 	});
 
+	 	// Start building command
 	 	builder	 	
 
 	 	.then(function(command){
@@ -101,33 +113,53 @@ module.exports = {
 	 	})	 
 	 	
 	 	.then(function(command){
-	 		return SetEvents(command);
+	 		return SetEvents(command,params);
 	 	})		
 	}
 }
 
-function SetEvents(command){	
+function SetEvents(command,params){	
+	
 	command.on('end', function() {
-		event.emit('FFmpegDone');
-   		console.log('Processing finished !');
+
    		command.kill('SIGKILL');
+   		event.emit('FFmpegDone');
+   		console.log('Processing finished !');
 
    	})
+   	
    	.on('start', function(commandLine) {
-    console.log('Spawned Ffmpeg with command: ' + commandLine);
+    
+    	console.log('Spawned Ffmpeg with command: ' + commandLine);
+    	// Initialize indicator for data started flowing
+    	command.bytesCaptureBegan = false ;
   	})
+  	
   	.on('error', function(err){
+  	
   		console.log(err);
   		command.kill('SIGKILL');
+  		event.emit('error');
   	})
+   	
    	.on('progress',function(progress){
+    
     	console.log(JSON.stringify(progress));
+
+    	// Check if should notify for first bytes captured
+    	if(command.bytesCaptureBegan == false){
+    		
+    		event.emit('CapturingBegan',params.dir+'/'+params.file+'.mp4');
+    		command.bytesCaptureBegan = true;
+    	}
     })
+
     .run();    
 
     return command;			
 }
 
+// Extracting binary data from stream
 function ExtractData(command,params){
 	command	
 	.output(params.dir+'/'+params.file+'.txt')
@@ -138,6 +170,7 @@ function ExtractData(command,params){
  	return command;		 		
 }
 
+// Define a 360p video output
 function VideoOutput360p(command,params){		
 	command	
  	.output(params.dir+'/'+params.file+'320p'+'.mp4')
@@ -149,6 +182,7 @@ function VideoOutput360p(command,params){
 	return command;
 }
 
+// Define a 480p video output
 function VideoOutput480p(command,params){		
 	command	
 	.output(params.dir+'/'+params.file+'480p'+'.mp4')
@@ -160,6 +194,7 @@ function VideoOutput480p(command,params){
 	return command;
 }
 
+// Define a origin video output
 function VideoOutput(command,params){		
 	command	
  	.output(params.dir+'/'+params.file+'.mp4')
