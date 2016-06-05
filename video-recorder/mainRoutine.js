@@ -2,11 +2,11 @@
 var mongoose = require('mongoose'),
     fs = require('fs'),
     mkdirp = require('mkdirp'),
-    VideoParams = require('./schemas/VideoParams'),
+    StreamingSource = require('./schemas/StreamingSource'),
     FFmpegService = require('./services/FFmpegService'),
     Event = require('./services/EventService'),
     FileWatcher = require('./services/FileWatcherService')(),
-    PortListener = require('./services/PortListenerService')();
+    StreamListener = require('./services/StreamListenerService')();
 
 module.exports = function() {
     console.log("Video recorder service is up.");
@@ -15,39 +15,41 @@ module.exports = function() {
     console.log('Mongo database:', process.env.MONGO_DATABASE);
     console.log('Files storage path: ', process.env.STORAGE_PATH);
 
-    // index used to find my videoParams object in the DB collection
-    var videoParamsIndex = process.env.INDEX;
+    // index used to find my StreamingSource object in the DB collection
+    var StreamingSourceIndex = process.env.INDEX;
 
-    getVideoParams(videoParamsIndex)
+    getStreamingSource(StreamingSourceIndex)
         .then(handleVideoSavingProcess)
         .catch(function(err) {
-            if (err) console.log(err);
+            if (err) 
+                console.log(err);
         });
 };
 
-// fetches videoParam object from DB
-function getVideoParams(index) {
-
+// fetches StreamingSource object from DB
+function getStreamingSource(index) {
     mongoose.connect('mongodb://' + process.env.MONGO_HOST + ':' + process.env.MONGO_PORT + '/' + process.env.MONGO_DATABASE);
+    
+    return StreamingSource.find()
+        .then(function(StreamingSource) {
+            // make sure StreamingSource exist and also our object at the specified index
+            if (!StreamingSource)
+                return Promise.reject("StreamingSource does not exist in DB");
+            else if (!StreamingSource[index])
+                return Promise.reject("StreamingSource has no object at index " + index);
 
-    return VideoParams.find()
-        .then(function(videoParams) {
-            // make sure videoParams exist and also our object at the specified index
-            if (!videoParams)
-                return Promise.reject("VideoParams does not exist in DB");
-            else if (!videoParams[index])
-                return Promise.reject("VideoParams has no object at index ", index);
-
-            return Promise.resolve(videoParams[index]);
+            return Promise.resolve(StreamingSource[index]);
         });
 };
 
-/*
-    Here all the process begin to run.
-    first he will listen to the address, when he catch data streaming he will run the ffmpeg command and file watcher.
-    when the ffmpeg finish his progress or the file watcher see that the file is not get bigger it will start the whole process again.
-*/
-function handleVideoSavingProcess(videoParam) {
+/********************************************************************************************************************************************/
+/*                                                                                                                                          */
+/*    Here all the process begin to run.                                                                                                    */
+/*    first he will listen to the address, when he catch data streaming he will run the ffmpeg command and file watcher.                    */
+/*    when the ffmpeg finish his progress or the file watcher see that the file is not get bigger it will start the whole process again.    */
+/*                                                                                                                                          */
+/********************************************************************************************************************************************/
+function handleVideoSavingProcess(StreamingSource) {
 
     var FileWatcherTimer,
         command;
@@ -55,62 +57,54 @@ function handleVideoSavingProcess(videoParam) {
     console.log('Start listen to port: '); // still not finished.
 
     // Starting Listen to the address.
-    PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' }); /*Just For now HardCoded address*/
+    StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
+    /***** Just For now HardCoded Address *****/
+    /*     Should be:                         */
+    /*  startStreamListener(StreamingSource)  */
+    /******************************************/
 
-    /*
-        +++++++++++++++++++++++++++++++++++++
-                    Events Section
-        +++++++++++++++++++++++++++++++++++++
-    */
+
+    /******************************************/
+    /*                                        */
+    /*         Events Section:                */
+    /*                                        */
+    /******************************************/
 
     // When Error eccured in one of the services.
-    Event.on('error', function(err) {
-
-        /*
-            TODO: Handle the error.
-        */
+    Event.on('error', function(err) {        
+        // TODO: Handle the error.
         console.log(err);
-
         if (command) {
             command.kill('SIGKILL');
         }
-
         setTimeout(function() {
-
-            PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' });
-
+            StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
+            /***** Just For now HardCoded Address *****/
+            /*     Should be:                         */
+            /*  startStreamListener(StreamingSource)  */
+            /******************************************/
         }, 2000);
-
-
     });
 
     // When the PortListenerService found some streaming data in the address.
     Event.on('StreamingData', function() {
-
-        var CurrentPath = PathBuilder({ KaronId: 239 });
-
-        // First build are path for our new file.
-
-        // Check if the path is exist.(our path: 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
+        var CurrentPath = pathBuilder({ KaronId: 239 });
+        // check if the path is exist (path e.g. 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
         try {
-
             console.log('Check if the path: ', CurrentPath, ' exist...');
             fs.accessSync(CurrentPath, fs.F_OK);
             console.log('The path is exist');
-
         } catch (err) {
-
-            // if throw error then the dir is not exist.
+            // when path not exist
             console.log('The path not exist...');
-
-            // create new path.
+            // create a new path
             mkdirp.sync(CurrentPath);
             console.log('new path create at: ', CurrentPath);
-
         }
 
-        var now = GetCurrentTime();
+        var now = getCurrentTime();
 
+        // TMP:
         var hardcodedParameters = {
             inputs: ['udp://239.0.0.1:1234'],
             duration: 10,
@@ -118,89 +112,82 @@ function handleVideoSavingProcess(videoParam) {
             file: now
         }
 
+        // var ffmepgParams = {
+        //     inputs: ['udp://' + StreamingSource.SourceIP + ':' + StreamingSource.SourcePort],
+        //     duration: CONST_BLA,
+        //     dir: CurrentPath,
+        //     file: now
+        // }
 
-        // Starting the ffmpeg process.
+        // starting the ffmpeg process
         console.log('Record new video at: ', CurrentPath);
 
-        FFmpegService.captureMuxedVideoTelemetry(hardcodedParameters).then(function(res) {
-            command = res;
-            CurrentPath += '/' + now + '.mp4';
+        FFmpegService.captureMuxedVideoTelemetry(hardcodedParameters)
+            .then(function(res) {
+                command = res;
+                CurrentPath += '/' + now + '.mp4';
+                setTimeout(function() {
+                    // start to watch the file that the ffmpeg will create
+                    FileWatcherTimer = FileWatcher.StartWatchFile({ Path: CurrentPath });
 
-            setTimeout(function() {
-                // Start to watch the file that the ffmpeg will create.
-                FileWatcherTimer = FileWatcher.StartWatchFile({ Path: CurrentPath });
-
-            }, 5000)
-        }, function(rej) {
-
-        });
-
+                }, 5000)
+            }, function(rej) {
+                // TODO...
+            });
     });
 
-    // When FFmpeg done his progress.
+    // when FFmpeg done his progress
     Event.on('FFmpegDone', function() {
-
-        // Stop the file watcher.
+        // stop the file watcher
         console.log('ffmpeg done his progress.');
         FileWatcher.StopWatchFile(FileWatcherTimer);
 
-        // Start the whole process again by listening to the address again.
+        // start the whole process again by listening to the address again.
         console.log('Start to listen the address again');
-        PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' }); /*Just For now HardCoded address*/
-
+        StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
+        /***** Just For now HardCoded Address *****/
+        /*     Should be:                         */
+        /*  startStreamListener(StreamingSource)  */
+        /******************************************/
     });
 
     // When the source stop stream data.
     Event.on('FileWatchStop', function() {
-
-        // Kill The FFmpeg Process.
+        // kill The FFmpeg Process.
         console.log('The Source stop stream data, Killing the ffmpeg process');
-
         command.kill('SIGKILL');
-
-
-        // Start the whole process again by listening to the address again.
+        // start the whole process again by listening to the address again.
         console.log('Start to listen the address again');
-        PortListener.StartListenToPort({ Port: 1234, Ip: '239.0.0.1' }); /*Just For now HardCoded address*/
-
+        StreamListener.StartListen({ Port: 1234, Ip: '239.0.0.1' });
+        /***** Just For now HardCoded Address *****/
+        /*     Should be:                         */
+        /*  startStreamListener(StreamingSource)  */
+        /******************************************/
     });
 
-    // Kill the ffmpeg, will emit when something happen to the node process and we want to clean up things.
+    // kill the ffmpeg, will emit when something happen to the node process and we want to clean up things
     Event.on('KillFFmpeg', function(cb) {
-
         console.log('Killing ffmpeg...');
-
         if (command) {
-
             command.kill('SIGKILL');
-
         }
-
     });
-
-    /*
-        ++++++++++++++++++++++++++++++++++++
-        ++++++++++++++++++++++++++++++++++++
-    */
 
 };
 
-
-
-/*
-    ========================================================================================
-                                        Helper Methods
-    ========================================================================================
-*/
+/********************************************************************************************/
+/*                                                                                          */
+/*                                 Helper Methods                                           */
+/*                                                                                          */
+/********************************************************************************************/
 
 // build new path in the current date. e.g: STORAGE_PATH/27-05-1996
-function PathBuilder(VideoObject) {
-    return process.env.STORAGE_PATH + '/' + VideoObject.KaronId + '/' + GetCurrentDate();
+function pathBuilder(VideoObject) {
+    return process.env.STORAGE_PATH + '/' + VideoObject.KaronId + '/' + getCurrentDate();
 };
 
 // get the current date and return format of dd-mm-yyyy
-function GetCurrentDate() {
-
+function getCurrentDate() {
     var today = new Date(),
         dd = checkTime(today.getDate()),
         mm = checkTime(today.getMonth() + 1), //January is 0!
@@ -210,7 +197,7 @@ function GetCurrentDate() {
 };
 
 // get the current time and return format of hh-MM-ss
-function GetCurrentTime() {
+function getCurrentTime() {
     var today = new Date(),
         h = checkTime(today.getHours()),
         m = checkTime(today.getMinutes()),
@@ -219,9 +206,8 @@ function GetCurrentTime() {
     return h + '-' + m + '-' + s;
 };
 
-// helper method for the GetCurrentDate function and for the GetCurrentTime function.
+// helper method for the getCurrentDate function and for the getCurrentTime function
 function checkTime(i) {
-
     // Check if the num is under 10 to add it 0, e.g : 5 - 05.
     if (i < 10) {
         i = "0" + i;
@@ -229,41 +215,40 @@ function checkTime(i) {
     return i;
 };
 
-/*
-    =======================================================================================
-    =======================================================================================
-*/
+// starting Listen to the stream
+function startStreamListener(StreamingSource) {
 
-/*
-    =======================================================================================
-                                        Exit Handler
-    =======================================================================================
-*/
+    var StreamListenerParams = {
+        Ip: StreamingSource.SourceIP,
+        Port: StreamingSource.SourcePort
+    }
+    StreamListener.StartListen(StreamListenerParams);
+};
 
+/********************************************************************************************/
+/*                                                                                          */
+/*                                 Exit Methods                                             */
+/*                                                                                          */
+/*    This will clean up the ffmpeg process before the node process will close somehow.     */
+/*                                                                                          */
+/********************************************************************************************/
 
-/*
-    this will clean up the ffmpeg process before the node process will close somehow.
-*/
-
-process.stdin.resume();//so the program will not close instantly
+process.stdin.resume(); // so the program will not close instantly
 
 function exitHandler(options, err) {
-    if (options.cleanup) Event.emit('KillFFmpeg');
-    if (err) console.log(err.stack);
-    if (options.exit) process.exit();
-}
+    if (options.cleanup)
+        Event.emit('KillFFmpeg');
+    if (err)
+        console.log(err.stack);
+    if (options.exit)
+        process.exit();
+};
 
-//do something when app is closing
-process.on('exit', exitHandler.bind(null,{cleanup:true}));
+// do something when app is closing
+process.on('exit', exitHandler.bind(null, { cleanup: true }));
 
-//catches ctrl+c event
-process.on('SIGINT', exitHandler.bind(null, {exit:true}));
+// catches ctrl+c event
+process.on('SIGINT', exitHandler.bind(null, { exit: true }));
 
-//catches uncaught exceptions
-process.on('uncaughtException', exitHandler.bind(null, {exit:true}));
-
-
-/*
-    =======================================================================================
-    =======================================================================================
-*/
+// catches uncaught exceptions
+process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
