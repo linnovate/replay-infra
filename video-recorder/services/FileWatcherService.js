@@ -7,9 +7,9 @@ var fs = require('fs'),
     event = require('./EventService');
 
 // globals
-var TimeToWait = 1500;
+var TimeToWait = 5000;
 
-// Const
+// const
 const SERVICE_NAME = 'FileWatcherService';
 
 // export out service.
@@ -23,16 +23,12 @@ function FileWatcher() {
 
     // Check the file Size, when it not growing it will emit event.
     var _CheckFileSize = function(path) {
-
         const METHOD_NAME = 'CheckFileSize';
-
         console.log(SERVICE_NAME, '.', METHOD_NAME, ' start running...');
 
         // Get the State Of the file.
         fs.stat(path, function(err, stat) {
-
             if (err) {
-
                 // Emit event of error and stop the timer.
                 event.emit('error', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' + err);
                 console.log(SERVICE_NAME, '.', METHOD_NAME, ': ', 'Stop the Timer...');
@@ -45,35 +41,26 @@ function FileWatcher() {
 
             // Check if the file size is bigger than the last check.
             if (stat.size > _CurrentFileSize) {
-
                 // Update the file size.
                 _CurrentFileSize = stat.size;
-
             } else {
-
                 // Callback called when the file stopped grow.
                 console.log(SERVICE_NAME, '.', METHOD_NAME, ': ', 'Stop the Timer...');
                 _StopTimer(_FileTimer);
                 event.emit('FileWatchStop');
 
             }
-
             console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
-
         });
-
     };
 
     // Stoping the timer when it needed.
     var _StopTimer = function(timer) {
-
         if (timer) {
-
             clearInterval(timer);
             _CurrentFileSize = -1;
 
         }
-
     };
 
     /*
@@ -83,9 +70,7 @@ function FileWatcher() {
         Params should contain at least Path To the file we want to watch.
     */
     var StartWatchFile = function(params) {
-
         const METHOD_NAME = 'StartWatchFile';
-
         console.log(SERVICE_NAME, '.', METHOD_NAME, ' start running...');
 
         // Check if there is path.
@@ -103,7 +88,6 @@ function FileWatcher() {
         }, TimeToWait);
 
         console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
-
         return _FileTimer;
     };
 
@@ -111,9 +95,7 @@ function FileWatcher() {
         This func stop the follow of the file when it needed.
     */
     var StopWatchFile = function(timer) {
-
         const METHOD_NAME = 'StopWatchFile';
-
         console.log(SERVICE_NAME, '.', METHOD_NAME, ' start running...');
 
         _StopTimer(timer);

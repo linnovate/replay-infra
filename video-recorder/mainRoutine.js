@@ -75,6 +75,7 @@ function handleVideoSavingProcess(StreamingSource) {
         // TODO: Handle the error.
         console.log(err);
         if (command) {
+        	console.log("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
             command.kill('SIGKILL');
         }
         setTimeout(function() {
@@ -86,7 +87,7 @@ function handleVideoSavingProcess(StreamingSource) {
         }, 2000);
     });
 
-    // When the PortListenerService found some streaming data in the address.
+    // When the StreamListenerService found some streaming data in the address.
     Event.on('StreamingData', function() {
         var CurrentPath = pathBuilder({ KaronId: 239 });
         // check if the path is exist (path e.g. 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
@@ -126,14 +127,15 @@ function handleVideoSavingProcess(StreamingSource) {
             .then(function(res) {
                 command = res;
                 CurrentPath += '/' + now + '.mp4';
-                setTimeout(function() {
-                    // start to watch the file that the ffmpeg will create
-                    FileWatcherTimer = FileWatcher.StartWatchFile({ Path: CurrentPath });
 
-                }, 5000)
             }, function(rej) {
                 // TODO...
             });
+    });
+
+    Event.on('CapturingBegan', function(filePath) {
+     // start to watch the file that the ffmpeg will create
+     FileWatcherTimer = FileWatcher.StartWatchFile({ Path: filePath });
     });
 
     // when FFmpeg done his progress
