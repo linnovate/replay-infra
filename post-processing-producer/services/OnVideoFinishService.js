@@ -34,7 +34,6 @@ function getPostProcessingQueueName() {
         throw "Error finding the finished videos queue name.";
 }
 
-
 // produce all jobs here
 function produceJobs(queueName, params) {
     produceMetadataParserJob(queueName, params);
