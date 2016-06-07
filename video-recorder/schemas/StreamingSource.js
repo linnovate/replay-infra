@@ -3,14 +3,14 @@ var Schema = mongoose.Schema;
 
 // create a schema
 var StreamingSourceSchema = new Schema({
-    SourceId: {
+    SourceID: {
         type: Number,
         required: true,
         unique: true
     },
     SourceName: {
         type: String,
-        required: false
+        required: true
     },
     SourceType: {
         type: String,
@@ -35,10 +35,10 @@ var StreamingSourceSchema = new Schema({
         }
     },
     StreamingStatus: {
-        Status: {
+        status: {
             type: String,
             required: true,
-            default:'STOP'
+            default:'NONE'
         },
         updated_at: {
             type: Date,
