@@ -9,6 +9,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"express": "^4.13.4",
 		"bluebird": "^3.4.0",
 		"busmq": "^1.5.4",
 		"elasticsearch": "^11.0.1",
