@@ -32,22 +32,6 @@ module.exports = function() {
         });
 };
 
-// fetches StreamingSource object from DB
-/*function getStreamingSource(index) {
-    mongoose.connect('mongodb://' + process.env.MONGO_HOST + ':' + process.env.MONGO_PORT + '/' + process.env.MONGO_DATABASE);
-    
-    return StreamingSource.find()
-        .then(function(StreamingSource) {
-            // make sure StreamingSource exist and also our object at the specified index
-            if (!StreamingSource)
-                return Promise.reject("StreamingSource does not exist in DB");
-            else if (!StreamingSource[index])
-                return Promise.reject("StreamingSource has no object at index " + index);
-
-            return Promise.resolve(StreamingSource[index]);
-        });
-};*/
-
 /********************************************************************************************************************************************/
 /*                                                                                                                                          */
 /*    Here all the process begin to run.                                                                                                    */
@@ -213,31 +197,31 @@ function setStatusTimer(timer, method){
 
 // get the current date and return format of dd-mm-yyyy
 function getCurrentDate() {
-    var today = new Date(),
-        dd = checkTime(today.getDate()),
-        mm = checkTime(today.getMonth() + 1), //January is 0!
-        yyyy = today.getFullYear();
+	var today = new Date(),
+		dd = checkTime(today.getDate()),
+		mm = checkTime(today.getMonth() + 1), //January is 0!
+		yyyy = today.getFullYear();
 
-    return dd + '-' + mm + '-' + yyyy;
+	return dd + '-' + mm + '-' + yyyy;
 };
 
 // get the current time and return format of hh-MM-ss
 function getCurrentTime() {
-    var today = new Date(),
-        h = checkTime(today.getHours()),
-        m = checkTime(today.getMinutes()),
-        s = checkTime(today.getSeconds());
+	var today = new Date(),
+		h = checkTime(today.getHours()),
+		m = checkTime(today.getMinutes()),
+		s = checkTime(today.getSeconds());
 
-    return h + '-' + m + '-' + s;
+	return h + '-' + m + '-' + s;
 };
 
 // helper method for the getCurrentDate function and for the getCurrentTime function
 function checkTime(i) {
-    // Check if the num is under 10 to add it 0, e.g : 5 - 05.
-    if (i < 10) {
-        i = "0" + i;
-    }
-    return i;
+	// Check if the num is under 10 to add it 0, e.g : 5 - 05.
+	if (i < 10) {
+		i = "0" + i;
+	}
+	return i;
 };
 
 // starting Listen to the stream
@@ -262,19 +246,17 @@ function startStreamListener(StreamingSource, callback) {
 process.stdin.resume(); // so the program will not close instantly
 
 function exitHandler(options, err) {
-    if (options.cleanup)
-        Event.emit('KillFFmpeg');
-    if (err)
-        console.log(err.stack);
-    if (options.exit)
-        process.exit();
+	if (options.cleanup)
+		Event.emit('KillFFmpeg');
+	if (err)
+		console.log(err.stack);
+	if (options.exit)
+		process.exit();
 };
 
 // do something when app is closing
 process.on('exit', exitHandler.bind(null, { cleanup: true }));
-
 // catches ctrl+c event
 process.on('SIGINT', exitHandler.bind(null, { exit: true }));
-
 // catches uncaught exceptions
 process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
