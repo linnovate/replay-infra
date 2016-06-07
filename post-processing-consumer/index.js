@@ -4,12 +4,12 @@ var BusService = require('BusService'),
 	JobsService = require('JobsService'),
 	_ = require('lodash');
 
-
 // notify we're up, and check input
 console.log('Post processing consumer is up!');
 if (!isInputValid()) {
 	return "Bad input was received.";
 }
+
 // connect to our databases once so the service won't have to re-create connection each time
 connectDatabases();
 
@@ -22,16 +22,14 @@ handleMessage({
 		videoId: 'someVideoId',
 		relativePath: 'someVideoId.data',
 		method: {
-			standard: 'TekenHozi',
+			standard: 'VisionStandard',
 			version: 1.0
 		}
 	}
 });
 
-
-// enforces basic validations on the environment input passed to process,
-// such as mandatory parameters.
-// later on, specific functions should enforce specific validations on their inputs
+// Enforces basic validations on the environment input passed to process, such as mandatory parameters.
+// Later on, specific functions should enforce specific validations on their inputs
 function isInputValid() {
 	console.log('Job type is: ', process.env.JOB_TYPE);
 	console.log('Redis host: ', process.env.REDIS_HOST);
@@ -50,30 +48,6 @@ function isInputValid() {
 		return false;
 
 	return true;
-}
-
-function handleMessage(message) {
-	// detect service job type
-	var jobType = process.env.JOB_TYPE;
-	// JOB_TYPE can be empty (handle all jobs), or a specific known JOB TYPE.
-	// message.type must be a known specific job.
-	if ((jobType && !JobsService.isKnownJobType(jobType)) ||
-		!JobsService.isKnownJobType(message.type)) {
-		console.log('Bad job type was inserted');
-		return;
-	}
-
-	// in case we are handling all job types, or,
-	// the job type is of our type
-	if (!jobType || message.type === jobType) {
-		var serviceName = JobsService.getServiceName(message.type);
-		service = require('./services/ProcessingServices/' + serviceName);
-		if (service)
-			service.start(message.params);
-		else
-			console.log('Bad service name');
-		return;
-	}
 }
 
 function connectDatabases() {
@@ -117,4 +91,28 @@ function connectElasticSearch() {
 		host: uri,
 		log: ['error', 'warning']
 	});
+}
+
+function handleMessage(message) {
+	// detect service job type
+	var jobType = process.env.JOB_TYPE;
+	// JOB_TYPE can be empty (handle all jobs), or a specific known JOB TYPE.
+	// message.type must be a known specific job.
+	if ((jobType && !JobsService.isKnownJobType(jobType)) ||
+		!JobsService.isKnownJobType(message.type)) {
+		console.log('Bad job type was inserted');
+		return;
+	}
+
+	// in case we are handling all job types, or,
+	// the job type is of our type
+	if (!jobType || message.type === jobType) {
+		var serviceName = JobsService.getServiceName(message.type);
+		service = require('./services/ProcessingServices/' + serviceName);
+		if (service)
+			service.start(message.params);
+		else
+			console.log('Bad service name');
+		return;
+	}
 }

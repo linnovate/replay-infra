@@ -39,22 +39,27 @@ function readDataAsString(path) {
 
 function dataToObjects(method, data) {
 	return new Promise(function(resolve, reject) {
-
 		var standardHandler;
-		if (method.standard == 'TekenHozi' && method.version == 0.9)
-			standardHandler = require('./Standards/TekenHozi/0.9');
-		else if (method.standard == 'TekenHozi' && method.version == 1.0)
-			standardHandler = require('./Standards/TekenHozi/1.0');
-		else
+		if (method.standard == 'VisionStandard') {
+			switch (method.version) {
+				case 0.9:
+					standardHandler = require('./Standards/VisionStandard/0.9');
+					break;
+				case 1.0:
+					standardHandler = require('./Standards/VisionStandard/1.0');
+					break;
+				default:
+					reject('Unsupported standard and version');
+			}
+		} else
 			reject('Unsupported standard and version');
 
 		resolve(standardHandler.parse(data));
 	});
 }
 
-// async save to databases
-// I do not want to stop everything if one save has failed,
-// so I resolve anyway, and log errors to console.
+// Async save to databases
+// (I do not want to stop everything if one save has failed, so I resolve anyway, and log errors to console)
 function saveToDatabases(xmls, params) {
 	return new Promise(function(resolve, reject) {
 		console.log('Saving to databases.');
@@ -66,10 +71,6 @@ function saveToDatabases(xmls, params) {
 	});
 }
 
-function handleErrors(err) {
-	if (err) console.log(err);
-}
-
 function saveToMongo(xmls, params) {
 	// convert xmls to list of VideoMetadata
 	var videoMetadatas = xmlObjectsToVideoMetadata(xmls, params);
@@ -79,17 +80,6 @@ function saveToMongo(xmls, params) {
 			console.log(err);
 		else
 			console.log('Bulk insertion to mongo succeed.');
-	});
-}
-
-function xmlObjectsToVideoMetadata(xmls, params) {
-	return _.map(xmls, function(xml) {
-		return new VideoMetadata({
-			sourceId: xml.VideoSource.PlatformID,
-			videoId: params.videoId,
-			receivingMethod: params.method,
-			data: xml
-		})
 	});
 }
 
@@ -129,4 +119,20 @@ function xmlObjectsToElasticBulkRequest(xmls, params) {
 	});
 
 	return bulkRequest;
+}
+
+function handleErrors(err) {
+	if (err)
+		console.log(err);
+}
+
+function xmlObjectsToVideoMetadata(xmls, params) {
+	return _.map(xmls, function(xml) {
+		return new VideoMetadata({
+			sourceId: xml.VideoSource.PlatformID,
+			videoId: params.videoId,
+			receivingMethod: params.method,
+			data: xml
+		})
+	});
 }
