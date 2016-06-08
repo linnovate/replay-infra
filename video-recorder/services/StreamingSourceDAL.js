@@ -6,12 +6,17 @@ var mongoose = require('mongoose'),
 // Optional streaming sources statuses
 const CAPTURING = 'CAPTURING',
 	NONE = 'NONE',
-	LISTENING = 'LISTENING';
+	LISTENING = 'LISTENING',
+	SERVICE_NAME = '#StreamingSourceDAL#';
 
 module.exports = StreamingSourceDAL;
 
 function StreamingSourceDAL(host, port, db) {
-	
+
+	if(!host || !port || !db){
+		return promise.reject('#StreamingSourceDAL# bad connection params provided');
+	}
+
 	mongoose.connect('mongodb://' + host + ':' + port + '/' + db);
 
 	// Retrives a stream source from the database by ID
@@ -22,39 +27,39 @@ function StreamingSourceDAL(host, port, db) {
 				return promise.reject("StreamingSource has no object at sourceId " + sourceId);
 			}
 
+			if (!StreamingSource) {
+				console.log(SERVICE_NAME, 'no Streaming Source found');
+				return promise.reject('no stream source found');
+			}
+
 			return promise.resolve(StreamingSource);
 		});
 	};
 
 	// Update capturing status and current update time
 	var NotifySourceCapturing = function(sourceId) {
-		StreamingSource.update({ SourceID: sourceId }, { StreamingStatus: { status: CAPTURING, updated_at: moment.now() } }, null, function(err, numEffected) {
-			if (err) {
-				return promise.reject("Cannot update streaming source status: " + err);
-			}
-			promise.resolve(numEffected);
-		})
+		return updateSourceStatus({ sourceId: sourceId, status: CAPTURING });
 	};
 
 	// Update no action taken status and current update time 
 	var NotifySourceNone = function(sourceId) {
-		StreamingSource.update({ SourceID: sourceId }, { StreamingStatus: { status: NONE, updated_at: moment.now() } }, null, function(err, numEffected) {
-			if (err) {
-				return promise.reject("Cannot update streaming source status: " + err);
-			}
-			promise.resolve(numEffected);
-		})
+		return updateSourceStatus({ sourceId: sourceId, status: NONE });
 	};
 
 	// Update listening status and current update time
 	var NotifySourceListening = function(sourceId) {
-		StreamingSource.update({ SourceID: sourceId }, { StreamingStatus: { status: LISTENING, updated_at: moment.now() } }, null, function(err, numEffected) {
+		return updateSourceStatus({ sourceId: sourceId, status: LISTENING });
+	};
+
+	// Help method to update data source
+	var updateSourceStatus = function(sourceStatus) {
+		StreamingSource.update({ SourceID: sourceStatus.sourceId }, { StreamingStatus: { status: sourceStatus.status, updated_at: moment.now() } }, null, function(err, numEffected) {
 			if (err) {
 				return promise.reject("Cannot update streaming source status: " + err);
 			}
-			promise.resolve(numEffected);
+			return promise.resolve(numEffected);
 		})
-	};
+	}
 
 	return {
 		GetStreamingSource: GetStreamingSource,

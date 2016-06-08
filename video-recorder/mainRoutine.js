@@ -1,35 +1,36 @@
 // requires
 var mongoose = require('mongoose'),
-    fs = require('fs'),
-    promise = require('bluebird')
-    mkdirp = require('mkdirp'),
-    StreamingSource = require('./schemas/StreamingSource'),
-    FFmpegService = require('./services/FFmpegWrapper'),
-    Event = require('./services/EventEmitterSingleton'),
-    FileWatcher = require('./services/FileWatcher')(),
-    StreamListener = require('./services/StreamListener')(),
-    StreamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST,process.env.MONGO_PORT,process.env.MONGO_DATABASE),
-    moment = require('moment');
+	fs = require('fs'),
+	promise = require('bluebird'),
+	mkdirp = require('mkdirp'),
+	StreamingSource = require('./schemas/StreamingSource'),
+	FFmpegWrapper = require('./services/FFmpegWrapper'),
+	Event = require('./services/EventEmitterSingleton'),
+	FileWatcher = require('./services/FileWatcher')(),
+	StreamListener = require('./services/StreamListener')(),
+	ViewStandardHandler = require('./services/ViewStandardHandler')(),
+	StreamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE),
+	moment = require('moment');
 
 const DURATION = 10,
-    TIMER_INTERVAL = 5000;
+	TIMER_INTERVAL = 5000;
 
 module.exports = function() {
-    console.log("Video recorder service is up.");
-    console.log('#MainRoutine# Mongo host:', process.env.MONGO_HOST);
-    console.log('#MainRoutine# Mongo port:', process.env.MONGO_PORT);
-    console.log('#MainRoutine# Mongo database:', process.env.MONGO_DATABASE);
-    console.log('#MainRoutine# Files storage path: ', process.env.STORAGE_PATH);
+	console.log("Video recorder service is up.");
+	console.log('#MainRoutine# Mongo host:', process.env.MONGO_HOST);
+	console.log('#MainRoutine# Mongo port:', process.env.MONGO_PORT);
+	console.log('#MainRoutine# Mongo database:', process.env.MONGO_DATABASE);
+	console.log('#MainRoutine# Files storage path: ', process.env.STORAGE_PATH);
 
-    // index used to find my StreamingSource object in the DB collection
-    var StreamingSourceIndex = process.env.INDEX;
+	// index used to find my StreamingSource object in the DB collection
+	var StreamingSourceIndex = process.env.INDEX;
 
-    StreamingSourceDAL.GetStreamingSource(StreamingSourceIndex)
-        .then(handleVideoSavingProcess)
-        .catch(function(err) {
-            if (err) 
-                console.log(err);
-        });
+	StreamingSourceDAL.GetStreamingSource(StreamingSourceIndex)
+		.then(handleVideoSavingProcess)
+		.catch(function(err) {
+			if (err)
+				console.log(err);
+		});
 };
 
 /********************************************************************************************************************************************/
@@ -41,136 +42,137 @@ module.exports = function() {
 /********************************************************************************************************************************************/
 function handleVideoSavingProcess(StreamingSource) {
 
-    var FileWatcherTimer,
-        StreamStatusTimer,
-        command;
+	var FileWatcherTimer,
+		StreamStatusTimer,
+		command;
 
-    console.log('#MainRoutine# Start listen to port: ' + StreamingSource.SourcePort); // still not finished.
+	console.log('#MainRoutine# Start listen to port: ' + StreamingSource.SourcePort); // still not finished.
 
-    // Starting Listen to the address.
-    startStreamListener(StreamingSource,function(){
-        StreamStatusTimer = setStatusTimer(StreamStatusTimer,StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
-    }); 
+	// Starting Listen to the address.
+	startStreamListener(StreamingSource, function() {
+		StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
+	});
 
-    /******************************************/
-    /*                                        */
-    /*         Events Section:                */
-    /*                                        */
-    /******************************************/
+	/******************************************/
+	/*                                        */
+	/*         Events Section:                */
+	/*                                        */
+	/******************************************/
 
-    // When Error eccured in one of the services.
-    Event.on('error', function(err) {        
-        // TODO: Handle the error.
-        console.log("Error: " + err);
-        if (command) {
-            promise.resolve()
-            .then(function(){
-                command.kill('SIGKILL');
-            })
-            .then(function(){
-                FileWatcher.StopWatchFile(FileWatcherTimer);               
-                startStreamListener(StreamingSource,function(){
-                    StreamStatusTimer = setStatusTimer(StreamStatusTimer,StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
-                });              
-            });
-        }
-    });
+	// When Error eccured in one of the services.
+	Event.on('error', function(err) {
+		console.log("Error: " + err);
+		if (command) {
+			promise.resolve()
+				.then(function() {
+					command.kill('SIGKILL');
+				})
+				.then(function() {
+					FileWatcher.StopWatchFile(FileWatcherTimer);
+					startStreamListener(StreamingSource, function() {
+						StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
+					});
+				});
+		}
+	});
 
-    // When the StreamListenerService found some streaming data in the address.
-    Event.on('StreamingData', function() {
-        var CurrentPath = pathBuilder({ SourceName: StreamingSource.SourceName });
-        // check if the path is exist (path e.g. 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
-        try {
-            console.log('#MainRoutine# Check if the path: ', CurrentPath, ' exist...');
-            fs.accessSync(CurrentPath, fs.F_OK);
-            console.log('#MainRoutine# The path is exist');
-        } catch (err) {
-            // when path not exist
-            console.log('#MainRoutine# The path not exist...');
-            // create a new path
-            mkdirp.sync(CurrentPath);
-            console.log('#MainRoutine# new path create at: ', CurrentPath);
-        }
+	// When the StreamListenerService found some streaming data in the address.
+	Event.on('StreamingData', function() {
+		var CurrentPath = pathBuilder({ SourceName: StreamingSource.SourceName });
+		// check if the path is exist (path e.g. 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
+		try {
+			console.log('#MainRoutine# Check if the path: ', CurrentPath, ' exist...');
+			fs.accessSync(CurrentPath, fs.F_OK);
+			console.log('#MainRoutine# The path is exist');
+		} catch (err) {
+			// when path not exist
+			console.log('#MainRoutine# The path not exist...');
+			// create a new path
+			mkdirp.sync(CurrentPath);
+			console.log('#MainRoutine# new path create at: ', CurrentPath);
+		}
 
-        var now = getCurrentTime();
+		var now = getCurrentTime();
 
-        // TMP:
-        var hardcodedParameters = {
-            inputs: ['udp://'+StreamingSource.SourceIP+':'+StreamingSource.SourcePort],
-            duration: DURATION,
-            dir: CurrentPath,
-            file: now
-        }
+		var ffmpegParams = {
+			inputs: ['udp://' + StreamingSource.SourceIP + ':' + StreamingSource.SourcePort],
+			duration: DURATION,
+			dir: CurrentPath,
+			file: now
+		}
 
-        // var ffmepgParams = {
-        //     inputs: ['udp://' + StreamingSource.SourceIP + ':' + StreamingSource.SourcePort],
-        //     duration: CONST_BLA,
-        //     dir: CurrentPath,
-        //     file: now
-        // }
+		// starting the ffmpeg process
+		console.log('#MainRoutine# Record new video at: ', CurrentPath);
+		//console.log(JSON.stringify(ViewStandardHandler),ViewStandardHandler);
 
-        // starting the ffmpeg process
-        console.log('#MainRoutine# Record new video at: ', CurrentPath);
+		/************************************************************/
+		/*    Adding Data Manualy (It will be deleted!!!)           */
+		/************************************************************/
+		addMetadataManualy(CurrentPath, now);
+		/************************************************************/
 
-        FFmpegService.captureMuxedVideoTelemetry(hardcodedParameters)
-            .then(function(res) {
-                command = res;
-                // CurrentPath += '/' + now + '.mp4';
+		ViewStandardHandler.realizeStandardCaptureMethod(StreamingSource.SourceType, StreamingSource.StreamingMethod.version)
+			.then(function(captureCommand) {
+				return captureCommand(ffmpegParams)
+			})
+			.then(function(res) {
+				command = res;				
+			}, function(rej) {
+				
+			});
+		StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceCapturing(StreamingSource.SourceID));
+	});
 
-            }, function(rej) {
-                // TODO...
-            });
-        StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceCapturing(StreamingSource.SourceID));                
-    });
+	// Start file watcher on data start flowing
+	Event.on('CapturingBegan', function(filePath) {
+		// start to watch the file that the ffmpeg will create
+		FileWatcherTimer = FileWatcher.StartWatchFile({ Path: filePath });
+	});
 
-    // Start file watcher on data start flowing
-    Event.on('CapturingBegan', function(filePath) {
-     // start to watch the file that the ffmpeg will create
-     FileWatcherTimer = FileWatcher.StartWatchFile({ Path: filePath });
-    });
+	// when FFmpeg done his progress
+	Event.on('FFmpegDone', function() {
+		promise.resolve()
+			.then(function() {
+				// Stop the file watcher.
+				console.log('#MainRoutine# ffmpeg done his progress.');
+				FileWatcher.StopWatchFile(FileWatcherTimer);
+			})
+			.then(function() {
+				// Start the whole process again by listening to the address again.
+				console.log('#MainRoutine# Start to listen the address again');
+				startStreamListener(StreamingSource, function() {
+					StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
+				});
+			});
+	});
 
-    // when FFmpeg done his progress
-    Event.on('FFmpegDone', function() {
-        promise.resolve()
-        .then(function(){
-            // Stop the file watcher.
-            console.log('#MainRoutine# ffmpeg done his progress.');
-            FileWatcher.StopWatchFile(FileWatcherTimer);
-        })
-        .then(function(){
-            // Start the whole process again by listening to the address again.
-            console.log('#MainRoutine# Start to listen the address again');
-            startStreamListener(StreamingSource,function(){
-                StreamStatusTimer = setStatusTimer(StreamStatusTimer,StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
-            });  
-        });
-    });
+	// When the source stop stream data.
+	Event.on('FileWatchStop', function() {
+		// kill The FFmpeg Process.
+		console.log('#MainRoutine# The Source stop stream data, Killing the ffmpeg process');
+		promise.resolve()
+			.then(function() {
+				if (command) {
+					command.kill('SIGKILL');
+				}
+			})
+			.then(function() {
+				// Start the whole process again by listening to the address again.
+				console.log('#MainRoutine# Start to listen the address again');
+				startStreamListener(StreamingSource, function() {
+					StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
+				});
+			});
+	});
 
-    // When the source stop stream data.
-    Event.on('FileWatchStop', function() {
-        // kill The FFmpeg Process.
-        console.log('#MainRoutine# The Source stop stream data, Killing the ffmpeg process');
-        promise.resolve()
-        .then(function(){
-           command.kill('SIGKILL');           
-        })
-        .then(function(){
-            // Start the whole process again by listening to the address again.
-            console.log('#MainRoutine# Start to listen the address again');            
-            startStreamListener(StreamingSource,function(){
-                StreamStatusTimer = setStatusTimer(StreamStatusTimer,StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
-            });             
-        });       
-    });
-
-    // kill the ffmpeg, will emit when something happen to the node process and we want to clean up things
-    Event.on('KillFFmpeg', function(cb) {
-        console.log('#MainRoutine# Killing ffmpeg...');
-        if (command) {
-            command.kill('SIGKILL');
-        }
-        StreamingSourceDAL.NotifySourceNone(StreamingSource.SourceID);
-    });
+	// kill the ffmpeg, will emit when something happen to the node process and we want to clean up things
+	Event.on('KillFFmpeg', function(cb) {
+		console.log('#MainRoutine# Killing ffmpeg...');
+		if (command) {
+			command.kill('SIGKILL');
+		}
+		StreamingSourceDAL.NotifySourceNone(StreamingSource.SourceID);
+	});
 };
 
 /********************************************************************************************/
@@ -181,18 +183,18 @@ function handleVideoSavingProcess(StreamingSource) {
 
 // build new path in the current date. e.g: STORAGE_PATH/27-05-1996
 function pathBuilder(VideoObject) {
-    return process.env.STORAGE_PATH + '/' + VideoObject.SourceName + '/' + getCurrentDate();
+	return process.env.STORAGE_PATH + '/' + VideoObject.SourceName + '/' + getCurrentDate();
 };
 
 // Sets a keep alive status notifier
-function setStatusTimer(timer, method){
-    clearInterval(timer);    
-    timer = setInterval(function() {
-        method;
-        console.log('#MainRoutine# updating status....'+ moment().format());
-    }, TIMER_INTERVAL);
+function setStatusTimer(timer, method) {
+	clearInterval(timer);
+	timer = setInterval(function() {
+		method;
+		console.log('#MainRoutine# updating status....' + moment().format());
+	}, TIMER_INTERVAL);
 
-    return timer;
+	return timer;
 }
 
 // get the current date and return format of dd-mm-yyyy
@@ -227,12 +229,19 @@ function checkTime(i) {
 // starting Listen to the stream
 function startStreamListener(StreamingSource, callback) {
 
-    var StreamListenerParams = {
-        Ip: StreamingSource.SourceIP,
-        Port: StreamingSource.SourcePort
-    }
-    StreamListener.StartListen(StreamListenerParams);
-    callback();
+	var StreamListenerParams = {
+		Ip: StreamingSource.SourceIP,
+		Port: StreamingSource.SourcePort
+	}
+	StreamListener.StartListen(StreamListenerParams);
+	callback();
+};
+/*
+/*              For Integration with parser component
+*/
+function addMetadataManualy(path, fileName) {
+	fs.createReadStream('./DemoData/DemoXML.xml')
+		.pipe(fs.createWriteStream(path + '/' + fileName + '.data'));
 };
 
 /********************************************************************************************/

@@ -66,7 +66,9 @@ module.exports = {
 			})
 			.then(function(command) {
 				return SetEvents(command, params);
-			})
+			});
+
+		return builder;
 	},
 
 	captureTelemetryWithoutVideo: function(params) {
@@ -87,7 +89,9 @@ module.exports = {
 			})
 			.then(function(command) {
 				return SetEvents(command, params);
-			})
+			});
+
+		return builder;
 	}
 };
 
@@ -102,7 +106,7 @@ function SetEvents(command, params) {
 			// Check if should notify for first bytes captured
 			if (command.bytesCaptureBegan == false) {
 				command.bytesCaptureBegan = true;
-				event.emit('CapturingBegan', params.dir + '/' + params.file + '.mp4');
+				event.emit('CapturingBegan', command._outputs[0].target);
 			}
 		})
 		.on('end', function() {
@@ -158,7 +162,7 @@ function VideoOutput480p(command, params) {
 
 // Extracting binary data from stream
 function ExtractData(command, params) {
-	command.output(params.dir + '/' + params.file + '.txt')
+	command.output(params.dir + '/' + params.file + '.data')
 		.duration(params.duration)
 		.outputOptions(['-map data-re', '-codec copy', '-f data', '-y']);
 	return command;
