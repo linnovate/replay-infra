@@ -2,17 +2,30 @@ var JobsService = require('JobsService');
 
 module.exports = {
 	start: function(req, res) {
-		handleMessage({
-			type: 'MetadataParser',
-			params: {
-				videoId: 'someVideoId',
-				relativePath: 'someVideoId.data',
-				method: {
-					standard: 'VisionStandard',
-					version: 1.0
-				}
-			}
-		});
+		var message = req.params.message;
+		if (!message || !message.type || message.type !== 'MetadataParser' ||
+			!message.params.videoId || !message.params.relativePath || !message.params.method ||
+			!message.params.method.standard || !message.params.method.version) {
+
+			res.status(400).send('Bad Request - Invalid message');
+		}
+		// if (typeof message === "undefined") {
+		// 	res.status(400).send('Bad Request - Invalid message.');
+		// }
+
+		handleMessage(message);
+
+		// handleMessage({
+		// 	type: 'MetadataParser',
+		// 	params: {
+		// 		videoId: 'someVideoId',
+		// 		relativePath: 'someVideoId.data',
+		// 		method: {
+		// 			standard: 'VisionStandard',
+		// 			version: 1.0
+		// 		}
+		// 	}
+		// });
 	}
 }
 
