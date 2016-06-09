@@ -78,7 +78,7 @@ function handleVideoSavingProcess(StreamingSource) {
 
 	// When the StreamListenerService found some streaming data in the address.
 	Event.on('StreamingData', function() {
-		var CurrentPath = pathBuilder({ SourceName: StreamingSource.SourceName });
+		var CurrentPath = pathBuilder({ SourceID: StreamingSource.SourceID });
 		// check if the path is exist (path e.g. 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
 		try {
 			console.log('#MainRoutine# Check if the path: ', CurrentPath, ' exist...');
@@ -182,8 +182,8 @@ function handleVideoSavingProcess(StreamingSource) {
 /********************************************************************************************/
 
 // build new path in the current date. e.g: STORAGE_PATH/27-05-1996
-function pathBuilder(VideoObject) {
-	return process.env.STORAGE_PATH + '/' + VideoObject.SourceName + '/' + getCurrentDate();
+function pathBuilder(pathParams) {
+	return process.env.STORAGE_PATH + '/' + pathParams.SourceID + '/' + getCurrentDate();
 };
 
 // Sets a keep alive status notifier
