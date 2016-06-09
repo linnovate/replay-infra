@@ -1,8 +1,0 @@
-{
-	"PostProcessingQueue":{
-		"name": "PostProcessing"
-	},
-	"FinishedVideosQueue": {
-		"name": "FinishedVideos"
-	}
-}

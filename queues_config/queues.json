@@ -1,0 +1,13 @@
+{
+	"PostProcessingQueue":{
+		"name": "PostProcessing",
+	},
+	"MetadataParserQueue": {
+		"name": "MetadataParser",
+		"serviceName": "MetadataParserService"
+	},
+	"FinishedVideosQueue": {
+		"name": "FinishedVideos",
+		"serviceName": "OnFinishedVideoService"
+	}
+}
