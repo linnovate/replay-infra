@@ -44,7 +44,8 @@ function handleVideoSavingProcess(StreamingSource) {
 
 	var FileWatcherTimer,
 		StreamStatusTimer,
-		command;
+		command,
+		metadataFile;
 
 	console.log('#MainRoutine# Start listen to port: ' + StreamingSource.SourcePort); // still not finished.
 
@@ -108,7 +109,8 @@ function handleVideoSavingProcess(StreamingSource) {
 		/************************************************************/
 		/*    Adding Data Manualy (It will be deleted!!!)           */
 		/************************************************************/
-		addMetadataManualy(CurrentPath, now);
+		metadataFile = CurrentPath + '/' + now + '.data';
+		addMetadataManualy(metadataFile);
 		/************************************************************/
 
 		ViewStandardHandler.realizeStandardCaptureMethod(StreamingSource.SourceType, StreamingSource.StreamingMethod.version)
@@ -116,9 +118,9 @@ function handleVideoSavingProcess(StreamingSource) {
 				return captureCommand(ffmpegParams)
 			})
 			.then(function(res) {
-				command = res;				
+				command = res;
 			}, function(rej) {
-				
+
 			});
 		StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceCapturing(StreamingSource.SourceID));
 	});
@@ -136,6 +138,12 @@ function handleVideoSavingProcess(StreamingSource) {
 				// Stop the file watcher.
 				console.log('#MainRoutine# ffmpeg done his progress.');
 				FileWatcher.StopWatchFile(FileWatcherTimer);
+			})
+			.then(function() {
+				var CurrentPath = pathBuilder({ SourceID: StreamingSource.SourceID });
+				var now = getCurrentTime();
+				var dataPath = CurrentPath + '/' + now + '.data';
+				sendMessage(dataPath);
 			})
 			.then(function() {
 				// Start the whole process again by listening to the address again.
@@ -239,10 +247,49 @@ function startStreamListener(StreamingSource, callback) {
 /*
 /*              For Integration with parser component
 */
-function addMetadataManualy(path, fileName) {
+function addMetadataManualy(metadataFile) {
 	fs.createReadStream('./DemoData/DemoXML.xml')
-		.pipe(fs.createWriteStream(path + '/' + fileName + '.data'));
+		.pipe(fs.createWriteStream(metadataFile));
 };
+
+function sendMessage(dataPath) {
+	var message = {
+		type: 'MetadataParser',
+		params: {
+			videoId: 'someVideoId',
+			relativePath: dataPath,
+			method: {
+				standard: 'VisionStandard',
+				version: 1.0
+			}
+		}
+	}
+
+	var http = require('http');
+	var params = "?type=MetadataParser&videoId=someVideoId&relativePath=" + dataPath + "&standard=VisionStandard&version=1.0"
+
+	var options = {
+		host: 'localhost',
+		path: '/start' + params,
+		port: '4000' //,
+			// method: 'get'
+	};
+
+	http.request(options, function(response) {
+		var str = '';
+
+		//another chunk of data has been recieved, so append it to `str`
+		response.on('data', function(chunk) {
+			str += chunk;
+		});
+
+		//the whole response has been recieved, so we just print it out here
+		response.on('end', function() {
+			console.log(str);
+		});
+	}).end();
+
+}
 
 /********************************************************************************************/
 /*                                                                                          */

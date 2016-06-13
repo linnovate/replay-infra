@@ -37,7 +37,7 @@ function StreamListener() {
 
         // check Port in params
         if (!params.Port) {
-            event.emit('error','#' + SERVICE_NAME + '#', 'Error on ' + METHOD_NAME + ' : There Is no Port To listen');
+            event.emit('error','#' + SERVICE_NAME + '#' + 'Error on ' + METHOD_NAME + ' : There Is no Port To listen');
             return;
         } else {
             _port = params.Port;
@@ -58,7 +58,7 @@ function StreamListener() {
                     console.log('#' + SERVICE_NAME + '#','Binding To : ', _ip, ':', _port, ' succeed');
                 });
             } catch (err) {
-                event.emit('error','#' + SERVICE_NAME + '#', 'Error on ' + METHOD_NAME + ' : ' + err);
+                event.emit('error','#' + SERVICE_NAME + '#' +  'Error on ' + METHOD_NAME + ' : ' + err);
                 return;
             }
         }
@@ -75,7 +75,7 @@ function StreamListener() {
 
         // when unexcepted error eccured.
         _server.on('error', (err) => {
-            event.emit('error','#' + SERVICE_NAME + '#', 'Unexcepted Error eccured while trying listen to the address ' + _ip + ':' + _port + ' : ' + err);
+            event.emit('error','#' + SERVICE_NAME + '#' + ' Unexcepted Error eccured while trying listen to the address ' + _ip + ':' + _port + ' : ' + err);
             _server.close();
 
         });

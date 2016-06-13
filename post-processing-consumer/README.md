@@ -18,7 +18,7 @@ Make sure to have MongoDB and Elasticsearch installed locally, else you may conf
 
 Run app (default parameters will be used):
 ```
-MONGO_DATABASE=replay_dev STORAGE_PATH=/tmp QUEUE_NAME=DEFAULT_TASKS_QUEUE node index.js
+MONGO_DATABASE=replay_dev STORAGE_PATH=/home/$USER/vod_storge_data QUEUE_NAME=DEFAULT_TASKS_QUEUE node index.js
 ```
 
 Job types are found under the /job-types folder.

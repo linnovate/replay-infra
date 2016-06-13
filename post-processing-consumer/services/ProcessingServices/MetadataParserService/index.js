@@ -20,8 +20,13 @@ module.exports.start = function(params) {
 		return;
 	}
 
+	/************************************************************/
+	/*    Currnetly relativePathToData = full path              */
+	/************************************************************/
 	// concat full path
-	var pathToData = process.env.STORAGE_PATH + '/' + relativePathToData;
+	// var pathToData = process.env.STORAGE_PATH + '/' + relativePathToData;
+	var pathToData = relativePathToData;
+	/************************************************************/
 
 	readDataAsString(pathToData)
 		.then(function(data) {
@@ -42,14 +47,14 @@ function dataToObjects(method, data) {
 		var standardHandler;
 		if (method.standard == 'VisionStandard') {
 			switch (method.version) {
-				case 0.9:
+				case '0.9':
 					standardHandler = require('./Standards/VisionStandard/0.9');
 					break;
-				case 1.0:
+				case '1.0':
 					standardHandler = require('./Standards/VisionStandard/1.0');
 					break;
 				default:
-					reject('Unsupported standard and version');
+					reject('Unsupported version');
 			}
 		} else
 			reject('Unsupported standard and version');
