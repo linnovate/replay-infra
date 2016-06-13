@@ -16,7 +16,7 @@ const DURATION = 10,
 	TIMER_INTERVAL = 5000;
 
 module.exports = function() {
-	console.log("Video recorder service is up.");
+	console.log('Video recorder service is up.');
 	console.log('#MainRoutine# Mongo host:', process.env.MONGO_HOST);
 	console.log('#MainRoutine# Mongo port:', process.env.MONGO_PORT);
 	console.log('#MainRoutine# Mongo database:', process.env.MONGO_DATABASE);
@@ -41,7 +41,6 @@ module.exports = function() {
 /*                                                                                                                                          */
 /********************************************************************************************************************************************/
 function handleVideoSavingProcess(StreamingSource) {
-
 	var FileWatcherTimer,
 		StreamStatusTimer,
 		command,
@@ -62,7 +61,7 @@ function handleVideoSavingProcess(StreamingSource) {
 
 	// When Error eccured in one of the services.
 	Event.on('error', function(err) {
-		console.log("Error: " + err);
+		console.log('Error: ' + err);
 		if (command) {
 			promise.resolve()
 				.then(function() {
@@ -100,11 +99,11 @@ function handleVideoSavingProcess(StreamingSource) {
 			duration: DURATION,
 			dir: CurrentPath,
 			file: now
-		}
+		};
 
 		// starting the ffmpeg process
 		console.log('#MainRoutine# Record new video at: ', CurrentPath);
-		//console.log(JSON.stringify(ViewStandardHandler),ViewStandardHandler);
+		// console.log(JSON.stringify(ViewStandardHandler),ViewStandardHandler);
 
 		/************************************************************/
 		/*    Adding Data Manualy (It will be deleted!!!)           */
@@ -115,7 +114,7 @@ function handleVideoSavingProcess(StreamingSource) {
 
 		ViewStandardHandler.realizeStandardCaptureMethod(StreamingSource.SourceType, StreamingSource.StreamingMethod.version)
 			.then(function(captureCommand) {
-				return captureCommand(ffmpegParams)
+				return captureCommand(ffmpegParams);
 			})
 			.then(function(res) {
 				command = res;
@@ -192,7 +191,7 @@ function handleVideoSavingProcess(StreamingSource) {
 // build new path in the current date. e.g: STORAGE_PATH/27-05-1996
 function pathBuilder(pathParams) {
 	return process.env.STORAGE_PATH + '/' + pathParams.SourceID + '/' + getCurrentDate();
-};
+}
 
 // Sets a keep alive status notifier
 function setStatusTimer(timer, method) {
@@ -213,7 +212,7 @@ function getCurrentDate() {
 		yyyy = today.getFullYear();
 
 	return dd + '-' + mm + '-' + yyyy;
-};
+}
 
 // get the current time and return format of hh-MM-ss
 function getCurrentTime() {
@@ -223,16 +222,16 @@ function getCurrentTime() {
 		s = checkTime(today.getSeconds());
 
 	return h + '-' + m + '-' + s;
-};
+}
 
 // helper method for the getCurrentDate function and for the getCurrentTime function
 function checkTime(i) {
 	// Check if the num is under 10 to add it 0, e.g : 5 - 05.
 	if (i < 10) {
-		i = "0" + i;
+		i = '0' + i;
 	}
 	return i;
-};
+}
 
 // starting Listen to the stream
 function startStreamListener(StreamingSource, callback) {
@@ -240,17 +239,18 @@ function startStreamListener(StreamingSource, callback) {
 	var StreamListenerParams = {
 		Ip: StreamingSource.SourceIP,
 		Port: StreamingSource.SourcePort
-	}
+	};
 	StreamListener.StartListen(StreamListenerParams);
 	callback();
-};
+}
+
 /*
-/*              For Integration with parser component
+/* For Integration with parser component
 */
 function addMetadataManualy(metadataFile) {
 	fs.createReadStream('./DemoData/DemoXML.xml')
 		.pipe(fs.createWriteStream(metadataFile));
-};
+}
 
 function sendMessage(dataPath) {
 	var message = {
@@ -263,33 +263,32 @@ function sendMessage(dataPath) {
 				version: 1.0
 			}
 		}
-	}
+	};
 
 	var http = require('http');
-	var params = "?type=MetadataParser&videoId=someVideoId&relativePath=" + dataPath + "&standard=VisionStandard&version=1.0"
+	var params = '?type=MetadataParser&videoId=someVideoId&relativePath=' + dataPath + '&standard=VisionStandard&version=1.0';
 
 	var options = {
 		host: 'localhost',
 		path: '/start' + params,
-		port: '4000' //,
-			// method: 'get'
+		port: '4000'
 	};
 
 	http.request(options, function(response) {
 		var str = '';
 
-		//another chunk of data has been recieved, so append it to `str`
+		// another chunk of data has been recieved, so append it to `str`
 		response.on('data', function(chunk) {
 			str += chunk;
 		});
 
-		//the whole response has been recieved, so we just print it out here
+		// the whole response has been recieved, so we just print it out here
 		response.on('end', function() {
 			console.log(str);
 		});
 	}).end();
-
 }
+
 
 /********************************************************************************************/
 /*                                                                                          */
@@ -308,7 +307,7 @@ function exitHandler(options, err) {
 		console.log(err.stack);
 	if (options.exit)
 		process.exit();
-};
+}
 
 // do something when app is closing
 process.on('exit', exitHandler.bind(null, { cleanup: true }));
