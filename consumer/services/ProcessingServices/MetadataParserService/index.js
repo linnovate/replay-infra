@@ -5,21 +5,15 @@ var Promise = require('bluebird'),
 
 module.exports.start = function(params){
 	console.log('MetadataParserService started.');
-	return;
+
+	if(!validateInput(params)){
+		console.log('Some vital parameters are missing.')
+        return;
+	}
 
 	// extract params and handle metadata
 	var relativePathToData = params.relativePath;
 	var method = params.method;
-
-	console.log('Relative path is: ', relativePathToData);
-	console.log('Method is: ', method);
-
-	// validate params
-	if(!relativePathToData || !process.env.STORAGE_PATH ||
-		!method || !method.standard || !method.version){
-		console.log('Some vital parameters are missing.');
-		return;
-	}
 
 	// concat full path
 	var pathToData = process.env.STORAGE_PATH + '/' + relativePathToData;
@@ -32,6 +26,20 @@ module.exports.start = function(params){
 		return saveToDatabases(xmls, params);
 	})
 	.catch(handleErrors);
+}
+
+function validateInput(params){
+	var relativePathToData = params.relativePath;
+	var method = params.method;
+	
+	// validate params
+	if(!relativePathToData || !process.env.STORAGE_PATH ||
+		!method || !method.standard || !method.version){
+		console.log('Some vital parameters are missing.');
+		return false;
+	}
+
+	return true;
 }
 
 function readDataAsString(path){
@@ -86,11 +94,11 @@ function saveToMongo(xmls, params){
 function xmlObjectsToVideoMetadata(xmls, params){
 	return _.map(xmls, function(xml){
 		return new VideoMetadata({
-			sourceId: xml.VideoSource.PlatformID,
+			sourceId: params.sourceId,
 			videoId: params.videoId,
 			receivingMethod: params.method,
 			data: xml
-		})
+		});
 	});
 }
 

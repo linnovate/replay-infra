@@ -1,9 +1,12 @@
 var BusService = require('BusService'),
     mongoose = require('mongoose'),
     elasticsearch = require('elasticsearch'),
+    bluebird = require('bluebird'),
     JobsService = require('JobsService'),
     _ = require('lodash');
 
+// set mongoose promise library
+mongoose.Promise = bluebird.Promise,
 
 // notify we're up, and check input
 console.log('Post processing consumer is up!');
@@ -15,7 +18,7 @@ if (!isInputValid()) {
     return "Bad input was received.";
 }
 // connect to our databases once so the service won't have to re-create connection each time
-// connectDatabases();
+connectDatabases();
 
 // get the matching queue name of the job type
 queueName = JobsService.getQueueName(jobType);
@@ -99,6 +102,8 @@ function connectMongo() {
     // connect to mongo
     mongoose.connect(uri, options);
     global.mongoose = mongoose;
+
+    console.log('Connected to mongo');
 }
 
 function connectElasticSearch() {
@@ -112,4 +117,6 @@ function connectElasticSearch() {
         host: uri,
         log: ['error', 'warning']
     });
+
+    console.log('Connected to elastic');
 }

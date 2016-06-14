@@ -4,11 +4,13 @@ BusService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 var message = {
     params: {
     	sourceId: 123,
+        provider: 'kaltura',
+        providerId: 'someKalturaId',
     	videoName: 'coolVideo.ts',
         videoRelativePath: 'relative/path/to/video',
-        dataRelativePath: 'relative/path/to/data',
+        dataRelativePath: 'sample.data',
         receivingMethod: {
-            standard: 'VisionStandard',
+            standard: 'VideoStandard',
             version: 1.0
         }
     }

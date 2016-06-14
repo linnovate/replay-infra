@@ -1,6 +1,7 @@
 var BusService = require('BusService'),
     JobsService = require('JobsService'),
     Video = require('schemas/Video'),
+    mongoose = require('mongoose'),
     Promise = require('bluebird');
 
 module.exports.start = function(params) {
@@ -11,7 +12,7 @@ module.exports.start = function(params) {
         return;
     }
 
-    BusService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
+    busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 
     // case there's a video (sometimes there'd be only metadata)
     if (params.videoName) {
@@ -29,6 +30,8 @@ module.exports.start = function(params) {
 }
 
 function validateInput(params) {
+    var provider = params.provider;
+    var providerId = params.providerId;
     var relativePathToVideo = params.videoRelativePath;
     var videoName = params.videoName;
     var sourceId = params.sourceId;
@@ -36,7 +39,8 @@ function validateInput(params) {
     var method = params.receivingMethod;
 
     // validate vital params
-    if (!sourceId || !method || !method.standard || !method.version) {
+    if (!provider || !providerId || !sourceId || !method || !method.standard
+        || !method.version) {
         return false;
     }
 
@@ -50,14 +54,15 @@ function validateInput(params) {
 
 function SaveVideoToMongo(params) {
     console.log('Saving video object to mongo...');
-    // return Video.save({
-    //     sourceId: params.sourceId,
-    //     relativePath: params.relativePathToVideo,
-    //     name: params.videoName
-    //     receivingMethod: params.receivingMethod
-    // });
-    // resolve with videoId
-    return Promise.resolve('someVideoId');
+
+    return Video.create({
+        provider: params.provider,
+        providerId: params.providerId,
+        sourceId: params.sourceId,
+        relativePath: params.videoRelativePath,
+        name: params.videoName,
+        receivingMethod: params.receivingMethod
+    });
 }
 
 // produce all jobs here
@@ -71,13 +76,16 @@ function produceMetadataParserJob(params) {
     console.log('Producing MetadataParser job...');
 
     var message = {
-        videoId: params.videoId, // could be undefined
-        relativePath: params.dataRelativePath,
-        method: params.method
+        params: {
+            sourceId: params.sourceId,
+            videoId: params.videoId, // could be undefined
+            relativePath: params.dataRelativePath,
+            method: params.receivingMethod
+        }
     };
     var queueName = JobsService.getQueueName('MetadataParser');
     if (queueName)
-        BusService.produce(queueName, message);
+        busService.produce(queueName, message);
     else
         throw 'Could not find queue name of the inserted job type';
 }

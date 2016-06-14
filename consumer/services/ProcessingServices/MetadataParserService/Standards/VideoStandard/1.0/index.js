@@ -7,6 +7,8 @@ module.exports.parse = function(data) {
     var delimiter = '</VIMSMessage>';
 
     var xmls = data.split(delimiter);
+    // pop last item since it's the delimiter itself
+    xmls.pop();
 
     xmls.forEach(function(xmlString) {
         if (xmlString) {
