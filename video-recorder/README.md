@@ -32,7 +32,7 @@ ___
 
 ## Example how to simualte streaming:
 
-install [tsPlay](http://manpages.ubuntu.com/manpages/xenial/man1/tsplay.1.html).
+install [tsTools](https://github.com/kynesim/tstools).
 
 Then run:
 
