@@ -1,12 +1,11 @@
-var promise = require('bluebird'),
-    FFmpegWrapper = require('./FFmpegWrapper'),
+var promise = require('bluebird');
+var FFmpegWrapper = require('./FFmpegWrapper'),
     Standards = require('../enums/ViewStandards'),
     TransportTypes = require('../enums/TransportTypes');
 
 module.exports = ViewStandards;
 
 function ViewStandards() {
-
     var realizeStandardCaptureMethod = function(transportType, standard) {
         var command;
         switch (standard) {
@@ -14,7 +13,6 @@ function ViewStandards() {
                 command = FFmpegWrapper.captureMuxedVideoTelemetry;
                 break;
             case Standards.V09:
-
                 switch (transportType) {
                     case TransportTypes.VIDEO:
                         command = FFmpegWrapper.captureVideoWithoutTelemetry;
@@ -22,7 +20,12 @@ function ViewStandards() {
                     case TransportTypes.TELEMETRY:
                         command = FFmpegWrapper.captureTelemetryWithoutVideo;
                         break;
+                    default:
+                        return promise.reject('cannot resolve capture method');
                 }
+                break;
+            default:
+                return promise.reject('cannot resolve capture method');
         }
         return promise.resolve(command);
     };

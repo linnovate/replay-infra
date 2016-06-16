@@ -1,16 +1,13 @@
 // requires
-var mongoose = require('mongoose'),
-	fs = require('fs'),
+var fs = require('fs'),
 	promise = require('bluebird'),
 	mkdirp = require('mkdirp'),
-	StreamingSource = require('./schemas/StreamingSource'),
-	FFmpegWrapper = require('./services/FFmpegWrapper'),
-	Event = require('./services/EventEmitterSingleton'),
+	moment = require('moment');
+var	event = require('./services/EventEmitterSingleton'),
 	FileWatcher = require('./services/FileWatcher')(),
 	StreamListener = require('./services/StreamListener')(),
 	ViewStandardHandler = require('./services/ViewStandardHandler')(),
-	StreamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE),
-	moment = require('moment');
+	StreamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
 
 const DURATION = 10,
 	TIMER_INTERVAL = 5000;
@@ -25,14 +22,14 @@ module.exports = function() {
 	// index used to find my StreamingSource object in the DB collection
 	var StreamingSourceIndex = process.env.INDEX;
 
-	StreamingSourceDAL.GetStreamingSource(StreamingSourceIndex)
+	StreamingSourceDAL.getStreamingSource(StreamingSourceIndex)
 		.then(handleVideoSavingProcess)
 		.catch(function(err) {
-			if (err)
+			if (err) {
 				console.log(err);
+			}
 		});
 };
-
 /********************************************************************************************************************************************/
 /*                                                                                                                                          */
 /*    Here all the process begin to run.                                                                                                    */
@@ -45,22 +42,20 @@ function handleVideoSavingProcess(StreamingSource) {
 		StreamStatusTimer,
 		command,
 		metadataFile;
-
 	console.log('#MainRoutine# Start listen to port: ' + StreamingSource.SourcePort); // still not finished.
-
 	// Starting Listen to the address.
 	startStreamListener(StreamingSource, function() {
-		StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
+		StreamStatusTimer = setStatusTimer(StreamStatusTimer, function() {
+			StreamingSourceDAL.notifySourceListening(StreamingSource.SourceID);
+		});
 	});
-
 	/******************************************/
 	/*                                        */
-	/*         Events Section:                */
+	/*         events Section:                */
 	/*                                        */
 	/******************************************/
-
 	// When Error eccured in one of the services.
-	Event.on('error', function(err) {
+	event.on('error', function(err) {
 		console.log('Error: ' + err);
 		if (command) {
 			promise.resolve()
@@ -68,17 +63,19 @@ function handleVideoSavingProcess(StreamingSource) {
 					command.kill('SIGKILL');
 				})
 				.then(function() {
-					FileWatcher.StopWatchFile(FileWatcherTimer);
+					FileWatcher.stopWatchFile(FileWatcherTimer);
 					startStreamListener(StreamingSource, function() {
-						StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
+						StreamStatusTimer = setStatusTimer(StreamStatusTimer, function() {
+							StreamingSourceDAL.notifySourceListening(StreamingSource.SourceID);
+						});
 					});
 				});
 		}
 	});
 
 	// When the StreamListenerService found some streaming data in the address.
-	Event.on('StreamingData', function() {
-		var CurrentPath = pathBuilder({ SourceID: StreamingSource.SourceID });
+	event.on('StreamingData', function() {
+		var CurrentPath = pathBuilder({ SourceName: StreamingSource.SourceName });
 		// check if the path is exist (path e.g. 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
 		try {
 			console.log('#MainRoutine# Check if the path: ', CurrentPath, ' exist...');
@@ -91,16 +88,13 @@ function handleVideoSavingProcess(StreamingSource) {
 			mkdirp.sync(CurrentPath);
 			console.log('#MainRoutine# new path create at: ', CurrentPath);
 		}
-
 		var now = getCurrentTime();
-
 		var ffmpegParams = {
 			inputs: ['udp://' + StreamingSource.SourceIP + ':' + StreamingSource.SourcePort],
 			duration: DURATION,
 			dir: CurrentPath,
 			file: now
 		};
-
 		// starting the ffmpeg process
 		console.log('#MainRoutine# Record new video at: ', CurrentPath);
 		// console.log(JSON.stringify(ViewStandardHandler),ViewStandardHandler);
@@ -111,50 +105,55 @@ function handleVideoSavingProcess(StreamingSource) {
 		metadataFile = CurrentPath + '/' + now + '.data';
 		addMetadataManualy(metadataFile);
 		/************************************************************/
-
 		ViewStandardHandler.realizeStandardCaptureMethod(StreamingSource.SourceType, StreamingSource.StreamingMethod.version)
 			.then(function(captureCommand) {
 				return captureCommand(ffmpegParams);
 			})
 			.then(function(res) {
 				command = res;
-			}, function(rej) {
-
+			})
+			.catch(function(err) {
+				console.log(err);
+				throw err;
 			});
-		StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceCapturing(StreamingSource.SourceID));
+		StreamStatusTimer = setStatusTimer(StreamStatusTimer, function() {
+			StreamingSourceDAL.notifySourceCapturing(StreamingSource.SourceID);
+		});
 	});
 
 	// Start file watcher on data start flowing
-	Event.on('CapturingBegan', function(filePath) {
+	event.on('CapturingBegan', function(filePath) {
 		// start to watch the file that the ffmpeg will create
-		FileWatcherTimer = FileWatcher.StartWatchFile({ Path: filePath });
+		FileWatcherTimer = FileWatcher.startWatchFile({ Path: filePath });
 	});
 
 	// when FFmpeg done his progress
-	Event.on('FFmpegDone', function() {
+	event.on('FFmpegDone', function() {
 		promise.resolve()
 			.then(function() {
 				// Stop the file watcher.
 				console.log('#MainRoutine# ffmpeg done his progress.');
-				FileWatcher.StopWatchFile(FileWatcherTimer);
+				FileWatcher.stopWatchFile(FileWatcherTimer);
 			})
 			.then(function() {
-				var CurrentPath = pathBuilder({ SourceID: StreamingSource.SourceID });
-				var now = getCurrentTime();
-				var dataPath = CurrentPath + '/' + now + '.data';
-				sendMessage(dataPath);
+				/***************************************************/
+				/*           just for demo.. shouldnt be here      */
+				//	sendMessage(command._outputs[0].target);
+				/***************************************************/
 			})
 			.then(function() {
 				// Start the whole process again by listening to the address again.
 				console.log('#MainRoutine# Start to listen the address again');
 				startStreamListener(StreamingSource, function() {
-					StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
+					StreamStatusTimer = setStatusTimer(StreamStatusTimer, function() {
+						StreamingSourceDAL.notifySourceListening(StreamingSource.SourceID);
+					});
 				});
 			});
 	});
 
 	// When the source stop stream data.
-	Event.on('FileWatchStop', function() {
+	event.on('FileWatchStop', function() {
 		// kill The FFmpeg Process.
 		console.log('#MainRoutine# The Source stop stream data, Killing the ffmpeg process');
 		promise.resolve()
@@ -164,23 +163,31 @@ function handleVideoSavingProcess(StreamingSource) {
 				}
 			})
 			.then(function() {
+				/***************************************************/
+				/*           just for demo.. shouldnt be here      */
+				//	sendMessage(command._outputs[0].target);
+				/***************************************************/
+			})
+			.then(function() {
 				// Start the whole process again by listening to the address again.
 				console.log('#MainRoutine# Start to listen the address again');
 				startStreamListener(StreamingSource, function() {
-					StreamStatusTimer = setStatusTimer(StreamStatusTimer, StreamingSourceDAL.NotifySourceListening(StreamingSource.SourceID));
+					StreamStatusTimer = setStatusTimer(StreamStatusTimer, function() {
+						StreamingSourceDAL.notifySourceListening(StreamingSource.SourceID);
+					});
 				});
 			});
 	});
 
 	// kill the ffmpeg, will emit when something happen to the node process and we want to clean up things
-	Event.on('KillFFmpeg', function(cb) {
+	event.on('KillFFmpeg', function() {
 		console.log('#MainRoutine# Killing ffmpeg...');
 		if (command) {
 			command.kill('SIGKILL');
 		}
-		StreamingSourceDAL.NotifySourceNone(StreamingSource.SourceID);
+		StreamingSourceDAL.notifySourceNone(StreamingSource.SourceID);
 	});
-};
+}
 
 /********************************************************************************************/
 /*                                                                                          */
@@ -190,14 +197,14 @@ function handleVideoSavingProcess(StreamingSource) {
 
 // build new path in the current date. e.g: STORAGE_PATH/27-05-1996
 function pathBuilder(pathParams) {
-	return process.env.STORAGE_PATH + '/' + pathParams.SourceID + '/' + getCurrentDate();
+	return process.env.STORAGE_PATH + '/' + pathParams.SourceName + '/' + getCurrentDate();
 }
 
 // Sets a keep alive status notifier
 function setStatusTimer(timer, method) {
 	clearInterval(timer);
 	timer = setInterval(function() {
-		method;
+		method();
 		console.log('#MainRoutine# updating status....' + moment().format());
 	}, TIMER_INTERVAL);
 
@@ -235,12 +242,11 @@ function checkTime(i) {
 
 // starting Listen to the stream
 function startStreamListener(StreamingSource, callback) {
-
 	var StreamListenerParams = {
 		Ip: StreamingSource.SourceIP,
 		Port: StreamingSource.SourcePort
 	};
-	StreamListener.StartListen(StreamListenerParams);
+	StreamListener.startListen(StreamListenerParams);
 	callback();
 }
 
@@ -252,12 +258,16 @@ function addMetadataManualy(metadataFile) {
 		.pipe(fs.createWriteStream(metadataFile));
 }
 
+/*******************************************************************************/
+/*                       To be replaced when BasMQ is integrated			   */
+/*******************************************************************************/
 function sendMessage(dataPath) {
 	var message = {
 		type: 'MetadataParser',
 		params: {
-			videoId: 'someVideoId',
-			relativePath: dataPath,
+			videoName: 'someVideoId',
+			videoPath: dataPath,
+			sourceName: 's',
 			method: {
 				standard: 'VisionStandard',
 				version: 1.0
@@ -288,7 +298,7 @@ function sendMessage(dataPath) {
 		});
 	}).end();
 }
-
+/************************************************************************************/
 
 /********************************************************************************************/
 /*                                                                                          */
@@ -301,12 +311,15 @@ function sendMessage(dataPath) {
 process.stdin.resume(); // so the program will not close instantly
 
 function exitHandler(options, err) {
-	if (options.cleanup)
-		Event.emit('KillFFmpeg');
-	if (err)
+	if (options.cleanup) {
+		event.emit('KillFFmpeg');
+	}
+	if (err) {
 		console.log(err.stack);
-	if (options.exit)
+	}
+	if (options.exit) {
 		process.exit();
+	}
 }
 
 // do something when app is closing
