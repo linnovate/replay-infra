@@ -26,16 +26,6 @@ queueName = JobsService.getQueueName(jobType);
 // create bus
 BusService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 BusService.consume(queueName, handleMessage);
-// handleMessage({
-//     params: {
-//         videoId: 'someVideoId',
-//         relativePath: 'someVideoId.data',
-//         method: {
-//             standard: 'VideoStandard',
-//             version: 1.0
-//         }
-//     }
-// });
 
 
 // enforces basic validations on the environment input passed to process,

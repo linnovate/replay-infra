@@ -30,8 +30,6 @@ module.exports.start = function(params) {
 }
 
 function validateInput(params) {
-    var provider = params.provider;
-    var providerId = params.providerId;
     var relativePathToVideo = params.videoRelativePath;
     var videoName = params.videoName;
     var sourceId = params.sourceId;
@@ -39,8 +37,7 @@ function validateInput(params) {
     var method = params.receivingMethod;
 
     // validate vital params
-    if (!provider || !providerId || !sourceId || !method || !method.standard
-        || !method.version) {
+    if (!sourceId || !method || !method.standard || !method.version) {
         return false;
     }
 
@@ -56,8 +53,6 @@ function SaveVideoToMongo(params) {
     console.log('Saving video object to mongo...');
 
     return Video.create({
-        provider: params.provider,
-        providerId: params.providerId,
         sourceId: params.sourceId,
         relativePath: params.videoRelativePath,
         name: params.videoName,
@@ -68,7 +63,7 @@ function SaveVideoToMongo(params) {
 // produce all jobs here
 function produceJobs(params) {
     produceMetadataParserJob(params);
-    // produce insert to kaltura job here...
+    produceUploadToProviderJob(params);
     // etc...
 }
 
@@ -88,4 +83,25 @@ function produceMetadataParserJob(params) {
         busService.produce(queueName, message);
     else
         throw 'Could not find queue name of the inserted job type';
+}
+
+function produceUploadToProviderJob(params){
+    console.log('Producing UploadToProvider job...');
+
+    // upload to provider if video exists
+    if(params.videoRelativePath){
+
+        var message = {
+            params: {
+                videoName: params.videoName,
+                relativePath: params.videoRelativePath
+            }
+        }
+
+        var queueName = JobsService.getQueueName('UploadVideoToProvider');
+        if (queueName)
+            busService.produce(queueName, message);
+        else
+            throw 'Could not find queue name of the inserted job type';
+    }
 }

@@ -1,0 +1,57 @@
+{
+  "name": "kaltura",
+  "version": "3.3.1",
+  "description": "Kaltura NodeJS clientlibs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaltura/KalturaGeneratedAPIClientsNodeJS.git"
+  },
+  "keywords": [
+    "Kaltura",
+    "API",
+    "clientlibs"
+  ],
+  "author": {
+    "name": "Kaltura Community",
+    "email": "community@kaltura.com"
+  },
+  "license": "AGPLv3",
+  "bugs": {
+    "url": "https://github.com/kaltura/server/issues"
+  },
+  "dependencies": {
+    "crypto": "*",
+    "http": "*",
+    "path": "*",
+    "url": "*",
+    "fs": "*",
+    "utils": "*"
+  },
+  "homepage": "https://github.com/kaltura/KalturaGeneratedAPIClientsNodeJS",
+  "_id": "kaltura@3.3.1",
+  "_shasum": "cc9e6d8ef52788eccc6ac03e89872bc3a7e9cbc4",
+  "_from": "kaltura@>=3.3.1 <4.0.0",
+  "_npmVersion": "2.7.6",
+  "_nodeVersion": "0.10.25",
+  "_npmUser": {
+    "name": "kaltura",
+    "email": "community@kaltura.com"
+  },
+  "dist": {
+    "shasum": "cc9e6d8ef52788eccc6ac03e89872bc3a7e9cbc4",
+    "tarball": "https://registry.npmjs.org/kaltura/-/kaltura-3.3.1.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "kaltura",
+      "email": "community@kaltura.com"
+    }
+  ],
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/kaltura/-/kaltura-3.3.1.tgz",
+  "readme": "ERROR: No README data found!"
+}

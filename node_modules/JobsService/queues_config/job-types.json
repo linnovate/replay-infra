@@ -1,0 +1,22 @@
+[
+	{
+		"type": "MetadataParser",
+		"service": "MetadataParserService",
+		"queue": "MetadataParserQueue"
+	},
+	{
+		"type": "SaveVideo",
+		"service": "SaveVideoService",
+		"queue": "NewVideosQueue"
+	},
+	{
+		"type": "UploadVideoToProvider",
+		"service": "provider-services/upload",
+		"queue": "UploadProviderQueue"
+	},
+	{
+		"type": "FetchVideoFromProvider",
+		"service": "provider-services/fetch",
+		"queue": "FetchProviderQueue"
+	}
+]
