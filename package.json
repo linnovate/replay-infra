@@ -18,7 +18,7 @@
 	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"lint": "eslint $(git diff-index --cached --name-only HEAD | grep .*\\.js$)",
+		"lint": "./lintStagedFiles.sh",
 		"lintAll": "eslint ."
 	},
 	"pre-commit": {
