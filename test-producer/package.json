@@ -1,0 +1,15 @@
+{
+  "name": "test-producer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "rm -rf replay-common && git clone https://github.com/linnovate/replay-common.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "replay-bus-service": "./replay-common/replay-bus-service"
+  }
+}

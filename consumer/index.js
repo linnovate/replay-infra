@@ -1,8 +1,8 @@
-var BusService = require('BusService'),
+var BusService = require('replay-bus-service'),
     mongoose = require('mongoose'),
     elasticsearch = require('elasticsearch'),
     bluebird = require('bluebird'),
-    JobsService = require('JobsService'),
+    JobsService = require('replay-jobs-service'),
     _ = require('lodash');
 
 // set mongoose promise library

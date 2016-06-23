@@ -1,10 +1,11 @@
 {
-  "name": "post-processing-consumer",
+  "name": "consumer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "preinstall": "rm -rf replay-common && git clone https://github.com/linnovate/replay-common.git"
   },
   "author": "",
   "license": "ISC",
@@ -14,6 +15,10 @@
     "elasticsearch": "^11.0.1",
     "lodash": "^4.13.1",
     "mongoose": "^4.5.0",
-    "xml2js": "^0.4.16"
+    "xml2js": "^0.4.16",
+    "replay-bus-service": "./replay-common/replay-bus-service",
+    "replay-jobs-service": "./replay-common/replay-jobs-service",
+    "replay-kaltura-service": "./replay-common/replay-kaltura-service",
+    "replay-schemas": "./replay-common/replay-schemas"
   }
 }

@@ -1,6 +1,6 @@
-var BusService = require('BusService'),
-    JobsService = require('JobsService'),
-    Video = require('schemas/Video'),
+var BusService = require('replay-bus-service'),
+    JobsService = require('replay-jobs-service'),
+    Video = require('replay-schemas/Video'),
     mongoose = require('mongoose'),
     Promise = require('bluebird');
 
@@ -18,6 +18,7 @@ module.exports.start = function(params) {
     if (params.videoName) {
         SaveVideoToMongo(params)
             .then(function(video) {
+                console.log('Video successfully saved to mongo:', video);
                 params.videoId = video.id;
                 produceJobs(params);
             })
@@ -85,11 +86,11 @@ function produceMetadataParserJob(params) {
         throw 'Could not find queue name of the inserted job type';
 }
 
-function produceUploadToProviderJob(params){
+function produceUploadToProviderJob(params) {
     console.log('Producing UploadToProvider job...');
 
     // upload to provider if video exists
-    if(params.videoRelativePath){
+    if (params.videoRelativePath) {
 
         var message = {
             params: {

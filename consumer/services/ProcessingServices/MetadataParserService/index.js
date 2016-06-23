@@ -1,7 +1,7 @@
 var Promise = require('bluebird'),
 	fs = Promise.promisifyAll(require('fs')),
 	_ = require('lodash'),
-	VideoMetadata = require('schemas/VideoMetadata');
+	VideoMetadata = require('replay-schemas/VideoMetadata');
 
 module.exports.start = function(params){
 	console.log('MetadataParserService started.');
@@ -22,8 +22,8 @@ module.exports.start = function(params){
 	.then(function(data){
 		return dataToObjects(method, data);
 	})
-	.then(function(xmls){
-		return saveToDatabases(xmls, params);
+	.then(function(metadatas){
+		return saveToDatabases(metadatas, params);
 	})
 	.catch(handleErrors);
 }
@@ -64,12 +64,12 @@ function dataToObjects(method, data){
 // async save to databases
 // I do not want to stop everything if one save has failed,
 // so I resolve anyway, and log errors to console.
-function saveToDatabases(xmls, params){
+function saveToDatabases(metadatas, params){
 	return new Promise(function(resolve, reject){
 		console.log('Saving to databases.');
 
-		saveToMongo(xmls, params);
-		saveToElastic(xmls, params);
+		saveToMongo(metadatas, params);
+		saveToElastic(metadatas, params);
 
 		resolve();
 	});
@@ -79,9 +79,9 @@ function handleErrors(err){
 	if(err) console.log(err);
 }
 
-function saveToMongo(xmls, params){
+function saveToMongo(metadatas, params){
 	// convert xmls to list of VideoMetadata
-	var videoMetadatas = xmlObjectsToVideoMetadata(xmls, params);
+	var videoMetadatas = metadataObjectsToVideoMetadata(metadatas, params);
 	
 	VideoMetadata.insertMany(videoMetadatas, function(err, objs){
 		if(err)
@@ -91,20 +91,20 @@ function saveToMongo(xmls, params){
 	});
 }
 
-function xmlObjectsToVideoMetadata(xmls, params){
-	return _.map(xmls, function(xml){
+function metadataObjectsToVideoMetadata(metadatas, params){
+	return _.map(metadatas, function(metadata){
 		return new VideoMetadata({
 			sourceId: params.sourceId,
 			videoId: params.videoId,
 			receivingMethod: params.method,
-			data: xml
+			data: metadata
 		});
 	});
 }
 
-function saveToElastic(xmls, params){
+function saveToElastic(metadatas, params){
 	// convert xmls to bulk request object for elastic
-	var bulkRequest = xmlObjectsToElasticBulkRequest(xmls, params);
+	var bulkRequest = metadataObjectsToElasticBulkRequest(metadatas, params);
 
 	global.elasticsearch.bulk({
 	    body : bulkRequest
@@ -116,10 +116,10 @@ function saveToElastic(xmls, params){
 	});
 }
 
-function xmlObjectsToElasticBulkRequest(xmls, params){
+function metadataObjectsToElasticBulkRequest(metadatas, params){
 	var bulkRequest = [];
 
-	videoMetadatas = xmlObjectsToVideoMetadata(xmls, params);
+	videoMetadatas = metadataObjectsToVideoMetadata(metadatas, params);
 
 	videoMetadatas.forEach(function(videoMetadata){
 		// efficient way to remove auto generated _id
