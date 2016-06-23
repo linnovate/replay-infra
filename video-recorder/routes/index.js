@@ -1,4 +1,4 @@
-var ActionService = require('./controllers/ActionController')
+var ActionRouter = require('./controllers/ActionController')
 
 app.get('/start', ActionController.start);
 
