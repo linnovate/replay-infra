@@ -58,16 +58,16 @@ function StreamListener() {
 					return resolve({ ip: _ip, port: _port });
 				};
 
-				while (bindingAttemptsCounts++ < MAX_BINDING_TRIES) {
+				while (bindingAttemptsCounts < MAX_BINDING_TRIES) {
 					try {
 						// binding the server to listen to the address that given
 						_server.bind({ port: _port, address: _ip, exclusive: false }, afterBind);
 					} catch (err) {
 						bindingAttemptsCounts++;
 						console.log('try binding no ', bindingAttemptsCounts, 'failed...');
-						if (bindingAttemptsCounts === MAX_BINDING_TRIES) {
+						if (bindingAttemptsCounts === MAX_BINDING_TRIES)
 							return reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
-						}
+
 						// Wait 2 seconds before continuing for the next bind try
 						setTimeout(function() {}, 2000);
 						continue;
