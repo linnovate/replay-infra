@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "preinstall": "rm -rf replay-common && git clone https://github.com/linnovate/replay-common.git"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
@@ -15,10 +14,10 @@
     "elasticsearch": "^11.0.1",
     "lodash": "^4.13.1",
     "mongoose": "^4.5.0",
-    "xml2js": "^0.4.16",
-    "replay-bus-service": "./replay-common/replay-bus-service",
-    "replay-jobs-service": "./replay-common/replay-jobs-service",
-    "replay-kaltura-service": "./replay-common/replay-kaltura-service",
-    "replay-schemas": "./replay-common/replay-schemas"
+    "replay-bus-service": "^1.0.0",
+    "replay-jobs-service": "^1.0.0",
+    "replay-kaltura-service": "^1.0.1",
+    "replay-schemas": "^1.0.0",
+    "xml2js": "^0.4.16"
   }
 }

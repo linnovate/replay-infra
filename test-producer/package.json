@@ -4,12 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "preinstall": "rm -rf replay-common && git clone https://github.com/linnovate/replay-common.git"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "replay-bus-service": "./replay-common/replay-bus-service"
+    "replay-bus-service": "^1.0.0"
   }
 }
