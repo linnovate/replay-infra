@@ -38,12 +38,12 @@ function validateInput(params) {
     var method = params.receivingMethod;
 
     // validate vital params
-    if (!sourceId || !method || !method.standard || !method.version) {
+    if (!method || !method.standard || !method.version) {
         return false;
     }
 
     // validate that if there's a video, then all it's params exist
-    if ((videoName || relativePathToVideo) && !(videoName && relativePathToVideo)) {
+    if ((videoName || relativePathToVideo) && !(videoName && relativePathToVideo && sourceId)) {
         return false;
     }
 
