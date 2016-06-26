@@ -1,6 +1,6 @@
 var Promise = require('bluebird'),
 	fs = Promise.promisifyAll(require('fs')),
-	_ = require('lodash'),
+
 	VideoMetadata = require('replay-schemas/VideoMetadata');
 
 module.exports.start = function(params){
@@ -20,10 +20,10 @@ module.exports.start = function(params){
 
 	readDataAsString(pathToData)
 	.then(function(data){
-		return dataToObjects(method, data);
+		return dataToObjects(method, data, params);
 	})
-	.then(function(metadatas){
-		return saveToDatabases(metadatas, params);
+	.then(function(videoMetadatas){
+		return saveToDatabases(videoMetadatas, params);
 	})
 	.catch(handleErrors);
 }
@@ -31,7 +31,7 @@ module.exports.start = function(params){
 function validateInput(params){
 	var relativePathToData = params.relativePath;
 	var method = params.method;
-	
+
 	// validate params
 	if(!relativePathToData || !process.env.STORAGE_PATH ||
 		!method || !method.standard || !method.version){
@@ -46,43 +46,43 @@ function readDataAsString(path){
 	return fs.readFileAsync(path, "utf8");
 }
 
-function dataToObjects(method, data){
+// apply specific logic to parse the different standards of metadatas
+function dataToObjects(method, data, params){
 	return new Promise(function(resolve, reject){
-		
-		var standardHandler;
-		if(method.standard == 'VideoStandard' && method.version == 0.9)
-			standardHandler = require('./Standards/VideoStandard/0.9');
-		else if(method.standard == 'VideoStandard' && method.version == 1.0)
-			standardHandler = require('./Standards/VideoStandard/1.0');
-		else
-			reject('Unsupported standard and version');
 
-		resolve(standardHandler.parse(data));
+		var standardHandler, videoMetadatas;
+		if(method.standard == 'VideoStandard' && method.version == 0.9){
+			standardHandler = require('./Standards/VideoStandard/0.9');
+			resolve(standardHandler.parse(data));
+		}
+		else if(method.standard == 'VideoStandard' && method.version == 1.0){
+			standardHandler = require('./Standards/VideoStandard/1.0');
+			resolve(standardHandler.parse(data, params));
+		}
+		else
+			return reject('Unsupported standard and version');
 	});
 }
 
 // async save to databases
 // I do not want to stop everything if one save has failed,
 // so I resolve anyway, and log errors to console.
-function saveToDatabases(metadatas, params){
+function saveToDatabases(videoMetadatas, params){
 	return new Promise(function(resolve, reject){
 		console.log('Saving to databases.');
 
-		saveToMongo(metadatas, params);
-		saveToElastic(metadatas, params);
+		saveToMongo(videoMetadatas, params);
+		saveToElastic(videoMetadatas, params);
 
 		resolve();
 	});
 }
 
-function handleErrors(err){	
+function handleErrors(err){
 	if(err) console.log(err);
 }
 
-function saveToMongo(metadatas, params){
-	// convert xmls to list of VideoMetadata
-	var videoMetadatas = metadataObjectsToVideoMetadata(metadatas, params);
-	
+function saveToMongo(videoMetadatas, params){
 	VideoMetadata.insertMany(videoMetadatas, function(err, objs){
 		if(err)
 			console.log(err);
@@ -91,20 +91,9 @@ function saveToMongo(metadatas, params){
 	});
 }
 
-function metadataObjectsToVideoMetadata(metadatas, params){
-	return _.map(metadatas, function(metadata){
-		return new VideoMetadata({
-			sourceId: params.sourceId,
-			videoId: params.videoId,
-			receivingMethod: params.method,
-			data: metadata
-		});
-	});
-}
-
-function saveToElastic(metadatas, params){
+function saveToElastic(videoMetadatas, params){
 	// convert xmls to bulk request object for elastic
-	var bulkRequest = metadataObjectsToElasticBulkRequest(metadatas, params);
+	var bulkRequest = videoMetadatasToElasticBulkRequest(videoMetadatas, params);
 
 	global.elasticsearch.bulk({
 	    body : bulkRequest
@@ -116,10 +105,8 @@ function saveToElastic(metadatas, params){
 	});
 }
 
-function metadataObjectsToElasticBulkRequest(metadatas, params){
+function videoMetadatasToElasticBulkRequest(videoMetadatas, params){
 	var bulkRequest = [];
-
-	videoMetadatas = metadataObjectsToVideoMetadata(metadatas, params);
 
 	videoMetadatas.forEach(function(videoMetadata){
 		// efficient way to remove auto generated _id

@@ -1,7 +1,14 @@
-var xml2js = require('xml2js');
+var xml2js = require('xml2js'),
+    _ = require('lodash'),
+    VideoMetadata = require('replay-schemas/VideoMetadata');
 
-// parses the raw data from the metadata file into objects
-module.exports.parse = function(data) {
+// parses the raw data from the metadata file into metadataVideo objects
+// params is a json of:
+// sourceId (must)
+// videoId (optional)
+// methods (must)
+
+module.exports.parse = function(data, params) {
     var result = [];
 
     var delimiter = '</VIMSMessage>';
@@ -12,7 +19,7 @@ module.exports.parse = function(data) {
 
     xmls.forEach(function(xmlString) {
         if (xmlString) {
-        	
+
             xmlString += delimiter;
 
             // parse xmlString while:
@@ -31,5 +38,17 @@ module.exports.parse = function(data) {
             });
         }
     });
-    return result;
+
+    return metadataObjectsToVideoMetadata(result, params);
+}
+
+function metadataObjectsToVideoMetadata(metadatas, params){
+    return _.map(metadatas, function(metadata){
+        return new VideoMetadata({
+            sourceId: params.sourceId,
+            videoId: params.videoId,
+            receivingMethod: params.method,
+            data: metadata
+        });
+    });
 }
