@@ -1,8 +1,8 @@
 /***********************************************************************************/
 /*                                                                                 */
 /*        Service for the stream listener.                                         */
-/*        Will listen to the port until some data will stream,                     */
-/*        and after that will emit 'StreamingData' event and stop listen.          */
+/*        listen to the port until some data will stream,                          */
+/*        and then 'StreamingData' event is emiting.                               */
 /*                                                                                 */
 /***********************************************************************************/
 
@@ -10,10 +10,11 @@
 var dgram = require('dgram');
 var event = require('./EventEmitterSingleton');
 
-// Defiend the Service name.
+// Defiend consts.
 const SERVICE_NAME = '#StreamListener#',
 	LOCALHOST = '0.0.0.0',
-	MAX_BINDING_TRIES = 3;
+	MAX_BINDING_TRIES = 3,
+	TIME_TO_WAIT_AFTER_FAILED = 3000;
 
 // export our service.
 module.exports = StreamListener;
@@ -27,8 +28,10 @@ function StreamListener() {
 
 	/***********************************************************************************/
 	/*                                                                                 */
-	/*  Function That Start listen to address and wait until there is some data flow.  */
-	/*  Should get an object with Ip and Port.                                         */
+	/*  Function That Start listen to address until there is some data flow.           */
+	/*  Get an object with Ip and Port.                                                */
+	/*  Return promise, in reject return error,                                        */
+	/*  in resolve return object with ip,port and numbers of trying binding            */
 	/*                                                                                 */
 	/***********************************************************************************/
 	var startListen = function(params) {
@@ -39,7 +42,7 @@ function StreamListener() {
 
 			// check Port in params
 			if (!params || !params.Port) {
-				reject(SERVICE_NAME + 'Error on ' + METHOD_NAME + ' : There Is no Port To listen');
+				reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : There Is no Port To listen');
 			} else {
 				_port = params.Port;
 
@@ -49,47 +52,60 @@ function StreamListener() {
 				// create socket server
 				_server = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
+				// function that called after the bind complete.
 				var afterBind = function() {
 					// check if the IP is not 0.0.0.0
 					if (_ip !== LOCALHOST) {
 						_server.addMembership(_ip);
 					}
 					console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
-					return resolve({ ip: _ip, port: _port });
+					return resolve({ ip: _ip, port: _port, numOfAttempts: bindingAttemptsCounts });
 				};
 
-				while (bindingAttemptsCounts < MAX_BINDING_TRIES) {
+				// bind to the address.
+				var bindToTheAddress = function() {
 					try {
-						// binding the server to listen to the address that given
 						_server.bind({ port: _port, address: _ip, exclusive: false }, afterBind);
 					} catch (err) {
+						console.log('try binding no', bindingAttemptsCounts, 'failed...\n', err);
+						throw new Error(err);
+					}
+				};
+
+				var tryBinding = function() {
+					var bindFailed = function() {
+						console.log('bindingAttemptsCounts', bindingAttemptsCounts);
 						bindingAttemptsCounts++;
-						console.log('try binding no ', bindingAttemptsCounts, 'failed...');
 						if (bindingAttemptsCounts === MAX_BINDING_TRIES) {
 							return reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
 						}
-						// Wait 2 seconds before continuing for the next bind try
-						setTimeout(function() {}, 2000);
-						continue;
+						tryBinding();
+					};
+					try {
+						bindToTheAddress();
+					} catch (err) {
+						setTimeout(bindFailed, TIME_TO_WAIT_AFTER_FAILED);
 					}
-				}
+				};
+
+				tryBinding();
+
+				// on event of data flow
+				_server.on('message', (msg, rinfo) => {
+					console.log(SERVICE_NAME, 'Stop listening, Data Was detected at ', _ip, ':', _port, ' !');
+					// close the server so that the port will be open for the ffmpeg process to recording
+					_server.close();
+					// emmit an event so it could go next processing
+					event.emit('StreamingData');
+				});
+
+				// when unexcepted error eccured.
+				_server.on('error', (err) => {
+					event.emit('unexceptedError_StreamListener', SERVICE_NAME + ' Unexcepted Error eccured while trying listen to the address ' +
+						_ip + ':' + _port + ' : ' + err);
+					_server.close();
+				});
 			}
-
-			// on event of data flow
-			_server.on('message', (msg, rinfo) => {
-				console.log(SERVICE_NAME, 'Stop listening, Data Was detected at ', _ip, ':', _port, ' !');
-				// close the server so that the port will be open for the ffmpeg process to recording
-				_server.close();
-				// emmit an event so it could go next processing
-				event.emit('StreamingData');
-			});
-
-			// when unexcepted error eccured.
-			_server.on('error', (err) => {
-				event.emit('unexceptedError', SERVICE_NAME + ' Unexcepted Error eccured while trying listen to the address ' +
-					_ip + ':' + _port + ' : ' + err);
-				_server.close();
-			});
 		});
 
 		return promise;
