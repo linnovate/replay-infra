@@ -1,6 +1,6 @@
 var BusService = require('replay-bus-service');
 
-BusService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
+var busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 var message = {
 	params: {
 		sourceId: 123,
@@ -13,4 +13,4 @@ var message = {
 		}
 	}
 };
-BusService.produce('NewVideosQueue', message);
+busService.produce('NewVideosQueue', message);
