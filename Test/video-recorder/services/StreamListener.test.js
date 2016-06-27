@@ -165,7 +165,7 @@ function behaviorTests() {
 		});
 
 		after(function() {
-			tmpPorc.kill('SIGINT');
+			tmpPorc.kill();
 		});
 
 		it('should Emit event "StreamingData" when data is streaming', function(done) {
