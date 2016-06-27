@@ -1,10 +1,11 @@
 // requires
-var fs = require('fs'),
-	promise = require('bluebird'),
+var fs = require('fs');
+var promise = require('bluebird'),
 	mkdirp = require('mkdirp'),
 	moment = require('moment');
-var	event = require('./services/EventEmitterSingleton'),
-	FileWatcher = require('./services/FileWatcher')(),
+var event = require('./services/EventEmitterSingleton');
+
+var FileWatcher = require('./services/FileWatcher')(),
 	StreamListener = require('./services/StreamListener')(),
 	ViewStandardHandler = require('./services/ViewStandardHandler')(),
 	StreamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
@@ -138,7 +139,7 @@ function handleVideoSavingProcess(StreamingSource) {
 			.then(function() {
 				/***************************************************/
 				/*           just for demo.. shouldnt be here      */
-				//	sendMessage(command._outputs[0].target);
+				sendMessage({ streamingSource: StreamingSource, videoPath: command._outputs[0].target, dataPath: metadataFile});
 				/***************************************************/
 			})
 			.then(function() {
@@ -165,7 +166,7 @@ function handleVideoSavingProcess(StreamingSource) {
 			.then(function() {
 				/***************************************************/
 				/*           just for demo.. shouldnt be here      */
-				//	sendMessage(command._outputs[0].target);
+				sendMessage({ streamingSource: StreamingSource, videoPath: command._outputs[0].target, dataPath: metadataFile});
 				/***************************************************/
 			})
 			.then(function() {
@@ -215,7 +216,7 @@ function setStatusTimer(timer, method) {
 function getCurrentDate() {
 	var today = new Date(),
 		dd = checkTime(today.getDate()),
-		mm = checkTime(today.getMonth() + 1), //January is 0!
+		mm = checkTime(today.getMonth() + 1), // January is 0!
 		yyyy = today.getFullYear();
 
 	return dd + '-' + mm + '-' + yyyy;
@@ -261,42 +262,59 @@ function addMetadataManualy(metadataFile) {
 /*******************************************************************************/
 /*                       To be replaced when BasMQ is integrated			   */
 /*******************************************************************************/
-function sendMessage(dataPath) {
+function sendMessage(params) {
+	/*	var message = {
+			type: 'MetadataParser',
+			params: {
+				videoName: 'someVideoId',
+				videoPath: dataPath,
+				sourceName: 's',
+				method: {
+					standard: 'VisionStandard',
+					version: 1.0
+				}
+			}
+		};
+
+		var http = require('http');
+		var params = '?type=MetadataParser&videoId=someVideoId&relativePath=' + dataPath + '&standard=VisionStandard&version=1.0';
+
+		var options = {
+			host: 'localhost',
+			path: '/start' + params,
+			port: '4000'
+		};
+
+		http.request(options, function(response) {
+			var str = '';
+
+			// another chunk of data has been recieved, so append it to `str`
+			response.on('data', function(chunk) {
+				str += chunk;
+			});
+
+			// the whole response has been recieved, so we just print it out here
+			response.on('end', function() {
+				console.log(str);
+			});
+		}).end();*/
+	console.log(params);
+	var BusService = require('replay-bus-service');
+
+	var busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 	var message = {
-		type: 'MetadataParser',
 		params: {
-			videoName: 'someVideoId',
-			videoPath: dataPath,
-			sourceName: 's',
-			method: {
-				standard: 'VisionStandard',
-				version: 1.0
+			sourceId: params.streamingSource.SourceID,
+			videoName: params.videoName,
+			videoRelativePath: params.videoPath,
+			dataRelativePath: params.dataPath,
+			receivingMethod: {
+				standard: params.streamingSource.StreamingMethod.standard,
+				version: params.streamingSource.StreamingMethod.version
 			}
 		}
 	};
-
-	var http = require('http');
-	var params = '?type=MetadataParser&videoId=someVideoId&relativePath=' + dataPath + '&standard=VisionStandard&version=1.0';
-
-	var options = {
-		host: 'localhost',
-		path: '/start' + params,
-		port: '4000'
-	};
-
-	http.request(options, function(response) {
-		var str = '';
-
-		// another chunk of data has been recieved, so append it to `str`
-		response.on('data', function(chunk) {
-			str += chunk;
-		});
-
-		// the whole response has been recieved, so we just print it out here
-		response.on('end', function() {
-			console.log(str);
-		});
-	}).end();
+	busService.produce('NewVideosQueue', message);
 }
 /************************************************************************************/
 
