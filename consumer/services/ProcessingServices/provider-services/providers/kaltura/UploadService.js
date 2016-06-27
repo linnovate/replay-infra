@@ -1,34 +1,33 @@
 var fs = require('fs');
 
-module.exports.upload = function(params){
+module.exports.upload = function(params) {
 	console.log('Kaltura Upload Service started.');
 
-	if(!validateInput(params)){
+	if (!validateInput(params)) {
 		console.log('Some parameters are missing.');
 		return;
 	}
 
 	var sourceFilePath = process.env.STORAGE_PATH + '/' + params.relativePath;
-    var targetFilePath = process.env.DROP_FOLDER_PATH + '/' + params.videoName;
-    
-    // copy video file into drop folder
-    copyFile(sourceFilePath, targetFilePath, function(err){
-    	if(err){
-    		console.log('Error copying video to dropfolder: ', err);
-    		return;
-    	}
+	var targetFilePath = process.env.DROP_FOLDER_PATH + '/' + params.videoName;
 
-    	console.log('Video successfuly copied to dropfolder');
-    });
-}
+	// copy video file into drop folder
+	copyFile(sourceFilePath, targetFilePath, function(err) {
+		if (err) {
+			console.log('Error copying video to dropfolder: ', err);
+			return;
+		}
 
-function validateInput(params){
-    console.log('Video name is: ', params.videoName);
+		console.log('Video successfuly copied to dropfolder');
+	});
+};
+
+function validateInput(params) {
+	console.log('Video name is: ', params.videoName);
 	console.log('Relative path to video is: ', params.relativePath);
-    console.log('Drop folder path is: ', process.env.DROP_FOLDER_PATH);
+	console.log('Drop folder path is: ', process.env.DROP_FOLDER_PATH);
 
-	if(!process.env.STORAGE_PATH || !process.env.DROP_FOLDER_PATH
-		|| !params.relativePath || !params.videoName){
+	if (!process.env.STORAGE_PATH || !process.env.DROP_FOLDER_PATH || !params.relativePath || !params.videoName) {
 		return false;
 	}
 
@@ -36,25 +35,25 @@ function validateInput(params){
 }
 
 function copyFile(source, target, cb) {
-    var cbCalled = false;
+	var cbCalled = false;
 
-    var rd = fs.createReadStream(source);
-    rd.on("error", function(err) {
-        done(err);
-    });
-    var wr = fs.createWriteStream(target);
-    wr.on("error", function(err) {
-        done(err);
-    });
-    wr.on("close", function(ex) {
-        done();
-    });
-    rd.pipe(wr);
+	var rd = fs.createReadStream(source);
+	rd.on('error', function(err) {
+		done(err);
+	});
+	var wr = fs.createWriteStream(target);
+	wr.on('error', function(err) {
+		done(err);
+	});
+	wr.on('close', function(ex) {
+		done();
+	});
+	rd.pipe(wr);
 
-    function done(err) {
-        if (!cbCalled) {
-            cbCalled = true;
-            cb(err);
-        }
-    }
+	function done(err) {
+		if (!cbCalled) {
+			cbCalled = true;
+			cb(err);
+		}
+	}
 }
