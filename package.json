@@ -1,0 +1,37 @@
+{
+	"name": "replay-infra",
+	"version": "1.0.0",
+	"description": "1. videoRecorder- capture streams video.",
+	"main": "index.js",
+	"dependencies": {
+		"busmq": "^1.5.4",
+		"lodash": "^4.13.1",
+		"fs": "^0.0.2",
+		"mongoose": "^4.5.1",
+		"path": "^0.12.7",
+	},
+	"devDependencies": {
+		"eslint": "^2.12.0",
+		"eslint-config-google": "^0.6.0",
+		"pre-commit": "^1.1.3"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint": "./lintStagedFiles.sh",
+		"lintAll": "eslint ."
+	},
+	"pre-commit": {
+		"run": "lint",
+		"colors": true
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/linnovate/replay-infra.git"
+	},
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/linnovate/replay-infra/issues"
+	},
+	"homepage": "https://github.com/linnovate/replay-infra#readme"
+}
