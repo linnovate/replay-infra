@@ -1,7 +1,9 @@
 var Promise = require('bluebird'),
-	VideoMetadata = require('replay-schemas/VideoMetadata');
+	BusService = require('replay-bus-service'),
+	JobsService = require('replay-jobs-service');
 
 var fs = Promise.promisifyAll(require('fs'));
+var busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 
 module.exports.start = function(params) {
 	console.log('MetadataParserService started.');
@@ -23,7 +25,7 @@ module.exports.start = function(params) {
 			return dataToObjects(method, data, params);
 		})
 		.then(function(videoMetadatas) {
-			return saveToDatabases(videoMetadatas, params);
+			return produceInsertionToDatabasesJobs(videoMetadatas);
 		})
 		.catch(handleErrors);
 };
@@ -62,69 +64,45 @@ function dataToObjects(method, data, params) {
 	});
 }
 
-// async save to databases
-// I do not want to stop everything if one save has failed,
-// so I resolve anyway, and log errors to console.
-function saveToDatabases(videoMetadatas, params) {
+function produceInsertionToDatabasesJobs(videoMetadatas) {
 	return new Promise(function(resolve, reject) {
-		console.log('Saving to databases.');
+		console.log('Producing save to databases jobs.');
 
-		saveToMongo(videoMetadatas, params);
-		saveToElastic(videoMetadatas, params);
+		produceSaveToMongoJob(videoMetadatas);
+		produceSaveToElasticJob(videoMetadatas);
 
 		resolve();
 	});
+}
+
+function produceSaveToMongoJob(videoMetadatas) {
+	console.log('Producing save to Mongo job...');
+	var message = {
+		params: videoMetadatas
+	};
+	var queueName = JobsService.getQueueName('MetadataToMongo');
+	if (queueName) {
+		busService.produce(queueName, message);
+	} else {
+		throw new Error('Could not find queue name of the inserted job type');
+	}
+}
+
+function produceSaveToElasticJob(videoMetadatas) {
+	console.log('Producing save to Elastic job...');
+	var message = {
+		params: videoMetadatas
+	};
+	var queueName = JobsService.getQueueName('MetadataToElastic');
+	if (queueName) {
+		busService.produce(queueName, message);
+	} else {
+		throw new Error('Could not find queue name of the inserted job type');
+	}
 }
 
 function handleErrors(err) {
 	if (err) {
 		console.log(err);
 	}
-}
-
-function saveToMongo(videoMetadatas, params) {
-	VideoMetadata.insertMany(videoMetadatas, function(err, objs) {
-		if (err) {
-			console.log(err);
-		} else {
-			console.log('Bulk insertion to mongo succeed.');
-		}
-	});
-}
-
-function saveToElastic(videoMetadatas, params) {
-	// convert xmls to bulk request object for elastic
-	var bulkRequest = videoMetadatasToElasticBulkRequest(videoMetadatas, params);
-
-	global.elasticsearch.bulk({
-		body: bulkRequest
-	}, function(err, resp) {
-		if (err) {
-			console.log(err);
-		} else {
-			console.log('Bulk insertion to elastic succeed.');
-		}
-	});
-}
-
-function videoMetadatasToElasticBulkRequest(videoMetadatas, params) {
-	var bulkRequest = [];
-
-	videoMetadatas.forEach(function(videoMetadata) {
-		// efficient way to remove auto generated _id
-		videoMetadata._id = undefined;
-
-		// push action
-		bulkRequest.push({
-			index: {
-				_index: 'videometadatas',
-				_type: 'videometadata'
-			}
-		});
-
-		// push document
-		bulkRequest.push(videoMetadata);
-	});
-
-	return bulkRequest;
 }

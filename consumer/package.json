@@ -15,7 +15,7 @@
     "lodash": "^4.13.1",
     "mongoose": "^4.5.0",
     "replay-bus-service": "^1.0.0",
-    "replay-jobs-service": "^1.0.1",
+    "replay-jobs-service": "^1.0.2",
     "replay-kaltura-service": "^1.0.1",
     "replay-schemas": "^1.0.0",
     "xml2js": "^0.4.16"
