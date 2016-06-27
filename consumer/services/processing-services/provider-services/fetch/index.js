@@ -7,7 +7,7 @@ module.exports.start = function(params) {
 
 	console.log('Lifting appropriate fetch service...');
 	// dynamically lift the provider's upload service
-	var fetchService = require('../providers/' + process.env.PROVIDER + '/FetchService');
+	var fetchService = require('../providers/' + process.env.PROVIDER + '/fetch-service');
 	if (fetchService) {
 		fetchService.fetch(params);
 	} else {

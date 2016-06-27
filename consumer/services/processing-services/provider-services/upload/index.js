@@ -7,7 +7,7 @@ module.exports.start = function(params) {
 
 	console.log('Lifting appropriate upload service...');
 	// dynamically lift the provider's upload service
-	var uploadService = require('../providers/' + process.env.PROVIDER + '/UploadService');
+	var uploadService = require('../providers/' + process.env.PROVIDER + '/upload-service');
 	if (uploadService) {
 		uploadService.upload(params);
 	} else {

@@ -56,7 +56,7 @@ function handleMessage(message) {
 
 	// get the appropriate service name and start it
 	var serviceName = JobsService.getServiceName(jobType);
-	var service = require('./services/ProcessingServices/' + serviceName);
+	var service = require('./services/processing-services/' + serviceName);
 	if (service) {
 		service.start(JSON.parse(message).params);
 	} else {

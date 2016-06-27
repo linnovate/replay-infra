@@ -51,10 +51,10 @@ function dataToObjects(method, data, params) {
 	return new Promise(function(resolve, reject) {
 		var standardHandler;
 		if (method.standard === 'VideoStandard' && method.version === 0.9) {
-			standardHandler = require('./Standards/VideoStandard/0.9');
+			standardHandler = require('./standards/video-standard/0.9');
 			resolve(standardHandler.parse(data));
 		} else if (method.standard === 'VideoStandard' && method.version === 1.0) {
-			standardHandler = require('./Standards/VideoStandard/1.0');
+			standardHandler = require('./standards/video-standard/1.0');
 			resolve(standardHandler.parse(data, params));
 		} else {
 			return reject('Unsupported standard and version');
