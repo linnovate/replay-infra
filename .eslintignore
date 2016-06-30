@@ -8,3 +8,5 @@
 /node_modules/KalturaService/kaltura
 
 !/node_modules/schemas
+
+/consumer/services/processing-services/metadata-parser-service/standards/video-standard/1.0/services/utm-lat-lon-converter.js
