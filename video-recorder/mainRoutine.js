@@ -42,7 +42,8 @@ function handleVideoSavingProcess(StreamingSource) {
 	var FileWatcherTimer,
 		StreamStatusTimer,
 		command,
-		metadataFile;
+		metadataFile,
+		fileName;
 	console.log('#MainRoutine# Start listen to port: ' + StreamingSource.SourcePort); // still not finished.
 	// Starting Listen to the address.
 	startStreamListener(StreamingSource, function() {
@@ -90,6 +91,7 @@ function handleVideoSavingProcess(StreamingSource) {
 			console.log('#MainRoutine# new path create at: ', CurrentPath);
 		}
 		var now = getCurrentTime();
+		fileName = now;
 		var ffmpegParams = {
 			inputs: ['udp://' + StreamingSource.SourceIP + ':' + StreamingSource.SourcePort],
 			duration: DURATION,
@@ -139,7 +141,12 @@ function handleVideoSavingProcess(StreamingSource) {
 			.then(function() {
 				/***************************************************/
 				/*           just for demo.. shouldnt be here      */
-				sendMessage({ streamingSource: StreamingSource, videoPath: command._outputs[0].target, dataPath: metadataFile});
+				sendMessage({
+					streamingSource: StreamingSource,
+					videoPath: command._outputs[0].target,
+					dataPath: metadataFile,
+					videoName: fileName + '.mp4'
+				});
 				/***************************************************/
 			})
 			.then(function() {
@@ -166,7 +173,12 @@ function handleVideoSavingProcess(StreamingSource) {
 			.then(function() {
 				/***************************************************/
 				/*           just for demo.. shouldnt be here      */
-				sendMessage({ streamingSource: StreamingSource, videoPath: command._outputs[0].target, dataPath: metadataFile});
+				sendMessage({
+					streamingSource: StreamingSource,
+					videoPath: command._outputs[0].target,
+					dataPath: metadataFile,
+					videoName: fileName + '.mp4'
+				});
 				/***************************************************/
 			})
 			.then(function() {
