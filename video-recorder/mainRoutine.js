@@ -43,7 +43,9 @@ function handleVideoSavingProcess(StreamingSource) {
 		StreamStatusTimer,
 		command,
 		metadataFile,
-		fileName;
+		fileName,
+		relativePath;
+
 	console.log('#MainRoutine# Start listen to port: ' + StreamingSource.SourcePort); // still not finished.
 	// Starting Listen to the address.
 	startStreamListener(StreamingSource, function() {
@@ -77,36 +79,27 @@ function handleVideoSavingProcess(StreamingSource) {
 
 	// When the StreamListenerService found some streaming data in the address.
 	event.on('StreamingData', function() {
-		var CurrentPath = pathBuilder({ SourceName: StreamingSource.SourceName });
-		// check if the path is exist (path e.g. 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
-		try {
-			console.log('#MainRoutine# Check if the path: ', CurrentPath, ' exist...');
-			fs.accessSync(CurrentPath, fs.F_OK);
-			console.log('#MainRoutine# The path is exist');
-		} catch (err) {
-			// when path not exist
-			console.log('#MainRoutine# The path not exist...');
-			// create a new path
-			mkdirp.sync(CurrentPath);
-			console.log('#MainRoutine# new path create at: ', CurrentPath);
-		}
-		var now = getCurrentTime();
-		fileName = now;
-		var ffmpegParams = {
-			inputs: ['udp://' + StreamingSource.SourceIP + ':' + StreamingSource.SourcePort],
-			duration: DURATION,
-			dir: CurrentPath,
-			file: now
-		};
-		// starting the ffmpeg process
-		console.log('#MainRoutine# Record new video at: ', CurrentPath);
-		// console.log(JSON.stringify(ViewStandardHandler),ViewStandardHandler);
+		relativePath = StreamingSource.SourceName + '/' + getCurrentDate();
+		var path = process.env.STORAGE_PATH + '/' + relativePath;
+		checkPath(path);
 
+		var currentTime = getCurrentTime();
 		/************************************************************/
 		/*    Adding Data Manualy (It will be deleted!!!)           */
 		/************************************************************/
-		metadataFile = CurrentPath + '/' + now + '.data';
-		addMetadataManualy(metadataFile);
+		metadataFile = relativePath + '/' + currentTime + '.data';
+		addMetadataManualy(process.env.STORAGE_PATH + '/' + metadataFile);
+
+		relativePath = relativePath + '/' + currentTime + '.mp4';
+		fileName = currentTime;
+		var ffmpegParams = {
+			inputs: ['udp://' + StreamingSource.SourceIP + ':' + StreamingSource.SourcePort],
+			duration: DURATION,
+			dir: path,
+			file: currentTime
+		};
+		// starting the ffmpeg process
+		console.log('#MainRoutine# Record new video at: ', path);
 		/************************************************************/
 		ViewStandardHandler.realizeStandardCaptureMethod(StreamingSource.SourceType, StreamingSource.StreamingMethod.version)
 			.then(function(captureCommand) {
@@ -143,7 +136,7 @@ function handleVideoSavingProcess(StreamingSource) {
 				/*           just for demo.. shouldnt be here      */
 				sendMessage({
 					streamingSource: StreamingSource,
-					videoPath: command._outputs[0].target,
+					videoPath: relativePath,
 					dataPath: metadataFile,
 					videoName: fileName + '.mp4'
 				});
@@ -175,7 +168,7 @@ function handleVideoSavingProcess(StreamingSource) {
 				/*           just for demo.. shouldnt be here      */
 				sendMessage({
 					streamingSource: StreamingSource,
-					videoPath: command._outputs[0].target,
+					videoPath: relativePath,
 					dataPath: metadataFile,
 					videoName: fileName + '.mp4'
 				});
@@ -208,9 +201,19 @@ function handleVideoSavingProcess(StreamingSource) {
 /*                                                                                          */
 /********************************************************************************************/
 
-// build new path in the current date. e.g: STORAGE_PATH/27-05-1996
-function pathBuilder(pathParams) {
-	return process.env.STORAGE_PATH + '/' + pathParams.SourceName + '/' + getCurrentDate();
+// check if the path is exist (path e.g. 'STORAGE_PATH/SourceID/CurrentDate(dd-mm-yyyy)/')
+function checkPath(path) {
+	try {
+		console.log('#MainRoutine# Check if the path: ', path, ' exist...');
+		fs.accessSync(path, fs.F_OK);
+		console.log('#MainRoutine# The path is exist');
+	} catch (err) {
+		// when path not exist
+		console.log('#MainRoutine# The path not exist...');
+		// create a new path
+		mkdirp.sync(path);
+		console.log('#MainRoutine# new path create at: ', path);
+	}
 }
 
 // Sets a keep alive status notifier
