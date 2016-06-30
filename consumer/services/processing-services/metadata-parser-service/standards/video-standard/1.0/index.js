@@ -1,5 +1,6 @@
 var xml2js = require('xml2js'),
 	_ = require('lodash'),
+	moment = require('moment'),
 	VideoMetadata = require('replay-schemas/VideoMetadata');
 
 // parses the raw data from the metadata file into metadataVideo objects
@@ -43,12 +44,30 @@ module.exports.parse = function(data, params) {
 };
 
 function metadataObjectsToVideoMetadata(metadatas, params) {
-	return _.map(metadatas, function(metadata) {
+	var mapping = _.map(metadatas, function(metadata) {
 		return new VideoMetadata({
 			sourceId: params.sourceId,
 			videoId: params.videoId,
 			receivingMethod: params.method,
+			timestamp: moment.utc(metadata.TimeTag.Time),
+			sensorPosition: {
+				lat: metadata.SensorPOV.Position.Latitude,
+				lon: metadata.SensorPOV.Position.Longitude
+			},
+			sensorTrace: toWGS84(metadata.SensorTrace.TracePoint),
 			data: metadata
 		});
+	});
+	return mapping;
+}
+
+// convert EPSG Code 32636 (UTM 36N) to WGS-84
+function toWGS84(epsgPoints) {
+	return _.map(epsgPoints, function(point) {
+		return {
+			lat: 31.760051,
+			lon: 35.210370,
+			_id: undefined
+		};
 	});
 }
