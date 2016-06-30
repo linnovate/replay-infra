@@ -18,7 +18,6 @@
   "homepage": "https://github.com/CodeJjang/video-recorder#readme",
   "dependencies": {
     "bluebird": "^3.4.0",
-    "bluebirds": "0.0.6",
     "express": "^4.13.4",
     "fluent-ffmpeg": "^2.1.0",
     "mkdirp": "^0.5.1",
