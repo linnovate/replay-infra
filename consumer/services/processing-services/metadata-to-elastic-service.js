@@ -1,10 +1,16 @@
 module.exports.start = function(metadatas) {
 	console.log('MetadataToElastic service started.');
 
-	saveToElastic(metadatas);
+	if (metadatas && metadatas.length > 0) {
+		saveToElastic(metadatas);
+	} else {
+		console.log('No metadatas receieved.');
+	}
 };
 
 function saveToElastic(videoMetadatas) {
+	console.log('Saving to elastic...');
+
 	// convert xmls to bulk request object for elastic
 	var bulkRequest = videoMetadatasToElasticBulkRequest(videoMetadatas);
 
