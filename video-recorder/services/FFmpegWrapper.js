@@ -1,9 +1,8 @@
 var ffmpeg = require('fluent-ffmpeg'),
-	promise = require('bluebird');
+	BluebirdPromise = require('bluebird');
 var event = require('./EventEmitterSingleton');
 
-const //FFMPEG_TIMEOUT = 30 * 60 * 1000,
-	SERVICE_NAME = '#FFmpegWrapper#';
+const SERVICE_NAME = '#FFmpegWrapper#';
 
 module.exports = {
 	// Params object (e.g{inputs:<[inputs]>,Directory:<dir/dir2>,file:<filename>,duration:<sec/hh:mm:ss.xxx>})
@@ -11,11 +10,11 @@ module.exports = {
 		// setting the boolean requests to check params
 		var checkBadParams = (!params.duration || !params.file || !params.dir || !params.inputs || params.inputs.length === 0);
 		if (checkBadParams) {
-			return promise.reject('bad params suplied');
+			return BluebirdPromise.reject('bad params suplied');
 		}
 		console.log(SERVICE_NAME, 'capturing muxed!!!!!');
 		// Building the FFmpeg command
-		var builder = new promise(function(resolve, reject) {
+		var builder = new BluebirdPromise(function(resolve, reject) {
 			// FFmpeg command initialization
 			var command = ffmpeg();
 			// Resolving the command forward
@@ -23,7 +22,8 @@ module.exports = {
 		});
 
 		// Start building command
-		builder.then(function(command) {
+		builder
+			.then(function(command) {
 				return initializeInputs(command, params);
 			})
 			.then(function(command) {
@@ -40,6 +40,9 @@ module.exports = {
 			})
 			.then(function(command) {
 				return setEvents(command, params);
+			})
+			.then(function(command) {
+				return runCommand(command);
 			})
 			.catch(function(err) {
 				event.emit('FFmpegError', err);
@@ -52,10 +55,10 @@ module.exports = {
 		// setting the boolean requests to check params
 		var checkBadParams = (!params.duration || !params.file || !params.dir || !params.inputs || params.inputs.length === 0);
 		if (checkBadParams) {
-			return promise.reject('bad params suplied');
+			return BluebirdPromise.reject('bad params suplied');
 		}
 		// Building the FFmpeg command
-		var builder = new promise(function(resolve, reject) {
+		var builder = new BluebirdPromise(function(resolve, reject) {
 			// FFmpeg command initialization
 			var command = ffmpeg();
 			// Resolving the command forward
@@ -63,7 +66,8 @@ module.exports = {
 		});
 
 		// Start building command
-		builder.then(function(command) {
+		builder
+			.then(function(command) {
 				return initializeInputs(command, params);
 			})
 			.then(function(command) {
@@ -78,6 +82,9 @@ module.exports = {
 			.then(function(command) {
 				return setEvents(command, params);
 			})
+			.then(function(command) {
+				return runCommand(command);
+			})
 			.catch(function(err) {
 				event.emit('FFmpegError', err);
 			});
@@ -89,10 +96,10 @@ module.exports = {
 		// setting the boolean requests to check params
 		var checkBadParams = (!params.duration || !params.file || !params.dir || !params.inputs || params.inputs.length === 0);
 		if (checkBadParams) {
-			return promise.reject('bad params suplied');
+			return BluebirdPromise.reject('bad params suplied');
 		}
 		// Building the FFmpeg command
-		var builder = new promise(function(resolve, reject) {
+		var builder = new BluebirdPromise(function(resolve, reject) {
 			// FFmpeg command initialization
 			var command = ffmpeg();
 			// Resolving the command forward
@@ -100,7 +107,8 @@ module.exports = {
 		});
 
 		// Start building command
-		builder.then(function(command) {
+		builder
+			.then(function(command) {
 				return initializeInputs(command, params);
 			})
 			.then(function(command) {
@@ -108,6 +116,9 @@ module.exports = {
 			})
 			.then(function(command) {
 				return setEvents(command, params);
+			})
+			.then(function(command) {
+				return runCommand(command);
 			})
 			.catch(function(err) {
 				event.emit('FFmpegError', err);
@@ -117,9 +128,15 @@ module.exports = {
 	}
 };
 
+function runCommand(command) {
+	command.run();
+	return command;
+}
+
 function setEvents(command, params) {
-	command.on('start', function(commandLine) {
-			console.log(SERVICE_NAME, 'Spawned Ffmpeg with command: ' + commandLine);
+	command
+		.on('start', function(commandLine) {
+			console.log(SERVICE_NAME, 'Spawned FFmpeg with command: ' + commandLine);
 			// Initialize indicator for data started flowing
 			command.bytesCaptureBegan = false;
 		})
@@ -140,8 +157,6 @@ function setEvents(command, params) {
 			// command.kill('SIGKILL');
 			event.emit('FFmpegError');
 		});
-
-	command.run();
 	return command;
 }
 

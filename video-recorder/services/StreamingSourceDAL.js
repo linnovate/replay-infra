@@ -37,13 +37,20 @@ function StreamingSourceDAL(host, port, db) {
 
 	// Help method to update data source
 	var updateSourceStatus = function(sourceStatus) {
-		StreamingSource.update({ SourceID: sourceStatus.sourceId }, { StreamingStatus: { status: sourceStatus.status, updated_at: moment.now() } },
-		null, function(err, numEffected) {
-			if (err) {
-				return promise.reject('Canot update streaming source status: ' + err);
-			}
-			return promise.resolve(numEffected);
-		});
+		StreamingSource.update(
+			{ SourceID: sourceStatus.sourceId }, {
+				StreamingStatus: {
+					status: sourceStatus.status,
+					lastUpdateTime: moment.now()
+				}
+			},
+			null,
+			function(err, numEffected) {
+				if (err) {
+					return promise.reject('Canot update streaming source status: ' + err);
+				}
+				return promise.resolve(numEffected);
+			});
 	};
 
 	// Update CAPTURING status and current update time
