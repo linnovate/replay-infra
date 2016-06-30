@@ -9,7 +9,7 @@ var message = {
 		dataRelativePath: 'sample.data',
 		receivingMethod: {
 			standard: 'VideoStandard',
-			version: 1.0
+			version: '1.0'
 		}
 	}
 };
