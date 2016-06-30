@@ -1,3 +1,10 @@
 */node_modules/*
 
-!/node_modules/Example
+# !/node_modules/BusService
+
+# !/node_modules/JobsService
+
+# !/node_modules/KalturaService
+# /node_modules/KalturaService/kaltura
+
+# !/node_modules/schemas

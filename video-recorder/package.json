@@ -1,28 +1,28 @@
 {
-	"name": "video-recorder",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/CodeJjang/video-recorder.git"
-	},
-	"author": "",
-	"license": "ISC",
-	"bugs": {
-		"url": "https://github.com/CodeJjang/video-recorder/issues"
-	},
-	"homepage": "https://github.com/CodeJjang/video-recorder#readme",
-	"dependencies": {
-		"bluebird": "^3.4.0",
-		"bluebirds": "0.0.6",
-		"express": "^4.13.4",
-		"fluent-ffmpeg": "^2.1.0",
-		"mkdirp": "^0.5.1",
-		"moment": "^2.13.0",
-		"mongoose": "^4.4.19"
-	}
+  "name": "video-recorder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeJjang/video-recorder.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CodeJjang/video-recorder/issues"
+  },
+  "homepage": "https://github.com/CodeJjang/video-recorder#readme",
+  "dependencies": {
+    "bluebird": "^3.4.0",
+    "express": "^4.13.4",
+    "fluent-ffmpeg": "^2.1.0",
+    "mkdirp": "^0.5.1",
+    "moment": "^2.13.0",
+    "mongoose": "^4.4.19",
+    "replay-bus-service": "^1.0.0"
+  }
 }
