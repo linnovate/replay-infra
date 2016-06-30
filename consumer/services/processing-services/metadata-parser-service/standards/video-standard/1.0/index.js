@@ -56,21 +56,37 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 				lat: metadata.SensorPOV.Position.Latitude,
 				lon: metadata.SensorPOV.Position.Longitude
 			},
-			sensorTrace: toWGS84(metadata.SensorTrace.TracePoint),
+			sensorTrace: tracePointsToGeoJson(metadata.SensorTrace.TracePoint),
 			data: metadata
 		});
 	});
 	return mapping;
 }
 
+// convert tracePoints array in the form of:
+// [{ Eastings: ... , Northing: ....}]
+// to Geo Json in the form of:
+// { type: 'polygon', coordinates: [[lon, lat]]}
+function tracePointsToGeoJson(tracePoints) {
+	var geoJson = {};
+	geoJson.type = 'polygon';
+	// check there are at least 2 points (which is valid, we duplicate the first one)
+	if (tracePoints.length > 1) {
+		geoJson.coordinates = toWGS84(tracePoints);
+		// copy first coordinate to last position in order to complete the polygon
+		geoJson.coordinates.push(geoJson.coordinates[0]);
+		return geoJson;
+	}
+	// return undefined sensorTrace
+	console.log('Trace points received are not a valid polygon');
+	return undefined;
+}
+
 // convert EPSG Code 32636 (UTM 36N) points to WGS-84 points
 function toWGS84(epsgPoints) {
 	return _.map(epsgPoints, function(point) {
 		var latlon = geoConverter.utmToLatLon(point.Eastings, point.Northings, 36, false);
-		return {
-			lat: latlon[0],
-			lon: latlon[1],
-			_id: undefined
-		};
+		// Geo-Json coordinates are lon, lat!
+		return [latlon[1], latlon[0]];
 	});
 }
