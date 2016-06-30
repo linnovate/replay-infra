@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<VIMSMessage xmlns="http://vims.idf/stat/v1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+xsi:schemaLocation="http://vims.idf/stat/v1.0 VIMS-Stat-1.0-Final.xsd" VIMSVersion="1.0">
+	<Classification>Unclassified</Classification>
+	<TimeTag>
+		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Accuracy>GPS</Accuracy>
+	</TimeTag>
+	<VideoSource>
+		<PlatformKind>Turbo</PlatformKind>
+		<PlatformID>20</PlatformID>
+		<SensorKind>Bat</SensorKind>
+		<SensorID>1</SensorID>
+	</VideoSource>
+	<VideoParams>
+		<FocalLength>35</FocalLength>
+		<FNumber>5.7</FNumber>
+		<PixelSize>
+			<HSize>60</HSize>
+			<VSize>40</VSize>
+		</PixelSize>
+		<Resolution>
+			<HRes>720</HRes>
+			<VRes>480</VRes>
+			<ScanFormat>Progressive</ScanFormat>
+		</Resolution>
+		<BitDepth>8</BitDepth>
+		<ChannelKind>IR</ChannelKind>
+		<FrameRate>30</FrameRate>
+		<Polarity>Hot White</Polarity>
+	</VideoParams>
+</VIMSMessage>
