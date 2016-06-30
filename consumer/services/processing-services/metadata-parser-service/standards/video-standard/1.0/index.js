@@ -3,6 +3,8 @@ var xml2js = require('xml2js'),
 	moment = require('moment'),
 	VideoMetadata = require('replay-schemas/VideoMetadata');
 
+var geoConverter = require('./services/utm-lat-lon-converter');
+
 // parses the raw data from the metadata file into metadataVideo objects
 // params is a json of:
 // sourceId (must)
@@ -49,7 +51,7 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 			sourceId: params.sourceId,
 			videoId: params.videoId,
 			receivingMethod: params.method,
-			timestamp: moment.utc(metadata.TimeTag.Time),
+			timestamp: moment(metadata.TimeTag.Time).utc().format(),
 			sensorPosition: {
 				lat: metadata.SensorPOV.Position.Latitude,
 				lon: metadata.SensorPOV.Position.Longitude
@@ -61,12 +63,13 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 	return mapping;
 }
 
-// convert EPSG Code 32636 (UTM 36N) to WGS-84
+// convert EPSG Code 32636 (UTM 36N) points to WGS-84 points
 function toWGS84(epsgPoints) {
 	return _.map(epsgPoints, function(point) {
+		var latlon = geoConverter.utmToLatLon(point.Eastings, point.Northings, 36, false);
 		return {
-			lat: 31.760051,
-			lon: 35.210370,
+			lat: latlon[0],
+			lon: latlon[1],
 			_id: undefined
 		};
 	});
