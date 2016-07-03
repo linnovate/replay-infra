@@ -1,10 +1,6 @@
 */node_modules/*
+!/node_modules/schemas
 
-# !/node_modules/BusService
+/consumer/services/processing-services/metadata-parser-service/standards/video-standard/1.0/services/utm-lat-lon-converter.js
 
-# !/node_modules/JobsService
-
-# !/node_modules/KalturaService
-# /node_modules/KalturaService/kaltura
-
-# !/node_modules/schemas
+/query-service

@@ -14,7 +14,36 @@ Run redis:
 ```
 redis-server
 ```
-Make sure to have MongoDB and Elasticsearch installed locally, else you may configure them via the environment variables .
+Make sure to have MongoDB and ElasticSearch installed locally, else you may configure them via the environment variables .
+
+Initialize ElasticSearch:
+```
+PUT videometadatas
+{
+   "settings" : {
+       "index" : {
+           "number_of_shards" :5,
+           "number_of_replicas" : 1
+       }
+   },
+   "mappings": {
+       "videometadata": {
+            "properties": {
+              "sourceId": { "type": "integer" },
+              "videoId": { "type": "string" },
+              "receivingMethod": {
+                "standard": { "type": "string"},
+                "version": { "type": "string" }
+              },
+              "timestamp": { "type": "date" },
+              "sensorPosition": { "type": "geo_point" },
+              "sensorTrace": { "type": "geo_shape" },
+              "data": { "type": "object" }
+            }
+       }
+    }
+}
+```
 
 Run app (default parameters will be used):
 ```
