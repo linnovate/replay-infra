@@ -4,13 +4,6 @@
   "description": "1. videoRecorder- capture streams video.",
   "main": "index.js",
   "dependencies": {
-    "bluebird": "^3.4.0",
-    "busmq": "^1.5.4",
-    "fs": "^0.0.2",
-    "lodash": "^4.13.1",
-    "mongoose": "^4.4.20",
-    "path": "^0.12.7",
-    "stanag": "^1.0.1"
   },
   "devDependencies": {
     "eslint": "^2.12.0",
