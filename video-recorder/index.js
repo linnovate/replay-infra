@@ -4,4 +4,12 @@ var	mainRoutine = require('./mainRoutine');
 
 var	app = express();
 
-app.listen(3000 + process.env.INDEX, mainRoutine);
+var index = parseInt(process.env.INDEX);
+
+if(!isNaN(index)){
+	app.listen(3000 + index, mainRoutine);	
+}
+else{
+	throw new Error('Process index specified is not a number!');
+}
+
