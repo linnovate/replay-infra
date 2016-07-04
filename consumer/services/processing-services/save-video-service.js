@@ -1,6 +1,5 @@
 var BusService = require('replay-bus-service'),
-	JobsService = require('replay-jobs-service'),
-	Video = require('replay-schemas/Video');
+	JobsService = require('replay-jobs-service');
 
 var busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 
@@ -52,7 +51,7 @@ function validateInput(params) {
 function saveVideoToMongo(params) {
 	console.log('Saving video object to mongo...');
 
-	return Video.create({
+	return global.models.video.create({
 		sourceId: params.sourceId,
 		relativePath: params.videoRelativePath,
 		name: params.videoName,

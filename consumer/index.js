@@ -4,11 +4,15 @@ var BusService = require('replay-bus-service'),
 	bluebird = require('bluebird'),
 	JobsService = require('replay-jobs-service');
 
+var waterlineConfig = require('replay-schemas/waterlineConfig');
+
 // set mongoose promise library
 mongoose.Promise = bluebird.Promise;
 
 // notify we're up, and check input
-console.log('Post processing consumer is up!');
+console.log('Consumer is up!');
+
+waterlineConfig();
 
 // extract command line params
 var jobType = process.argv[2];
@@ -66,35 +70,7 @@ function handleMessage(message) {
 }
 
 function connectDatabases() {
-	connectMongo();
 	connectElasticSearch();
-}
-
-function connectMongo() {
-	var host = process.env.MONGO_HOST || 'localhost';
-	var port = process.env.MONGO_PORT || 27017;
-
-	var keepAliveInSeconds = 60 * 60 * 24 * 30; // 30 days
-	// initialize options
-	var options = {
-		server: {
-			socketOptions: {
-				keepAlive: keepAliveInSeconds
-			}
-		},
-		replset: {
-			socketOptions: {
-				keepAlive: keepAliveInSeconds
-			}
-		}
-	};
-
-	var uri = 'mongodb://' + host + ':' + port + '/' + process.env.MONGO_DATABASE;
-	// connect to mongo
-	mongoose.connect(uri, options);
-	global.mongoose = mongoose;
-
-	console.log('Connected to mongo');
 }
 
 function connectElasticSearch() {

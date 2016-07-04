@@ -1,7 +1,6 @@
 var xml2js = require('xml2js'),
 	_ = require('lodash'),
-	moment = require('moment'),
-	VideoMetadata = require('replay-schemas/VideoMetadata');
+	moment = require('moment');
 
 var geoConverter = require('./services/utm-lat-lon-converter');
 
@@ -47,7 +46,7 @@ module.exports.parse = function(data, params) {
 
 function metadataObjectsToVideoMetadata(metadatas, params) {
 	var mapping = _.map(metadatas, function(metadata) {
-		return new VideoMetadata({
+		return {
 			sourceId: params.sourceId,
 			videoId: params.videoId,
 			receivingMethod: params.method,
@@ -58,7 +57,7 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 			},
 			sensorTrace: tracePointsToGeoJson(metadata.SensorTrace.TracePoint),
 			data: metadata
-		});
+		};
 	});
 	return mapping;
 }
