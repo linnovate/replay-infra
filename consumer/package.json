@@ -18,7 +18,9 @@
     "replay-jobs-service": "^1.0.2",
     "replay-kaltura-service": "^1.0.1",
     "replay-schemas": "^1.0.0",
+    "sails-mongo": "^0.12.0",
     "stanag": "^1.0.2",
+    "waterline": "^0.12.2",
     "xml2js": "^0.4.16"
   }
 }
