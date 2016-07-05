@@ -6,29 +6,21 @@
 /*                                                                                          */
 /********************************************************************************************/
 
-module.export = new Exitutil();
+module.exports = new Exitutil();
 
 function Exitutil() {
 	var _ffmpegProcessCommand;
 
-	function setFFmpegProcessCommand(command) {
+	function _setFFmpegProcessCommand(command) {
 		_ffmpegProcessCommand = command;
 	}
-
-	process.stdin.resume(); // so the program will not close instantly
-
-	// do something when app is closing
-	// process.on('exit', exitHandler.bind(null));
-	// catches ctrl+c event
-	process.on('SIGINT', exitHandler.bind(null, { exit: true }));
-	// catches uncaught exceptions
-	process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
 
 	function exitHandler(options, err) {
 		if (err) {
 			console.log(err);
 		}
 		if (_ffmpegProcessCommand) {
+			console.log('Killing FFmpeg Process');
 			_ffmpegProcessCommand.kill('SIGKILL');
 		}
 		if (options.exit) {
@@ -37,7 +29,22 @@ function Exitutil() {
 		}
 	}
 
+	function exitBind() {
+		process.stdin.resume(); // so the program will not close instantly
+
+		// do something when app is closing
+		// process.on('exit', exitHandler.bind(null));
+		// catches ctrl+c event
+		process.on('SIGINT', exitHandler.bind(null, { exit: true }));
+		// catches uncaught exceptions
+		process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
+	}
+
+	// function body:
+
+	exitBind();
+
 	return {
-		setFFmpegProcessCommand: setFFmpegProcessCommand
+		setFFmpegProcessCommand: _setFFmpegProcessCommand
 	};
 }

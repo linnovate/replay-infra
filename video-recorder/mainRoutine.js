@@ -1,6 +1,7 @@
 // requires
 var promise = require('bluebird'),
-	moment = require('moment');
+	moment = require('moment'),
+	BusService = require('replay-bus-service');
 var event = require('./services/EventEmitterSingleton'),
 	streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
@@ -88,6 +89,20 @@ function handleVideoSavingProcess(streamingSource) {
 		throw err;
 	});
 
+	// When the file didnt created by the ffmpeg
+	event.on('FileDontExist_FileWatcher', function(err) {
+		console.log(err);
+		startStreamListener(streamingSource)
+			.then(function() {
+				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
+					streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+				});
+			})
+			.catch(function(err) {
+				throw err;
+			});
+	});
+
 	// When the streamListenerService found some streaming data in the address.
 	event.on('StreamingData', function() {
 		var pathForFFmpeg = STORAGE_PATH + '/' + streamingSource.SourceName + '/' + util.getCurrentDate();
@@ -143,11 +158,18 @@ function handleVideoSavingProcess(streamingSource) {
 			globals.fileName = globals.videoRelativeFilePath.split('/').pop().split('.')[0];
 			pathToWatch = globals.videoRelativeFilePath;
 		}
-		startWatchFile(pathToWatch);
+		startWatchFile(pathToWatch)
+			.then(function(timer) {
+				globals.fileWatcherTimer = timer;
+			})
+			.catch(function(err) {
+				throw err;
+			});
 	});
 
 	// when FFmpeg done his progress,
 	event.on('FFmpegDone', function(paths) {
+		console.log(PROCESS_NAME, 'FFmpegDone emited!!!!!!!!!!!!');
 		promise.resolve()
 			.then(function() {
 				// Stop the file watcher.
@@ -179,7 +201,9 @@ function handleVideoSavingProcess(streamingSource) {
 
 	// When Error eccured on FFmpeg service.
 	event.on('FFmpegError', function(err) {
+		console.log(PROCESS_NAME, 'FFmpegError emited!!!!!!!!!!!!');
 		console.log(err);
+		stopWatchFile(globals.fileWatcherTimer);
 		startStreamListener(streamingSource)
 			.then(function() {
 				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
@@ -195,27 +219,13 @@ function handleVideoSavingProcess(streamingSource) {
 	event.on('FileWatchStop', function() {
 		// kill The FFmpeg Process.
 		console.log(PROCESS_NAME + ' The Source stop stream data, Killing the ffmpeg process');
-		promise.resolve()
-			.then(function() {
-				stopFFmpegProcess(globals.command);
-			})
-			.then(function() {
-				sendToJobQueue({
-					streamingSource: streamingSource,
-					videoPath: globals.videoPath,
-					dataPath: globals.metadataRelativeFilePath,
-					videoName: globals.fileNames
-				});
-			})
-			.then(function() {
-				// Start the whole process again by listening to the address again.
-				console.log(PROCESS_NAME + ' Start to listen the address again');
-				startStreamListener(streamingSource).then(function() {
-					globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-						streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
-					});
-				});
-			});
+		stopFFmpegProcess(globals.command);
+		sendToJobQueue({
+			streamingSource: streamingSource,
+			videoPath: globals.videoPath,
+			dataPath: globals.metadataRelativeFilePath,
+			videoName: globals.fileNames
+		});
 	});
 }
 
@@ -249,13 +259,7 @@ function startStreamListener(streamingSource) {
 
 // Start timer that watch over file
 function startWatchFile(path) {
-	fileWatcher.startWatchFile({ path: path, timeToWait: INTERVAL_TIME })
-		.then(function(timer) {
-			return timer;
-		})
-		.catch(function(err) {
-			throw err;
-		});
+	return fileWatcher.startWatchFile({ path: path, timeToWait: INTERVAL_TIME });
 }
 
 // Stop timer that watch over file
@@ -266,18 +270,18 @@ function stopWatchFile(timer) {
 }
 
 // Stop the ffmpeg process
-function stopFFmpegProcess(command) {
+function stopFFmpegProcess(command, callBack) {
 	if (command) {
 		command.kill('SIGKILL');
+	}
+	if (callBack) {
+		callBack();
 	}
 }
 
 // Send message to the next service.
 function sendToJobQueue(params) {
-	console.log(params);
-	var BusService = require('replay-bus-service');
-
-	var busService = new BusService(REDIS_HOST, REDIS_PORT);
+	var busServiceProducer = new BusService(REDIS_HOST, REDIS_PORT);
 	var message = {
 		params: {
 			sourceId: params.streamingSource.SourceID,
@@ -290,7 +294,7 @@ function sendToJobQueue(params) {
 			}
 		}
 	};
-	busService.produce('NewVideosQueue', message);
+	busServiceProducer.produce('NewVideosQueue', message);
 }
 
 /********************************************************************************************/

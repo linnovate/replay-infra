@@ -16,7 +16,7 @@ function Utilitties() {
  * For Integration with parser component *
  *****************************************/
 function addMetadataManualy(metadataFile) {
-	fs.createReadStream('../DemoData/DemoXML.xml')
+	fs.createReadStream('./DemoData/DemoXML.xml')
 		.pipe(fs.createWriteStream(metadataFile));
 }
 

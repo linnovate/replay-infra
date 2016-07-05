@@ -135,28 +135,29 @@ function runCommand(command) {
 
 function setEvents(command, params) {
 	var videoPath = params.dir + '/' + params.file + '.mp4';
-	var telemtryPath = params.dir + '/' + params.file + '.data';
+	var telemetryPath = params.dir + '/' + params.file + '.data';
 	command
 		.on('start', function(commandLine) {
 			console.log(SERVICE_NAME, 'Spawned FFmpeg with command: ' + commandLine);
 			// Initialize indicator for data started flowing
+			event.emit('FFmpegBegin', { telemetryPath: telemetryPath, videoPath: videoPath });
 			command.bytesCaptureBegan = false;
 		})
 		.on('progress', function(progress) {
 			// Check if should notify for first bytes captured
 			if (command.bytesCaptureBegan === false) {
 				command.bytesCaptureBegan = true;
-				event.emit('FFmpegBegin', { telemtryPath: telemtryPath, videoPath: videoPath });
+				event.emit('FFmpegFirstProgress', { telemetryPath: telemetryPath, videoPath: videoPath });
 			}
 		})
 		.on('end', function() {
 			// command.kill('SIGKILL');
 			console.log(SERVICE_NAME, 'Processing finished !');
-			event.emit('FFmpegDone', { telemtryPath: telemtryPath, videoPath: videoPath });
+			event.emit('FFmpegDone', { telemetryPath: telemetryPath, videoPath: videoPath });
 		})
 		.on('error', function(err) {
 			// command.kill('SIGKILL');
-			event.emit('FFmpegError', err);
+			event.emit('FFmpegError', 'Error on FFmpegWrapper : ' + err);
 		});
 	return command;
 }
@@ -179,7 +180,7 @@ function videoOutput(command, params) {
 
 // Define a 360p video output
 function videoOutput360p(command, params) {
-	command.output(params.dir + '/' + params.file + '320p.mp4')
+	command.output(params.dir + '/' + params.file + '_320p.mp4')
 		.duration(params.duration)
 		.outputOptions(['-y'])
 		.format('mp4')
@@ -189,7 +190,7 @@ function videoOutput360p(command, params) {
 
 // Define a 480p video output
 function videoOutput480p(command, params) {
-	command.output(params.dir + '/' + params.file + '480p.mp4')
+	command.output(params.dir + '/' + params.file + '_480p.mp4')
 		.duration(params.duration)
 		.outputOptions(['-y'])
 		.format('mp4')

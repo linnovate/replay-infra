@@ -7,7 +7,8 @@ var fs = require('fs');
 var event = require('./EventEmitterSingleton');
 
 // const
-const SERVICE_NAME = '#FileWatcher#';
+const SERVICE_NAME = '#FileWatcher#',
+	MAX_CHECK_TRIES = 3;
 
 // export out service.
 module.exports = new FileWatcher();
@@ -16,14 +17,16 @@ module.exports = new FileWatcher();
 function FileWatcher() {
 	var _CurrentFileSize = -1,
 		_FileTimer,
-		_timeToWait = 5000;
+		_timeToWait = 5000,
+		_checkingAttempts = 1;
 
 	// Stoping the timer when it needed.
 	var _StopTimer = function(timer) {
 		if (timer) {
 			clearInterval(timer);
-			_CurrentFileSize = -1;
 		}
+		_CurrentFileSize = -1;
+		_checkingAttempts = 1;
 	};
 
 	// Check the file Size, when it not growing it will emit event.
@@ -33,10 +36,16 @@ function FileWatcher() {
 		// Get the State Of the file.
 		fs.stat(path, function(err, stat) {
 			if (err) {
-				// Emit event of error and stop the timer.
-				event.emit('error', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' + err);
-				console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
-				_StopTimer(_FileTimer);
+				if (_checkingAttempts === MAX_CHECK_TRIES) {
+					// Emit event of error and stop the timer.
+					event.emit('FileDontExist_FileWatcher', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' + err);
+					console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
+					_StopTimer(_FileTimer);
+					console.log(err);
+				} else {
+					console.log('try one more time');
+					_checkingAttempts++;
+				}
 				return false;
 			}
 
