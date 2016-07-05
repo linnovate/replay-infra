@@ -5,6 +5,7 @@ var BusService = require('replay-bus-service'),
 	JobsService = require('replay-jobs-service');
 
 var waterlineConfig = require('replay-schemas/waterlineConfig');
+var Promise = bluebird;
 
 // set mongoose promise library
 mongoose.Promise = bluebird.Promise;
@@ -12,24 +13,19 @@ mongoose.Promise = bluebird.Promise;
 // notify we're up, and check input
 console.log('Consumer is up!');
 
-waterlineConfig();
-
 // extract command line params
 var jobType = process.argv[2];
-
 if (!isInputValid()) {
 	console.log('Bad input was received.');
 	process.exit();
 }
-// connect to our databases once so the service won't have to re-create connection each time
-connectDatabases();
 
-// get the matching queue name of the job type
-var queueName = JobsService.getQueueName(jobType);
-
-// create bus
-BusService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
-BusService.consume(queueName, handleMessage);
+waterlineConfig()
+	.then(connectElasticSearch)
+	.then(connectBus)
+	.catch(function(err) {
+		console.log(err);
+	});
 
 // enforces basic validations on the environment input passed to process,
 // such as mandatory parameters.
@@ -54,6 +50,18 @@ function isInputValid() {
 	return true;
 }
 
+function connectBus() {
+	return new Promise(function(reject, resolve) {
+		// get the matching queue name of the job type
+		var queueName = JobsService.getQueueName(jobType);
+
+		// create bus
+		BusService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
+		BusService.consume(queueName, handleMessage);
+		resolve();
+	});
+}
+
 function handleMessage(message) {
 	console.log('Received message: ', message);
 	console.log('Lifting appropriate service...');
@@ -69,21 +77,21 @@ function handleMessage(message) {
 	return;
 }
 
-function connectDatabases() {
-	connectElasticSearch();
-}
-
+// connect to ElasticSearch once so the service won't have to re-create connection each time
 function connectElasticSearch() {
-	var host = process.env.ELASTIC_HOST || 'localhost';
-	var port = process.env.ELASTIC_PORT || 9200;
+	return new Promise(function(reject, resolve) {
+		var host = process.env.ELASTIC_HOST || 'localhost';
+		var port = process.env.ELASTIC_PORT || 9200;
 
-	var uri = host + ':' + port;
-	// connect to elastic
-	// keep-alive is true by default, which means forever
-	global.elasticsearch = new elasticsearch.Client({
-		host: uri,
-		log: ['error', 'warning']
+		var uri = host + ':' + port;
+		// connect to elastic
+		// keep-alive is true by default, which means forever
+		global.elasticsearch = new elasticsearch.Client({
+			host: uri,
+			log: ['error', 'warning']
+		});
+
+		console.log('Connected to elastic.');
+		resolve();
 	});
-
-	console.log('Connected to elastic');
 }
