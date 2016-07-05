@@ -65,15 +65,16 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 // convert tracePoints array in the form of:
 // [{ Eastings: ... , Northing: ....}]
 // to Geo Json in the form of:
-// { type: 'polygon', coordinates: [[lon, lat]]}
+// { type: 'polygon', coordinates: [[[lon, lat]]] }
 function tracePointsToGeoJson(tracePoints) {
 	var geoJson = {};
 	geoJson.type = 'polygon';
 	// check there are at least 2 points (which is valid, we duplicate the first one)
 	if (tracePoints.length > 1) {
-		geoJson.coordinates = toWGS84(tracePoints);
+		geoJson.coordinates = [[]];
+		geoJson.coordinates[0] = toWGS84(tracePoints);
 		// copy first coordinate to last position in order to complete the polygon
-		geoJson.coordinates.push(geoJson.coordinates[0]);
+		geoJson.coordinates[0].push(geoJson.coordinates[0][0]);
 		return geoJson;
 	}
 	// return undefined sensorTrace
