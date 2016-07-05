@@ -33,10 +33,10 @@ module.exports = {
 				return videoOutput360p(command, params);
 			})
 			.then(function(command) {
-				return videoOutput480p(command, params);
+				return extractData(command, params);
 			})
 			.then(function(command) {
-				return extractData(command, params);
+				return videoOutput480p(command, params);
 			})
 			.then(function(command) {
 				return setEvents(command, params);
@@ -134,6 +134,8 @@ function runCommand(command) {
 }
 
 function setEvents(command, params) {
+	var videoPath = params.dir + '/' + params.file + '.mp4';
+	var telemtryPath = params.dir + '/' + params.file + '.data';
 	command
 		.on('start', function(commandLine) {
 			console.log(SERVICE_NAME, 'Spawned FFmpeg with command: ' + commandLine);
@@ -144,18 +146,17 @@ function setEvents(command, params) {
 			// Check if should notify for first bytes captured
 			if (command.bytesCaptureBegan === false) {
 				command.bytesCaptureBegan = true;
-				event.emit('CapturingBegan', command._outputs[0].target);
+				event.emit('FFmpegBegin', { telemtryPath: telemtryPath, videoPath: videoPath });
 			}
 		})
 		.on('end', function() {
 			// command.kill('SIGKILL');
 			console.log(SERVICE_NAME, 'Processing finished !');
-			event.emit('FFmpegDone');
+			event.emit('FFmpegDone', { telemtryPath: telemtryPath, videoPath: videoPath });
 		})
 		.on('error', function(err) {
-			console.log(err);
 			// command.kill('SIGKILL');
-			event.emit('FFmpegError');
+			event.emit('FFmpegError', err);
 		});
 	return command;
 }

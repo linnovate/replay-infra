@@ -19,7 +19,7 @@ const SERVICE_NAME = '#StreamListener#',
 							'(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$');
 
 // export our service.
-module.exports = StreamListener;
+module.exports = new StreamListener();
 
 // Stream Listener Service.
 function StreamListener() {
