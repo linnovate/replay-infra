@@ -5,10 +5,7 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
-module.exports = {
+var Query = require('replay-schemas/Query');
 
-  attributes: {
-
-  }
-};
+module.exports = Query;
 

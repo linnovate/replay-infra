@@ -12,13 +12,21 @@
 
 module.exports = {
 
-  /***************************************************************************
-   * Set the default database connection for models in the development       *
-   * environment (see config/connections.js and config/models.js )           *
-   ***************************************************************************/
+	/***************************************************************************
+	 * Set the default database connection for models in the development       *
+	 * environment (see config/connections.js and config/models.js )           *
+	 ***************************************************************************/
 
-  // models: {
-  //   connection: 'someMongodbServer'
-  // }
+	// models: {
+	//   connection: 'someMongodbServer'
+	// }
 
+	settings: {
+		services: {
+			elastic: {
+				host: process.env.ELASTIC_HOST || 'localhost',
+				port: process.env.ELASTIC_PORT || 9200
+			}
+		}
+	}
 };
