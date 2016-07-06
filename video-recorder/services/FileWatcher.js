@@ -6,26 +6,27 @@
 var fs = require('fs');
 var event = require('./EventEmitterSingleton');
 
-// globals
-var TimeToWait = 5000;
-
 // const
-const SERVICE_NAME = '#FileWatcher#';
+const SERVICE_NAME = '#FileWatcher#',
+	MAX_CHECK_TRIES = 3;
 
 // export out service.
-module.exports = FileWatcher;
+module.exports = new FileWatcher();
 
 // Init the FileWathcer Service.
 function FileWatcher() {
 	var _CurrentFileSize = -1,
-		_FileTimer;
+		_FileTimer,
+		_timeToWait = 5000,
+		_checkingAttempts = 1;
 
 	// Stoping the timer when it needed.
 	var _StopTimer = function(timer) {
 		if (timer) {
 			clearInterval(timer);
-			_CurrentFileSize = -1;
 		}
+		_CurrentFileSize = -1;
+		_checkingAttempts = 1;
 	};
 
 	// Check the file Size, when it not growing it will emit event.
@@ -35,10 +36,16 @@ function FileWatcher() {
 		// Get the State Of the file.
 		fs.stat(path, function(err, stat) {
 			if (err) {
-				// Emit event of error and stop the timer.
-				event.emit('error', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' + err);
-				console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
-				_StopTimer(_FileTimer);
+				if (_checkingAttempts === MAX_CHECK_TRIES) {
+					// Emit event of error and stop the timer.
+					event.emit('FileDontExist_FileWatcher', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' + err);
+					console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
+					_StopTimer(_FileTimer);
+					console.log(err);
+				} else {
+					console.log('try one more time');
+					_checkingAttempts++;
+				}
 				return false;
 			}
 
@@ -65,23 +72,28 @@ function FileWatcher() {
 	    Params should contain at least Path To the file we want to watch.
 	*/
 	var startWatchFile = function(params) {
-		const METHOD_NAME = 'StartWatchFile';
-		// Check if there is path.
-		if (!params.Path) {
-			event.emit('error', 'Error accured in ', SERVICE_NAME, '.', METHOD_NAME, ' : Path cannot be undefined.');
-			return null;
-		}
+		var promise = new Promise(function(resolve, reject) {
+			const METHOD_NAME = 'StartWatchFile';
+			// Check if there is path.
+			if (params.timeToWait) {
+				_timeToWait = params.timeToWait;
+			}
+			if (!params.path) {
+				return reject('Error accured in ' + SERVICE_NAME + '.' + METHOD_NAME + ' : Path cannot be undefined');
+			}
 
-		console.log(SERVICE_NAME, METHOD_NAME, ' Init new interval...');
-		console.log(SERVICE_NAME, METHOD_NAME, ' Start checking at:', params.Path);
+			console.log(SERVICE_NAME, METHOD_NAME, ' Init new interval...');
+			console.log(SERVICE_NAME, METHOD_NAME, ' Start checking at:', params.path);
 
-		// Start Timer to follow the file.
-		_FileTimer = setInterval(function() {
-			_CheckFileSize(params.Path);
-		}, TimeToWait);
+			// Start Timer to follow the file.
+			_FileTimer = setInterval(function() {
+				_CheckFileSize(params.path);
+			}, _timeToWait);
 
-		// console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
-		return _FileTimer;
+			// console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
+			return resolve(_FileTimer);
+		});
+		return promise;
 	};
 
 	/*

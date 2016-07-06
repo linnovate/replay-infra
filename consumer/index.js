@@ -51,14 +51,13 @@ function isInputValid() {
 }
 
 function connectBus() {
-	return new Promise(function(reject, resolve) {
+	return new Promise(function(resolve, reject) {
 		// get the matching queue name of the job type
 		var queueName = JobsService.getQueueName(jobType);
 
 		// create bus
 		BusService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 		BusService.consume(queueName, handleMessage);
-		resolve();
 	});
 }
 
@@ -79,7 +78,7 @@ function handleMessage(message) {
 
 // connect to ElasticSearch once so the service won't have to re-create connection each time
 function connectElasticSearch() {
-	return new Promise(function(reject, resolve) {
+	return new Promise(function(resolve, reject) {
 		var host = process.env.ELASTIC_HOST || 'localhost';
 		var port = process.env.ELASTIC_PORT || 9200;
 

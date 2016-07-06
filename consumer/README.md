@@ -31,10 +31,7 @@ PUT videometadatas
             "properties": {
               "sourceId": { "type": "integer" },
               "videoId": { "type": "string" },
-              "receivingMethod": {
-                "standard": { "type": "string"},
-                "version": { "type": "string" }
-              },
+              "receivingMethod": { "type": "nested"},
               "timestamp": { "type": "date" },
               "sensorPosition": { "type": "geo_point" },
               "sensorTrace": { "type": "geo_shape" },

@@ -16,10 +16,10 @@ const SERVICE_NAME = '#StreamListener#',
 	MAX_BINDING_TRIES = 3,
 	TIME_TO_WAIT_AFTER_FAILED = 3000,
 	IP_FORMAT = new RegExp('^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.' +
-							'(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$');
+		'(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$');
 
 // export our service.
-module.exports = StreamListener;
+module.exports = new StreamListener();
 
 // Stream Listener Service.
 function StreamListener() {
@@ -68,7 +68,7 @@ function StreamListener() {
 				var afterBind = function(err) {
 					if (err) {
 						bindingAttemptsCounts++;
-						console.log('try binding no', bindingAttemptsCounts, 'failed...\n', err);
+						console.log('try binding no', bindingAttemptsCounts, 'failed...\n' + err);
 						if (bindingAttemptsCounts === MAX_BINDING_TRIES) {
 							_server.close();
 							return reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
