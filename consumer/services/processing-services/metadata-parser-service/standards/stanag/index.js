@@ -16,8 +16,7 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 			[34.9, 31.1],
 			[34.9, 32.1],
 			[34.8, 32.1]]
-	}
-		;
+	};
 
 	var mapping = _.map(metadatas, function(metadata) {
 		// time = addOneSecond(metadata.uNIXTimeStamp);
