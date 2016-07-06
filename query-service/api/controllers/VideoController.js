@@ -17,38 +17,42 @@ module.exports = {
 				return res.json(results);
 			})
 			.catch(function(err) {
-				if (err) {
-					console.log(err);
-					next(err);
-				}
+				return res.serverError(err);
 			});
 	}
 };
 
 function validateRequest(req) {
-	return new Promise(function(reject, resolve) {
+	return new Promise(function(resolve, reject) {
 		// make sure we have at least one attribute
-		if (!req.params || !req.params.fromVideoTime || !req.params.toVideoTime ||
-			!req.params.minVideoDuration || !req.params.minVideoDuration || !req.params.copyright ||
-			!req.params.minTraceHeight || !req.params.minTraceWidth || !req.params.source ||
-			!req.params.boundingPolygon) {
-			reject('Empty query is not allowed.');
+		if (!req.query || (req.query && !hasAnyQueryParam(req.query))) {
+			reject(new Error('Empty query is not allowed.'));
 		}
 		resolve(req);
 	});
 }
 
+// make sure we have at least one query param
+function hasAnyQueryParam(query) {
+	if (query.fromVideoTime || query.toVideoTime ||
+		query.minVideoDuration || query.minVideoDuration || query.copyright ||
+		query.minTraceHeight || query.minTraceWidth || query.source ||
+		query.boundingPolygon) {
+		return true;
+	}
+}
+
 function saveQuery(req) {
 	return Query.create({
-		fromVideoTime: req.params.fromVideoTime,
-		toVideoTime: req.params.toVideoTime,
-		minVideoDuration: req.params.minVideoDuration,
-		maxVideoDuration: req.params.maxVideoDuration,
-		copyright: req.params.copyright,
-		minTraceHeight: req.params.minTraceHeight,
-		minTraceWidth: req.params.minTraceWidth,
-		source: req.params.source,
-		boundingPolygon: req.params.boundingPolygon
+		fromVideoTime: req.query.fromVideoTime,
+		toVideoTime: req.query.toVideoTime,
+		minVideoDuration: req.query.minVideoDuration,
+		maxVideoDuration: req.query.maxVideoDuration,
+		copyright: req.query.copyright,
+		minTraceHeight: req.query.minTraceHeight,
+		minTraceWidth: req.query.minTraceWidth,
+		source: req.query.source,
+		boundingPolygon: req.query.boundingPolygon
 	});
 }
 
