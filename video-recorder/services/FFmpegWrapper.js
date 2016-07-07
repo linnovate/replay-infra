@@ -33,10 +33,10 @@ module.exports = {
 				return videoOutput360p(command, params);
 			})
 			.then(function(command) {
-				return videoOutput480p(command, params);
+				return extractData(command, params);
 			})
 			.then(function(command) {
-				return extractData(command, params);
+				return videoOutput480p(command, params);
 			})
 			.then(function(command) {
 				return setEvents(command, params);
@@ -134,28 +134,30 @@ function runCommand(command) {
 }
 
 function setEvents(command, params) {
+	var videoPath = params.dir + '/' + params.file + '.mp4';
+	var telemetryPath = params.dir + '/' + params.file + '.data';
 	command
 		.on('start', function(commandLine) {
 			console.log(SERVICE_NAME, 'Spawned FFmpeg with command: ' + commandLine);
 			// Initialize indicator for data started flowing
+			event.emit('FFmpegBegin', { telemetryPath: telemetryPath, videoPath: videoPath });
 			command.bytesCaptureBegan = false;
 		})
 		.on('progress', function(progress) {
 			// Check if should notify for first bytes captured
 			if (command.bytesCaptureBegan === false) {
 				command.bytesCaptureBegan = true;
-				event.emit('CapturingBegan', command._outputs[0].target);
+				event.emit('FFmpegFirstProgress', { telemetryPath: telemetryPath, videoPath: videoPath });
 			}
 		})
 		.on('end', function() {
 			// command.kill('SIGKILL');
 			console.log(SERVICE_NAME, 'Processing finished !');
-			event.emit('FFmpegDone');
+			event.emit('FFmpegDone', { telemetryPath: telemetryPath, videoPath: videoPath });
 		})
 		.on('error', function(err) {
-			console.log(err);
 			// command.kill('SIGKILL');
-			event.emit('FFmpegError');
+			event.emit('FFmpegError', 'Error on FFmpegWrapper : ' + err);
 		});
 	return command;
 }
@@ -178,7 +180,7 @@ function videoOutput(command, params) {
 
 // Define a 360p video output
 function videoOutput360p(command, params) {
-	command.output(params.dir + '/' + params.file + '320p.mp4')
+	command.output(params.dir + '/' + params.file + '_320p.mp4')
 		.duration(params.duration)
 		.outputOptions(['-y'])
 		.format('mp4')
@@ -188,7 +190,7 @@ function videoOutput360p(command, params) {
 
 // Define a 480p video output
 function videoOutput480p(command, params) {
-	command.output(params.dir + '/' + params.file + '480p.mp4')
+	command.output(params.dir + '/' + params.file + '_480p.mp4')
 		.duration(params.duration)
 		.outputOptions(['-y'])
 		.format('mp4')
