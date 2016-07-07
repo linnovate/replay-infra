@@ -10,6 +10,7 @@ var Promise = require('bluebird');
 module.exports = {
 
 	find: function(req, res, next) {
+		console.log(req.query);
 		validateRequest(req)
 			.then(saveQuery)
 			.then(performQuery)
@@ -37,13 +38,13 @@ function hasAnyQueryParam(query) {
 	if (query.fromVideoTime || query.toVideoTime ||
 		query.minVideoDuration || query.minVideoDuration || query.copyright ||
 		query.minTraceHeight || query.minTraceWidth || query.source ||
-		query.boundingPolygon) {
+		(query.boundingType && query.boundingCoordinates)) {
 		return true;
 	}
 }
 
 function saveQuery(req) {
-	return Query.create({
+	return sails.models.query.create({
 		fromVideoTime: req.query.fromVideoTime,
 		toVideoTime: req.query.toVideoTime,
 		minVideoDuration: req.query.minVideoDuration,
@@ -52,12 +53,15 @@ function saveQuery(req) {
 		minTraceHeight: req.query.minTraceHeight,
 		minTraceWidth: req.query.minTraceWidth,
 		source: req.query.source,
-		boundingPolygon: req.query.boundingPolygon
+		boundingPolygon: {
+			type: req.query.boundingType,
+			coordinates: req.query.boundingCoordinates
+		}
 	});
 }
 
 function performQuery(query) {
-	return ElasticSearchService.searchVideoMetadata(query.polygon)
+	return ElasticSearchService.searchVideoMetadata(query.boundingPolygon)
 		.then(function(resp) {
 			return Promise.resolve(resp.hits.hits);
 		});

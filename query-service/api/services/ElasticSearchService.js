@@ -1,8 +1,9 @@
 var elasticsearch = require('elasticsearch');
 
 var client = new elasticsearch.Client({
-	host: sails.config.settings.services.elastic.host + sails.config.settings.services.elastic.port,
-	log: ['error', 'warning']
+	host: sails.config.settings.services.elastic.host + ':' + sails.config.settings.services.elastic.port,
+	log: ['error', 'warning'],
+	apiVersion: '2.3'
 });
 
 module.exports = {
@@ -50,6 +51,13 @@ module.exports = {
 				}
 			}
 		};
+		var query = {
+			index: 'videometadatas',
+			type: 'videometadata',
+			body: body
+		};
+
+		console.log(query);
 		// body.query  = {};
 		// body.query.geo_shape = {};
 		// body.query.geo_shape.location = {};
@@ -59,6 +67,6 @@ module.exports = {
 		// body.query.geo_shape.location.shape.coordinates = [[]];
 		// body.query.geo_shape.location.shape.coordinates[0] = polygon;
 
-		return client.search('videometadata', 'videometadatas', body);
+		return client.search(query);
 	}
 };

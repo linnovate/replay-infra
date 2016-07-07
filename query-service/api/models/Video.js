@@ -5,7 +5,5 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
-var Video = require('replay-schemas/Video');
-
-module.exports = Video;
+module.exports = require('replay-schemas/Video');
 
