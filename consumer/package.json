@@ -1,0 +1,26 @@
+{
+  "name": "consumer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.4.0",
+    "busmq": "^1.5.4",
+    "elasticsearch": "^11.0.1",
+    "lodash": "^4.13.1",
+    "mongoose": "^4.5.0",
+    "replay-bus-service": "*",
+    "replay-jobs-service": "*",
+    "replay-kaltura-service": "*",
+    "replay-schemas": "^1.0.3",
+    "sails-mongo": "^0.12.0",
+    "stanag": "^1.0.2",
+    "waterline": "^0.12.2",
+    "xml2js": "^0.4.16"
+  }
+}
