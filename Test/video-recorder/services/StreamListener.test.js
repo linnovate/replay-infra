@@ -2,7 +2,7 @@ var chai = require('chai');
 var execComand = require('child_process');
 var assert = chai.assert;
 var event = require('../../../video-recorder/services/EventEmitterSingleton');
-var StreamListener = require('../../../video-recorder/services/StreamListener')();
+var StreamListener = require('../../../video-recorder/services/StreamListener');
 
 function start() {
 	streamListenerService();
