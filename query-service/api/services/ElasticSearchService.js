@@ -43,9 +43,7 @@ module.exports = {
 						relation: 'intersects',
 						shape: {
 							type: 'polygon',
-							coordinates: [
-								[polygon]
-							]
+							coordinates: [polygon]
 						}
 					}
 				}
