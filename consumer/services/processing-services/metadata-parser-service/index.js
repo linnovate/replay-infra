@@ -2,6 +2,8 @@ var Promise = require('bluebird'),
 	BusService = require('replay-bus-service'),
 	JobsService = require('replay-jobs-service');
 
+var path = require('path');
+
 var fs = Promise.promisifyAll(require('fs'));
 var busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 
@@ -18,7 +20,7 @@ module.exports.start = function(params) {
 	var method = params.method;
 
 	// concat full path
-	var pathToData = process.env.STORAGE_PATH + '/' + relativePathToData;
+	var pathToData = path.join(process.env.STORAGE_PATH, relativePathToData);
 
 	readDataAsString(pathToData)
 		.then(function(data) {

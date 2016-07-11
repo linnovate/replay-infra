@@ -20,7 +20,7 @@ if (!isInputValid()) {
 	process.exit();
 }
 
-connectMongo()
+connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
 	.then(connectElasticSearch)
 	.then(connectBus)
 	.catch(function(err) {
