@@ -6,7 +6,9 @@
  */
 
 var Promise = require('bluebird'),
-	Query = require('replay-schemas/Query');
+	ObjectId = require('mongoose').Types.ObjectId,
+	Query = require('replay-schemas/Query'),
+	Video = require('replay-schemas/Video');
 
 // trick sails to activate restful API to this controller
 sails.models.video = {};
@@ -73,9 +75,36 @@ function saveQuery(req) {
 }
 
 function performQuery(query) {
-	console.log('query in perform query: ', query);
 	return ElasticSearchService.searchVideoMetadata(query.boundingShape.coordinates)
 		.then(function(resp) {
-			return Promise.resolve(resp.hits.hits);
+			return getVideos(resp.hits.hits);
+		})
+		.then(function(videos) {
+			return Promise.resolve(videos);
 		});
+}
+
+function elasticHitsToIdList(elasticHits) {
+	return _.map(elasticHits, function(hit) {
+		return new ObjectId(hit._source.videoId);
+	});
+}
+
+function removeDuplicateHits(elasticHits) {
+	return _.uniq(elasticHits, function(hit) {
+		return hit.videoId;
+	});
+}
+
+function getVideos(elasticHits) {
+	// remove duplicate entries
+	var ids = removeDuplicateHits(elasticHits);
+	// convert to list of ObjectId
+	ids = elasticHitsToIdList(ids);
+	return Video.find({
+		_id: {
+			$in: ids
+		},
+		status: 'ready'
+	});
 }
