@@ -149,12 +149,12 @@ function handleVideoSavingProcess(streamingSource) {
 			throw new Error('There is no file to watch');
 		}
 		if (paths.telemetryPath) {
-			globals.metadataRelativeFilePath = paths.telemetryPath.substring(STORAGE_PATH);
+			globals.metadataRelativeFilePath = paths.telemetryPath.substring(paths.videoPath.indexOf(STORAGE_PATH) + STORAGE_PATH.length);
 			globals.fileName = globals.metadataRelativeFilePath.split('/').pop().split('.')[0];
 			pathToWatch = globals.metadataRelativeFilePath;
 		}
 		if (paths.videoPath) {
-			globals.videoRelativeFilePath = paths.videoPath.substring(STORAGE_PATH);
+			globals.videoRelativeFilePath = paths.videoPath.substring(paths.videoPath.indexOf(STORAGE_PATH) + STORAGE_PATH.length);
 			globals.fileName = globals.videoRelativeFilePath.split('/').pop().split('.')[0];
 			pathToWatch = globals.videoRelativeFilePath;
 		}
@@ -179,7 +179,7 @@ function handleVideoSavingProcess(streamingSource) {
 			.then(function() {
 				sendToJobQueue({
 					streamingSource: streamingSource,
-					videoPath: globals.videoPath,
+					videoPath: globals.videoRelativeFilePath,
 					dataPath: globals.metadataRelativeFilePath,
 					videoName: globals.fileName
 				});
@@ -222,7 +222,7 @@ function handleVideoSavingProcess(streamingSource) {
 		stopFFmpegProcess(globals.command);
 		sendToJobQueue({
 			streamingSource: streamingSource,
-			videoPath: globals.videoPath,
+			videoPath: globals.videoRelativeFilePath,
 			dataPath: globals.metadataRelativeFilePath,
 			videoName: globals.fileNames
 		});
@@ -294,6 +294,7 @@ function sendToJobQueue(params) {
 			}
 		}
 	};
+	console.log('message is ', message);
 	busServiceProducer.produce('NewVideosQueue', message);
 }
 
