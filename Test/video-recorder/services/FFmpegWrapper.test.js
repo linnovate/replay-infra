@@ -1,9 +1,9 @@
 var assert = require('chai').assert,
 	sinon = require('sinon');
-	//exec = require('child_process').exec;
+	// exec = require('child_process').exec;
 var ffmpeg = require('../../../video-recorder/services/FFmpegWrapper.js'),
 	event = require('../../../video-recorder/services/EventEmitterSingleton');
-//const STREAM_COMMAND = 'tsplay ./Test/src/Sample_Ts_File_For_Testing.ts 238.0.0.1:1234 -loop';
+// const STREAM_COMMAND = 'tsplay ./Test/src/Sample_Ts_File_For_Testing.ts 238.0.0.1:1234 -loop';
 
 function test() {
 	describe('FFmpeg Wrapper Testing', testMethods);
