@@ -31,7 +31,7 @@ module.exports = {
 function validateRequest(req) {
 	return new Promise(function(resolve, reject) {
 		// make sure we have at least one attribute
-		if (!req.query || (req.query && !hasAnyQueryParam(req.query))) {
+		if (!req.query) {
 			return reject(new Error('Empty query is not allowed.'));
 		}
 		// validate boundingShapeCoordinates is JSON parsable (since the array would be passed as string)
@@ -58,6 +58,11 @@ function hasAnyQueryParam(query) {
 }
 
 function saveQuery(req) {
+	var coordinates;
+	if (req.query.boundingShapeCoordinates) {
+		coordinates = JSON.parse(req.query.boundingShapeCoordinates);
+	}
+
 	return Query.create({
 		fromVideoTime: req.query.fromVideoTime,
 		toVideoTime: req.query.toVideoTime,
@@ -69,19 +74,23 @@ function saveQuery(req) {
 		source: req.query.source,
 		boundingShape: {
 			type: req.query.boundingShapeType,
-			coordinates: JSON.parse(req.query.boundingShapeCoordinates)
+			coordinates: coordinates
 		}
 	});
 }
 
 function performQuery(query) {
-	return ElasticSearchService.searchVideoMetadata(query.boundingShape.coordinates)
-		.then(function(resp) {
-			return getVideos(resp.hits.hits);
-		})
-		.then(function(videos) {
-			return Promise.resolve(videos);
-		});
+	if (query.boundingShape.coordinates) {
+		return ElasticSearchService.searchVideoMetadata(query.boundingShape.coordinates)
+			.then(function(resp) {
+				return getVideosOfMetadatas(resp.hits.hits);
+			})
+			.then(function(videos) {
+				return Promise.resolve(videos);
+			});
+	} else {
+		return getAllVideos();
+	}
 }
 
 function elasticHitsToIdList(elasticHits) {
@@ -96,7 +105,7 @@ function removeDuplicateHits(elasticHits) {
 	});
 }
 
-function getVideos(elasticHits) {
+function getVideosOfMetadatas(elasticHits) {
 	// remove duplicate entries
 	var ids = removeDuplicateHits(elasticHits);
 	// convert to list of ObjectId
@@ -107,4 +116,8 @@ function getVideos(elasticHits) {
 		},
 		status: 'ready'
 	});
+}
+
+function getAllVideos() {
+	return Video.find({ status: 'ready' });
 }
