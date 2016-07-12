@@ -9,7 +9,7 @@ var Promise = require('bluebird'),
 	Video = require('replay-schemas/Video');
 
 module.exports = {
-	'manifestUrl': function(req, res, next) {
+	findOne: function(req, res, next) {
 		var id = req.params.id;
 		getVideo(id)
 			.then(function(video) {

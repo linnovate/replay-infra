@@ -18,11 +18,12 @@ module.exports = {
 
 function retriveMediaUrlFromKaltura(entryId) {
 	return new Promise(function(resolve, reject) {
-		var server = 'http://vod.linnovate.net',
-			partnerId = '/p/101/sp/0',
+		var server = sails.config.settings.services.kaltura.server,
+			port = sails.config.settings.services.kaltura.port,
+			partnerId = '/p/' + sails.config.settings.services.kaltura.partnerId + '/sp/0',
 			Manifest = '/playManifest/entryId/',
 			format = '/format/mpegdash/protocol/http/flavorParamId/1';
-		var url = server + partnerId + Manifest + entryId + format;
+		var url = server + ':' + port + partnerId + Manifest + entryId + format;
 		console.log('request url to kaltura: ' + url);
 		request.get({
 			url: url
