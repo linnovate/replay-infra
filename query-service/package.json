@@ -8,8 +8,9 @@
     "bluebird": "^3.4.1",
     "elasticsearch": "^11.0.1",
     "include-all": "~0.1.6",
+    "mongoose": "^4.5.3",
     "rc": "1.0.1",
-    "replay-schemas": "*",
+    "replay-schemas": "^1.0.1",
     "sails": "~0.12.3",
     "sails-disk": "~0.10.9",
     "sails-mongo": "^0.12.0"

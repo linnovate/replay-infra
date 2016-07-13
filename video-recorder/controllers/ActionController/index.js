@@ -1,9 +1,9 @@
 module.exports = {
-	start: function(req, res){
+	start: function(req, res) {
 
 	},
 
-	stop: function(req, res){
-		
+	stop: function(req, res) {
+
 	}
-}
+};

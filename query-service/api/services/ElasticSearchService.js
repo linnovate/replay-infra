@@ -43,9 +43,7 @@ module.exports = {
 						relation: 'intersects',
 						shape: {
 							type: 'polygon',
-							coordinates: [
-							[polygon]
-							]
+							coordinates: polygon
 						}
 					}
 				}
@@ -56,16 +54,6 @@ module.exports = {
 			type: 'videometadata',
 			body: body
 		};
-
-		console.log(query);
-		// body.query  = {};
-		// body.query.geo_shape = {};
-		// body.query.geo_shape.location = {};
-		// body.query.geo_shape.location.relation = relation;
-		// body.query.geo_shape.location.shape = {};
-		// body.query.geo_shape.location.shape.type = 'polygon';
-		// body.query.geo_shape.location.shape.coordinates = [[]];
-		// body.query.geo_shape.location.shape.coordinates[0] = polygon;
 
 		return client.search(query);
 	},

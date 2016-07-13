@@ -4,7 +4,7 @@ var BusService = require('replay-bus-service'),
 	bluebird = require('bluebird'),
 	JobsService = require('replay-jobs-service');
 
-var waterlineConfig = require('replay-schemas/waterlineConfig');
+var connectMongo = require('replay-schemas/connectMongo');
 var Promise = bluebird;
 
 // set mongoose promise library
@@ -20,7 +20,7 @@ if (!isInputValid()) {
 	process.exit();
 }
 
-waterlineConfig()
+connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
 	.then(connectElasticSearch)
 	.then(connectBus)
 	.catch(function(err) {
