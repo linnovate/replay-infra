@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "replay-bus-service": "^1.0.0"
+    "replay-rabbitmq": "^1.0.0"
   }
 }

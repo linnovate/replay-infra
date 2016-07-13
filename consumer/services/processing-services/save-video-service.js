@@ -1,8 +1,6 @@
-var BusService = require('replay-bus-service'),
+var rabbit = require('replay-rabbitmq'),
 	JobsService = require('replay-jobs-service'),
 	Video = require('replay-schemas/Video');
-
-var busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
 
 module.exports.start = function(params) {
 	console.log('SaveVideoService started.');
@@ -15,6 +13,7 @@ module.exports.start = function(params) {
 	// case there's a video (sometimes there'd be only metadata)
 	if (params.videoName) {
 		saveVideoToMongo(params)
+			.then(connectRabbitMQ)
 			.then(function(video) {
 				console.log('Video successfully saved to mongo:', video);
 				params.videoId = video.id;
@@ -60,6 +59,10 @@ function saveVideoToMongo(params) {
 	});
 }
 
+function connectRabbitMQ() {
+	return rabbit.connect(process.env.RABBITMQ_HOST);
+}
+
 // produce all jobs here
 function produceJobs(params) {
 	produceMetadataParserJob(params);
@@ -80,7 +83,7 @@ function produceMetadataParserJob(params) {
 	};
 	var queueName = JobsService.getQueueName('MetadataParser');
 	if (queueName) {
-		busService.produce(queueName, message);
+		rabbit.produce(queueName, message);
 	} else {
 		throw new Error('Could not find queue name of the inserted job type');
 	}
@@ -100,7 +103,7 @@ function produceUploadToProviderJob(params) {
 
 		var queueName = JobsService.getQueueName('UploadVideoToProvider');
 		if (queueName) {
-			busService.produce(queueName, message);
+			rabbit.produce(queueName, message);
 		} else {
 			throw new Error('Could not find queue name of the inserted job type');
 		}
