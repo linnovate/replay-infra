@@ -19,11 +19,12 @@
     "grunt-sails-linker": "~0.10.1",
     "grunt-sync": "0.2.4",
     "include-all": "~0.1.6",
+    "mongoose": "^4.5.4",
+    "rc": "1.0.1",
     "replay-bus-service": "*",
     "replay-jobs-service": "*",
     "replay-kaltura-service": "*",
     "replay-schemas": "*",
-    "rc": "1.0.1",
     "sails": "~0.12.3",
     "sails-disk": "~0.10.9"
   },

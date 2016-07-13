@@ -15,5 +15,9 @@ module.exports.bootstrap = function(cb) {
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
 
 	connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
-	.then(cb);
+		.then(cb)
+		.catch(function(err) {
+			console.log('An error occured in bootstrap.');
+			console.log(err);
+		});
 };
