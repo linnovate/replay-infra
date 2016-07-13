@@ -12,13 +12,23 @@
 
 module.exports = {
 
-  /***************************************************************************
-   * Set the default database connection for models in the development       *
-   * environment (see config/connections.js and config/models.js )           *
-   ***************************************************************************/
+	/***************************************************************************
+	 * Set the default database connection for models in the development       *
+	 * environment (see config/connections.js and config/models.js )           *
+	 ***************************************************************************/
 
-  // models: {
-  //   connection: 'someMongodbServer'
-  // }
+	// models: {
+	//   connection: 'someMongodbServer'
+	// }
+	port: 1339,
+	settings: {
+		services: {
+			kaltura: {
+				server: 'http://vod.linnovate.net',
+				port: '80',
+				partnerId: 101
+			}
+		}
+	}
 
 };
