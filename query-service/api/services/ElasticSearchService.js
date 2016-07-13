@@ -56,5 +56,66 @@ module.exports = {
 		};
 
 		return client.search(query);
+	},
+	getDataByName: function (index, type, name, sort, callback) {
+		var body = {query: {
+			term: {videoId: name}
+		}};
+
+		client.search(index, type, body, sort, function(resp) {
+			callback(resp.hits.hits);
+		});
+	},
+
+	getDataByAll: function (index, type, termsArray, startTime, endTime, polygon, relation, callback) {
+		var body = {filter: {
+			bool: {
+				must: {}
+			}
+		}};
+
+		if (polygon !== null) {
+			var squery = {
+				geo_shape: {
+					sensorTrace: {
+						relation: relation,
+						shape: {
+							type: 'polygon',
+							coordinates: [
+							[]]
+						}
+					}
+				}
+			};
+			var i = 0;
+
+			polygon.forEach(function(r) {
+				squery.geo_shape.sensorTrace.shape.coordinates[0][i] = r;
+				i++;
+			});
+
+			termsArray.push(squery);
+		}
+
+		if (startTime !== null) {
+			var tquery = {};
+			tquery.range = {};
+			tquery.range.timestamp = {};
+			tquery.range.timestamp.gte = startTime;
+			if (endTime === null) {
+				var now = new Date();
+
+				console.log(now);
+				endTime = now.toISOString();
+			}
+			console.log(startTime, endTime);
+			tquery.range.timestamp.lte = endTime;
+			termsArray.push(tquery);
+		}
+
+		body.filter.bool.must = termsArray;
+		client.search(index, type, body, null, function(resp) {
+			callback(resp.hits.hits);
+		});
 	}
 };
