@@ -13,6 +13,7 @@
     "busmq": "^1.5.4",
     "elasticsearch": "^11.0.1",
     "lodash": "^4.13.1",
+    "moment": "^2.14.1",
     "mongoose": "^4.5.0",
     "replay-bus-service": "*",
     "replay-jobs-service": "*",
