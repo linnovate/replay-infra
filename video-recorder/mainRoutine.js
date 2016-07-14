@@ -291,7 +291,7 @@ function sendToJobQueue(params) {
 			dataRelativePath: params.dataPath,
 			receivingMethod: {
 				standard: params.streamingSource.StreamingMethod.standard,
-				version: params.streamingSource.StreamingMethod.version
+				version: '1.0' // params.streamingSource.StreamingMethod.version
 			}
 		}
 	};
