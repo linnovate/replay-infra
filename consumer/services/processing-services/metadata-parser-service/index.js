@@ -27,7 +27,7 @@ module.exports.start = function(params) {
 			return dataToObjects(method, data, params);
 		})
 		.then(function(videoMetadatas) {
-			return produceInsertionToDatabasesJobs(videoMetadatas);
+			return produceJobs(videoMetadatas);
 		})
 		.catch(handleErrors);
 };
@@ -66,14 +66,15 @@ function dataToObjects(method, data, params) {
 	});
 }
 
-function produceInsertionToDatabasesJobs(videoMetadatas) {
+function produceJobs(videoMetadatas) {
 	return new Promise(function(resolve, reject) {
 		console.log('Producing save to databases jobs.');
 
 		produceSaveToMongoJob(videoMetadatas);
 		produceSaveToElasticJob(videoMetadatas);
+		produceCaptionsJob(videoMetadatas);
 
-		resolve();
+		resolve(videoMetadatas);
 	});
 }
 
@@ -96,6 +97,19 @@ function produceSaveToElasticJob(videoMetadatas) {
 		params: videoMetadatas
 	};
 	var queueName = JobsService.getQueueName('MetadataToElastic');
+	if (queueName) {
+		busService.produce(queueName, message);
+	} else {
+		throw new Error('Could not find queue name of the inserted job type');
+	}
+}
+
+function produceCaptionsJob(videoMetadatas) {
+	console.log('Producing Captions job...');
+	var message = {
+		params: videoMetadatas
+	};
+	var queueName = JobsService.getQueueName('MetadataToCaptions');
 	if (queueName) {
 		busService.produce(queueName, message);
 	} else {
