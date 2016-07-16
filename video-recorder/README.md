@@ -14,11 +14,11 @@ ___
 3. Add some Mock values by initializing in mongo:
 ```
 
-db.streamingsources.save({"SourceID":100, "SourceName":"VideoMuxedStream", "SourceType":"VideoMuxedTelemetry", "SourceIP":"238.0.0.1", "SourcePort": 1234, "StreamingMethod":{"standard": "viewStandard","version":"1.0"}, "StreamingStatus":{"status":"none", "update_at":""}})
+db.streamingsources.save({"SourceID":100, "SourceName":"VideoMuxedStream", "SourceType":"VideoMuxedTelemetry", "SourceIP":"238.0.0.1", "SourcePort": 1234, "StreamingMethod":{"standard": "VideoStandard","version":"1.0"}, "StreamingStatus":{"status":"none", "lastUpdateTime":""}})
 
-db.streamingsources.save({"SourceID":101, "SourceName":"TelemetryStream", "SourceType":"Telemetry", "SourceIP":"238.0.0.1", "SourcePort": 1235, "StreamingMethod":{"standard": "viewStandard","version":"0.9"}, "StreamingStatus":{"status":"none", "update_at":""}})
+db.streamingsources.save({"SourceID":101, "SourceName":"TelemetryStream", "SourceType":"Telemetry", "SourceIP":"238.0.0.1", "SourcePort": 1235, "StreamingMethod":{"standard": "VideoStandard","version":"0.9"}, "StreamingStatus":{"status":"none", "lastUpdateTime":""}})
 
-db.streamingsources.save({"SourceID":102, "SourceName":"VideoStream", "SourceType":"Video", "SourceIP":"238.0.0.1", "SourcePort": 1236, "StreamingMethod":{"standard": "viewStandard","version":"0.9"}, "StreamingStatus":{"status":"none", "update_at":""}})
+db.streamingsources.save({"SourceID":102, "SourceName":"VideoStream", "SourceType":"Video", "SourceIP":"238.0.0.1", "SourcePort": 1236, "StreamingMethod":{"standard": "VideoStandard","version":"0.9"}, "StreamingStatus":{"status":"none", "lastUpdateTime":""}})
 ```
 
 ___

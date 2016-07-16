@@ -151,13 +151,14 @@ function handleVideoSavingProcess(streamingSource) {
 		if (paths.telemetryPath) {
 			globals.metadataRelativeFilePath = paths.telemetryPath.substring(paths.videoPath.indexOf(STORAGE_PATH) + STORAGE_PATH.length);
 			globals.fileName = globals.metadataRelativeFilePath.split('/').pop().split('.')[0];
-			pathToWatch = globals.metadataRelativeFilePath;
+			pathToWatch = paths.telemetryPath;
 		}
 		if (paths.videoPath) {
 			globals.videoRelativeFilePath = paths.videoPath.substring(paths.videoPath.indexOf(STORAGE_PATH) + STORAGE_PATH.length);
 			globals.fileName = globals.videoRelativeFilePath.split('/').pop().split('.')[0];
-			pathToWatch = globals.videoRelativeFilePath;
+			pathToWatch = paths.videoPath;
 		}
+
 		startWatchFile(pathToWatch)
 			.then(function(timer) {
 				globals.fileWatcherTimer = timer;
@@ -290,7 +291,7 @@ function sendToJobQueue(params) {
 			dataRelativePath: params.dataPath,
 			receivingMethod: {
 				standard: params.streamingSource.StreamingMethod.standard,
-				version: params.streamingSource.StreamingMethod.version
+				version: '1.0' // params.streamingSource.StreamingMethod.version
 			}
 		}
 	};
