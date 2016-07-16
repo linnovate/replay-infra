@@ -26,7 +26,8 @@
     "replay-kaltura-service": "*",
     "replay-schemas": "*",
     "sails": "~0.12.3",
-    "sails-disk": "~0.10.9"
+    "sails-disk": "~0.10.9",
+    "xml2json": "^0.9.1"
   },
   "scripts": {
     "debug": "node debug app.js",
