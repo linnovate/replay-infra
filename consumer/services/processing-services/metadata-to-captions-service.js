@@ -18,12 +18,12 @@ function addSubtitle(res) {
 		return;
 	}
 	videoId = res[0].videoId;
-	var baseDate = new Date(res[0]._source.timestamp);
+	var baseDate = new Date(res[0].timestamp);
 	res.forEach(function(r) {
 		if (baseDate === null) {
-			baseDate = new Date(r._source.timestamp);
+			baseDate = new Date(r.timestamp);
 		}
-		var d = new Date(r._source.timestamp);
+		var d = new Date(r.timestamp);
 		var timeDiff = Math.abs(d.getTime() - baseDate.getTime());
 		d = new Date(timeDiff);
 		start = d.getUTCMinutes() + ':' + d.getUTCSeconds() + '.' + d.getUTCMilliseconds();
