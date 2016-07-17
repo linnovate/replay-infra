@@ -286,12 +286,12 @@ function sendToJobQueue(params) {
 	var message = {
 		params: {
 			sourceId: params.streamingSource.SourceID,
-			videoName: params.videoName,
+			videoName: params.videoName + '.mp4',
 			videoRelativePath: params.videoPath,
 			dataRelativePath: params.dataPath,
 			receivingMethod: {
 				standard: params.streamingSource.StreamingMethod.standard,
-				version: '1.0' // params.streamingSource.StreamingMethod.version
+				version: '1.0'
 			}
 		}
 	};
