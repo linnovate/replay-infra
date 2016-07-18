@@ -10,6 +10,7 @@
     "lodash": "^4.13.1",
     "mongoose": "^4.4.20",
     "path": "^0.12.7",
+    "rewire": "^2.5.2",
     "sinon": "^1.17.4",
     "stanag": "^1.0.1",
     "supertest": "^1.2.0"
@@ -21,9 +22,9 @@
   },
   "scripts": {
     "test": "istanbul cover _mocha Test -- --recursive",
-    "coverage": "firefox coverage/lcov-report/index.html",
     "lint": "./lintStagedFiles.sh",
-    "lintAll": "eslint ."
+    "lintAll": "eslint .",
+    "coverage": "sensible-browser coverage/lcov-report/index.html"
   },
   "pre-commit": {
     "run": "lint",
@@ -39,9 +40,9 @@
     "url": "https://github.com/linnovate/replay-infra/issues"
   },
   "homepage": "https://github.com/linnovate/replay-infra#readme"
-}                                                                                                                                                                                                    
-                                                                                                                                                                                                         
-                                                                                                                                                                                                            
-                                                                                                                                                                                                            
-                                                                                                                                                                                                            
-                               
+}
+
+
+
+
+

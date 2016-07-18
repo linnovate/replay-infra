@@ -202,7 +202,6 @@ function handleVideoSavingProcess(streamingSource) {
 
 	// When Error eccured on FFmpeg service.
 	event.on('FFmpegError', function(err) {
-		console.log(PROCESS_NAME, 'FFmpegError emited!!!!!!!!!!!!');
 		console.log(err);
 		stopWatchFile(globals.fileWatcherTimer);
 		startStreamListener(streamingSource)
