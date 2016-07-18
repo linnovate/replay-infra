@@ -6,6 +6,7 @@
   "dependencies": {
     "bluebird": "^3.4.0",
     "busmq": "^1.5.4",
+    "chai": "^3.5.0",
     "fs": "^0.0.2",
     "lodash": "^4.13.1",
     "mongoose": "^4.4.20",
@@ -41,8 +42,3 @@
   },
   "homepage": "https://github.com/linnovate/replay-infra#readme"
 }
-
-
-
-
-
