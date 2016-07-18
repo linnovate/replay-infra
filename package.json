@@ -10,6 +10,7 @@
     "lodash": "^4.13.1",
     "mongoose": "^4.4.20",
     "path": "^0.12.7",
+    "rewire": "^2.5.2",
     "sinon": "^1.17.4",
     "stanag": "^1.0.1"
   },
@@ -22,7 +23,7 @@
     "test": "istanbul cover _mocha Test -- --recursive",
     "lint": "./lintStagedFiles.sh",
     "lintAll": "eslint .",
-    "show-test-coverage": "firefox coverage/lcov-report/index.html"
+    "coverage": "sensible-browser coverage/lcov-report/index.html"
   },
   "pre-commit": {
     "run": "lint",
