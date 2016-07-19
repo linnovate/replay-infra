@@ -25,6 +25,7 @@
     "replay-jobs-service": "*",
     "replay-kaltura-service": "*",
     "replay-schemas": "*",
+    "request": "^2.73.0",
     "sails": "~0.12.3",
     "sails-disk": "~0.10.9",
     "xml2json": "^0.9.1"
