@@ -15,17 +15,19 @@ module.exports = new FileWatcher();
 
 // Init the FileWathcer Service.
 function FileWatcher() {
-	var _CurrentFileSize = -1,
-		_FileTimer,
+	var _currentFileSize = -1,
+		_fileTimer,
 		_timeToWait = 5000,
 		_checkingAttempts = 1;
 
 	// Stoping the timer when it needed.
-	var _StopTimer = function(timer) {
+	var _stopTimer = function(timer) {
 		if (timer) {
 			clearInterval(timer);
+		} else if (_fileTimer) {
+			clearInterval(_fileTimer);
 		}
-		_CurrentFileSize = -1;
+		_currentFileSize = -1;
 		_checkingAttempts = 1;
 	};
 
@@ -38,27 +40,27 @@ function FileWatcher() {
 			if (err) {
 				if (_checkingAttempts === MAX_CHECK_TRIES) {
 					// Emit event of error and stop the timer.
-					event.emit('FileDontExist_FileWatcher', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' + err);
+					event.emit('FileDontExist_FileWatcher', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' +
+						'could not found any file, ignore it and continue on');
 					console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
-					_StopTimer(_FileTimer);
-					console.log(err);
+					_stopTimer(_fileTimer);
 				} else {
-					console.log('try one more time');
+					console.log(SERVICE_NAME, 'Could not find the file, trying again...');
 					_checkingAttempts++;
 				}
 				return false;
 			}
 
-			console.log(SERVICE_NAME, METHOD_NAME, ' CurrentFileSize: ', stat.size, ' | LastFileSize: ', _CurrentFileSize);
+			console.log(SERVICE_NAME, METHOD_NAME, ' CurrentFileSize: ', stat.size, ' | LastFileSize: ', _currentFileSize);
 
 			// Check if the file size is bigger than the last check.
-			if (stat.size > _CurrentFileSize) {
+			if (stat.size > _currentFileSize) {
 				// Update the file size.
-				_CurrentFileSize = stat.size;
+				_currentFileSize = stat.size;
 			} else {
 				// Callback called when the file stopped grow.
 				console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
-				_StopTimer(_FileTimer);
+				_stopTimer(_fileTimer);
 				event.emit('FileWatchStop');
 			}
 			// console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
@@ -86,12 +88,12 @@ function FileWatcher() {
 			console.log(SERVICE_NAME, METHOD_NAME, ' Start checking at:', params.path);
 
 			// Start Timer to follow the file.
-			_FileTimer = setInterval(function() {
+			_fileTimer = setInterval(function() {
 				_CheckFileSize(params.path);
 			}, _timeToWait);
 
 			// console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
-			return resolve(_FileTimer);
+			return resolve(_fileTimer);
 		});
 		return promise;
 	};
@@ -100,7 +102,7 @@ function FileWatcher() {
 	    This func stop the follow of the file when it needed.
 	*/
 	var stopWatchFile = function(timer) {
-		_StopTimer(timer);
+		_stopTimer(timer);
 	};
 
 	return {
