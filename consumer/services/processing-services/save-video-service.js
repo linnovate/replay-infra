@@ -11,7 +11,7 @@ module.exports.start = function(params, error, done) {
 
 	if (!validateInput(params)) {
 		console.log('Some vital parameters are missing.');
-		done();
+		error();
 	}
 
 	_transactionId = params.transactionId;

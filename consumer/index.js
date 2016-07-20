@@ -4,6 +4,8 @@ var rabbit = require('replay-rabbitmq'),
 	bluebird = require('bluebird'),
 	JobsService = require('replay-jobs-service');
 
+var path = require('path');
+
 var connectMongo = require('replay-schemas/connectMongo');
 var Promise = bluebird;
 
@@ -67,7 +69,7 @@ function handleMessage(message, err, done) {
 
 	// get the appropriate service name and start it
 	var serviceName = JobsService.getServiceName(jobType);
-	var service = require('./services/processing-services/' + serviceName);
+	var service = require(path.join('./services/processing-services/', serviceName));
 	if (service) {
 		service.start(message, err, done);
 	} else {
