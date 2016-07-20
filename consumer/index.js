@@ -42,7 +42,7 @@ function isInputValid() {
 	console.log('Files storage path: ', process.env.STORAGE_PATH);
 
 	// check mandatory parameter we can't continue without
-	if (!JobsService.isKnownJobType(jobType) || !process.env.MONGO_DATABASE || !process.env.STORAGE_PATH || !process.env.RABBITMQ_HOST) {
+	if (!JobsService.isKnownJobType(jobType) || !process.env.MONGO_DATABASE || !process.env.STORAGE_PATH) {
 		return false;
 	}
 
@@ -50,7 +50,8 @@ function isInputValid() {
 }
 
 function connectRabbitMQ() {
-	return rabbit.connect(process.env.RABBITMQ_HOST);
+	var host = process.env.RABBITMQ_HOST || 'localhost';
+	return rabbit.connect(host);
 }
 
 function consumeRabbitMQ() {
@@ -60,7 +61,7 @@ function consumeRabbitMQ() {
 	return rabbit.consume(queueName, maxMessagesAmount, handleMessage);
 }
 
-function handleMessage(message, done) {
+function handleMessage(message, err, done) {
 	console.log('Received message: ', message);
 	console.log('Lifting appropriate service...');
 
@@ -68,7 +69,7 @@ function handleMessage(message, done) {
 	var serviceName = JobsService.getServiceName(jobType);
 	var service = require('./services/processing-services/' + serviceName);
 	if (service) {
-		service.start(message, done);
+		service.start(message, err, done);
 	} else {
 		console.log('Bad service name');
 	}

@@ -1,12 +1,12 @@
 var Video = require('replay-schemas/Video'),
 	KalturaService = require('replay-kaltura-service');
 
-module.exports.fetch = function(params) {
+module.exports.fetch = function(params, err, done) {
 	console.log('Kaltura Fetch Service started.');
 
 	if (!validateInput(params)) {
 		console.log('Some parameters are missing.');
-		return;
+		done();
 	}
 
 	KalturaService.initialize()
@@ -18,9 +18,11 @@ module.exports.fetch = function(params) {
 		})
 		.then(updateVideoInMongo)
 		.then(confirmUpdate)
+		.then(done)
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
+				err();
 			}
 		});
 };
@@ -53,7 +55,9 @@ function updateVideoInMongo(kalturaVideo) {
 function confirmUpdate(video) {
 	if (video) {
 		console.log('Update in mongo succeeded.');
-	} else {
-		console.log('Update in mongo failed for some reason.');
+		return Promise.resolve();
 	}
+
+	console.log('Update in mongo failed for some reason.');
+	return Promise.reject();
 }

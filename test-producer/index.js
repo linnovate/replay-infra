@@ -1,6 +1,8 @@
-var rabbit = require('replay-rabbitmq');
+var rabbit = require('replay-rabbitmq'),
+	mongoose = require('mongoose');
 
 var rabbitHost = process.env.RABBITMQ_HOST || 'localhost';
+
 rabbit.connect(rabbitHost)
 	.then(function() {
 		var message = {
@@ -11,7 +13,8 @@ rabbit.connect(rabbitHost)
 			receivingMethod: {
 				standard: 'VideoStandard',
 				version: '1.0'
-			}
+			},
+			transactionId: new mongoose.Types.ObjectId()
 		};
 		rabbit.produce('NewVideosQueue', message);
 	})

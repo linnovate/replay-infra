@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "amqplib": "^0.4.2",
+    "mongoose": "^4.5.5",
     "replay-rabbitmq": "^1.0.0"
   }
 }

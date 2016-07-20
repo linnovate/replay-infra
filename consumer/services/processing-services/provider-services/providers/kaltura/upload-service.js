@@ -1,11 +1,11 @@
 var fs = require('fs');
 
-module.exports.upload = function(params) {
+module.exports.upload = function(params, err, done) {
 	console.log('Kaltura Upload Service started.');
 
 	if (!validateInput(params)) {
 		console.log('Some parameters are missing.');
-		return;
+		done();
 	}
 
 	var sourceFilePath = process.env.STORAGE_PATH + '/' + params.relativePath;
@@ -15,10 +15,11 @@ module.exports.upload = function(params) {
 	copyFile(sourceFilePath, targetFilePath, function(err) {
 		if (err) {
 			console.log('Error copying video to dropfolder: ', err);
-			return;
+			err();
 		}
 
-		console.log('Video successfuly copied to dropfolder');
+		console.log('Video successfuly copied to dropfolder.');
+		done();
 	});
 };
 
