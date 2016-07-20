@@ -44,6 +44,14 @@ function StreamListener() {
 			var bindingAttemptsCounts = 0;
 			console.log(SERVICE_NAME, METHOD_NAME, ' start running...\n params: ', JSON.stringify(params));
 
+			var _closeServer = function() {
+				try {
+					_server.close();
+				} catch (err) {
+					console.log('server is already closed');
+				}
+			};
+
 			// check params
 			if (!params || !params.port || !params.ip) {
 				reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Some of the parameters doesn\'t exist');
@@ -62,6 +70,9 @@ function StreamListener() {
 				console.log('finish validate the parameters');
 
 				// create socket server
+				if (_server) {
+					_closeServer();
+				}
 				_server = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
 				// function that called after the binding.
@@ -70,7 +81,7 @@ function StreamListener() {
 						bindingAttemptsCounts++;
 						console.log('try binding no', bindingAttemptsCounts, 'failed...\n' + err);
 						if (bindingAttemptsCounts === MAX_BINDING_TRIES) {
-							_server.close();
+							_closeServer();
 							return reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
 						}
 						bindToTheAddress();
@@ -98,11 +109,12 @@ function StreamListener() {
 				bindToTheAddress();
 
 				// on event of data flow
-				_server.on('message', (msg, rinfo) => {
+				_server.on('message', function eventCallBack(msg, rinfo) {
 					console.log(SERVICE_NAME, 'Stop listening, Data Was detected at ', _ip, ':', _port, ' !');
+					_server.removeListener('message', eventCallBack);
 					// close the server so that the port will be open for the ffmpeg process to recording
-					_server.close();
-					// emmit an event so it could go next processing
+					_closeServer();
+					// emit an event so it could go next processing
 					event.emit('StreamingData');
 				});
 
@@ -115,7 +127,7 @@ function StreamListener() {
 					if (finishedBind) {
 						event.emit('unexceptedError_StreamListener', SERVICE_NAME + ' Unexcepted Error eccured while trying listen to the address ' +
 							_ip + ':' + _port + ' : ' + err);
-						_server.close();
+						_closeServer();
 					} else {
 						setTimeout(function() {
 							afterBind(err);

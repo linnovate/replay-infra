@@ -48,6 +48,39 @@ Initialize the environment variables and run, e.g:
 INDEX=102 STORAGE_PATH=/home/$USER/vod_storge_data MONGO_HOST=localhost MONGO_PORT=27017 MONGO_DATABASE=replay_dev node index.js
 ```
 
+## Testing
+
+For tests first run the next commands:
+
+Install mocha globally
+```
+npm install mocha -g
+```
+
+Install instanbul globally
+```
+npm install istanbul -g
+```
+
+To run the Tests please ensure to be in the root of the replay-infra directory,
+then run the command:
+```
+npm test
+```
+(if there is any problem please follow the instracture that npm tell you to do)
+
+For see the coverege of tests run the command:
+```
+npm run coverage
+```
+
+or
+```
+npm run-script coverage
+```
+
+It will open in your default browser the coverage of the tests.
+
 ___
 
 #### For More Info Please Check out [Wiki](https://github.com/linnovate/replay-infra/wiki).

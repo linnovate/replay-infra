@@ -112,7 +112,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:51.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -222,7 +222,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:52.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -332,7 +332,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:53.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -442,7 +442,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:54.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -552,7 +552,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:55.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -662,7 +662,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:56.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -772,7 +772,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:57.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -882,7 +882,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:58.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -992,7 +992,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:19:59.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1102,7 +1102,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:00.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1212,7 +1212,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:01.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1322,7 +1322,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:02.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1432,7 +1432,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:03.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1542,7 +1542,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:04.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1652,7 +1652,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:05.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1762,7 +1762,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:06.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1872,7 +1872,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:07.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -1982,7 +1982,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:08.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>
@@ -2092,7 +2092,7 @@ xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion
 xsi:schemaLocation="http://vims.idf/dyn/v1.0 VIMS-Dyn-1.0-Final.xsd" VIMSVersion="1.0">
 	<Classification>Unclassified</Classification>
 	<TimeTag>
-		<Time>2012-02-28T19:19:50.234+02:00</Time>
+		<Time>2012-02-28T19:20:09.234+02:00</Time>
 		<Accuracy>GPS</Accuracy>
 	</TimeTag>
 	<MetadataSource>

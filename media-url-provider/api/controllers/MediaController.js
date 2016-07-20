@@ -32,7 +32,7 @@ module.exports = {
 
 function getVideo(id) {
 	return Video
-		.findOne({ sourceId: id })
+		.findOne({ _id: id })
 		.then(function(video) {
 			if (!video) {
 				return Promise.reject('Video does not exist');

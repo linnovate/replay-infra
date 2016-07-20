@@ -1,33 +1,14 @@
 {
-  "name": "video-box",
+  "name": "media-url-provider",
   "private": true,
   "version": "0.0.0",
   "description": "a Sails application",
   "keywords": [],
   "dependencies": {
-    "ejs": "2.3.4",
-    "grunt": "0.4.5",
-    "grunt-contrib-clean": "0.6.0",
-    "grunt-contrib-coffee": "0.13.0",
-    "grunt-contrib-concat": "0.5.1",
-    "grunt-contrib-copy": "0.5.0",
-    "grunt-contrib-cssmin": "0.9.0",
-    "grunt-contrib-jst": "0.6.0",
-    "grunt-contrib-less": "1.1.0",
-    "grunt-contrib-uglify": "0.7.0",
-    "grunt-contrib-watch": "0.5.3",
-    "grunt-sails-linker": "~0.10.1",
-    "grunt-sync": "0.2.4",
     "include-all": "~0.1.6",
-    "mongoose": "^4.5.4",
     "rc": "1.0.1",
-    "replay-bus-service": "*",
-    "replay-jobs-service": "*",
-    "replay-kaltura-service": "*",
-    "replay-schemas": "*",
     "sails": "~0.12.3",
-    "sails-disk": "~0.10.9",
-    "xml2json": "^0.9.1"
+    "sails-disk": "~0.10.9"
   },
   "scripts": {
     "debug": "node debug app.js",
@@ -36,7 +17,7 @@
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/linnovate3/video-box.git"
+    "url": "git://github.com/linnovate3/media-url-provider.git"
   },
   "author": "linnovate3",
   "license": ""

@@ -117,6 +117,7 @@ function footpointLatitude(y) {
  *   to optimize computations.
  *
  */
+// eslint-disable-next-line max-statements
 function mapXYToLatLon(x, y, lambda0) {
 	var phif, Nf, Nfpow, nuf2, ep2, tf, tf2, tf4, cf;
 	var x1frac, x2frac, x3frac, x4frac, x5frac, x6frac, x7frac, x8frac;
