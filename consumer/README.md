@@ -1,20 +1,7 @@
 ## Installation
-First install redis:
-```
-wget http://download.redis.io/redis-stable.tar.gz
-tar xvzf redis-stable.tar.gz
-cd redis-stable
-make
-sudo make install
+Install RabbitMQ according to the instructions [in replay-rabbitmq repo](https://github.com/linnovate/replay-common/tree/develop/replay-rabbitmq).
 
-```
-
-## Running
-Run redis:
-```
-redis-server
-```
-Make sure to have MongoDB and ElasticSearch installed locally, else you may configure them via the environment variables .
+You can have have MongoDB and ElasticSearch installed locally, else you may configure them via the environment variables.
 
 Initialize ElasticSearch:
 ```
@@ -60,9 +47,8 @@ MONGO_PORT
 MONGO_DATABASE // mandatory
 ELASTIC_HOST
 ELASTIC_PORT
-REDIS_HOST
-REDIS_PORT
-REDIS_PASSWORD
+RABBITMQ_HOST
+RABBITMQ_MAX_RESEND_ATTEMPS
 PROVIDER
 DROP_FOLDER_PATH
 KALTURA_PARTNER_ID

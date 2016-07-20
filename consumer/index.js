@@ -34,6 +34,7 @@ connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_D
 function isInputValid() {
 	console.log('Job type is: ', jobType);
 	console.log('RabbitMQ host: ', process.env.RABBITMQ_HOST);
+	console.log('RabbitMQ max resend attempts: ', process.env.RABBITMQ_MAX_RESEND_ATTEMPTS);
 	console.log('Mongo host: ', process.env.MONGO_HOST);
 	console.log('Mongo port: ', process.env.MONGO_PORT);
 	console.log('Mongo database: ', process.env.MONGO_DATABASE);
@@ -62,7 +63,6 @@ function consumeRabbitMQ() {
 }
 
 function handleMessage(message, err, done) {
-	console.log('Received message: ', message);
 	console.log('Lifting appropriate service...');
 
 	// get the appropriate service name and start it
