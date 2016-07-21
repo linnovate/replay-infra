@@ -2,17 +2,16 @@ Video-recorder
 ==============================
 
 ##### Video-recorder is the _Capture_ component for the Replay project.
-In general word it's just a record tool for video/metadata broadcast streaming.
-_"Just catch stream and save it (;"_
-
+In general word it's just a record tool for video/metadata broadcast streaming.  
+_"Just catch stream and save it" :smirk:_
 
 
 Setup
 ------------------------------
 
 #### 1. [FFmpeg](https://ffmpeg.org/)
-This module uses the [fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg) and that requires FFmpeg to be installed on your computer.
-For more information (and installation instructions) please refer to [fluent-ffmpeg Prerequisites](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg#prerequisites)
+This module uses the [fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg) and that requires FFmpeg to be installed on your computer.  
+For more information (and installation instructions) please refer to [fluent-ffmpeg prerequisites](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg#prerequisites)
 
 #### 2. [MongoDB](https://www.mongodb.com/)
 First install MongoDB according to this ([installation tutorial](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)).
@@ -34,7 +33,6 @@ And then, for running use the command:
 tsplay Path/To/Your/TS/File.ts [IP:Port] -loop
 ```
 
-
 #### 4. Don't forget to install package dependencies by running
 ```Bash
 npm install
@@ -44,6 +42,7 @@ npm install
 Running
 ------------------------------
 
+#### Environment variables:
 Just initialize the environment variables and run `node index.js`.
 The environment variables available for configuration are:
 ```Bash
@@ -54,7 +53,7 @@ MONGO_PORT
 MONGO_DATABASE
 ```
 
-####Example:
+#### Run command example:
 ``` Bash
 INDEX=102 STORAGE_PATH=/home/$USER/vod_storge_data MONGO_HOST=localhost MONGO_PORT=27017 MONGO_DATABASE=replay_dev node index.js
 ```
@@ -80,6 +79,7 @@ npm run coverage`
 ```
 
 The code coverege will open in a new window in your default browser.
+
 
 ______________________________
 
