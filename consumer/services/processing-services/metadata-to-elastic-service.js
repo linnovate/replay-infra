@@ -1,28 +1,67 @@
-module.exports.start = function(metadatas) {
+var JobsService = require('replay-jobs-service');
+
+var _transactionId;
+var jobStatusTag = 'saved-metadata-to-elastic';
+
+module.exports.start = function(params, error, done) {
 	console.log('MetadataToElastic service started.');
 
-	if (metadatas && metadatas.length > 0) {
-		saveToElastic(metadatas);
-	} else {
-		console.log('No metadatas receieved.');
+	if (!validateInput(params)) {
+		console.log('Some parameters are missing.');
+		return error();
 	}
+
+	_transactionId = params.transactionId;
+
+	// Make sure we haven't performed this job already
+	JobsService.findJobStatus(_transactionId)
+		.then(function(jobStatus) {
+			if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
+				// case we've already performed the action, ack the message
+				done();
+			} else {
+				return saveToElastic(params.metadatas);
+			}
+		})
+		.then(done)
+		.catch(function(err) {
+			if (err) {
+				console.log(err);
+				error();
+			}
+		})
+		.finally(function() {
+			// update job status at last, so if it will fail it won't trigger re-insertion
+			return updateJobStatus();
+		});
 };
 
+function validateInput(params) {
+	if (!params.transactionId) {
+		return false;
+	}
+	return true;
+}
+
 function saveToElastic(videoMetadatas) {
-	console.log('Saving to elastic...');
+	if (videoMetadatas && videoMetadatas.length > 0) {
+		console.log('Saving to elastic...');
 
-	// convert xmls to bulk request object for elastic
-	var bulkRequest = videoMetadatasToElasticBulkRequest(videoMetadatas);
+		// convert xmls to bulk request object for elastic
+		var bulkRequest = videoMetadatasToElasticBulkRequest(videoMetadatas);
 
-	global.elasticsearch.bulk({
-		body: bulkRequest
-	}, function(err, resp) {
-		if (err) {
-			console.log(err);
-		} else {
-			console.log('Bulk insertion to elastic succeed.');
-		}
-	});
+		return global
+			.elasticsearch.bulk({
+				body: bulkRequest
+			})
+			.then(function() {
+				console.log('Bulk insertion to elastic succeed.');
+				return updateJobStatus();
+			});
+	}
+
+	console.log('No metadatas receieved.');
+	return Promise.resolve();
 }
 
 function videoMetadatasToElasticBulkRequest(videoMetadatas) {
@@ -45,4 +84,8 @@ function videoMetadatasToElasticBulkRequest(videoMetadatas) {
 	});
 
 	return bulkRequest;
+}
+
+function updateJobStatus() {
+	return JobsService.updateJobStatus(_transactionId, jobStatusTag);
 }
