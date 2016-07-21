@@ -56,7 +56,7 @@ function saveToElastic(videoMetadatas) {
 			})
 			.then(function() {
 				console.log('Bulk insertion to elastic succeed.');
-				return updateJobStatus();
+				return Promise.resolve();
 			});
 	}
 
