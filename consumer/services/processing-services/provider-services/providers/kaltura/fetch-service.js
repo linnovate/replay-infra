@@ -45,6 +45,8 @@ function validateInput(params) {
 	return true;
 }
 
+// Initialize kaltura, get the video data from it, then update the
+// video object in mongo.
 function performFetchChain(params) {
 	return KalturaService.initialize()
 		.then(function() {

@@ -1,20 +1,58 @@
 var Promise = require('bluebird'),
-	BusService = require('replay-bus-service'),
+	rabbit = require('replay-rabbitmq'),
 	JobsService = require('replay-jobs-service');
 
 var path = require('path');
 
-var fs = Promise.promisifyAll(require('fs'));
-var busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
+var fs = Promise.promisifyAll(require('fs')),
+	_transactionId,
+	jobStatusTag = 'parsed-metadata';
 
-module.exports.start = function(params) {
+module.exports.start = function(params, error, done) {
 	console.log('MetadataParserService started.');
 
 	if (!validateInput(params)) {
 		console.log('Some vital parameters are missing.');
-		return;
+		error();
 	}
 
+	_transactionId = params.transactionId;
+
+	JobsService.findJobStatus(_transactionId)
+		.then(function(jobStatus) {
+			if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
+				// case we've already performed the action, ack the message
+				return Promise.resolve();
+			}
+			return performParseChain(params);
+		})
+		.then(done)
+		.catch(function(err) {
+			if (err) {
+				console.log(err);
+				error();
+			}
+		});
+};
+
+function validateInput(params) {
+	var relativePathToData = params.relativePath;
+	var method = params.method;
+	var transactionId = params.transactionId;
+
+	// validate params
+	if (!relativePathToData || !process.env.STORAGE_PATH ||
+		!method || !method.standard || !method.version || !transactionId) {
+		console.log('Some vital parameters are missing.');
+		return false;
+	}
+
+	return true;
+}
+
+// Read data from file, convert it to objects, produce insert-to-databases jobs,
+// and then update the job status that we've parsed metadata.
+function performParseChain(params) {
 	// extract params and handle metadata
 	var relativePathToData = params.relativePath;
 	var method = params.method;
@@ -29,21 +67,8 @@ module.exports.start = function(params) {
 		.then(function(videoMetadatas) {
 			return produceInsertionToDatabasesJobs(videoMetadatas);
 		})
-		.catch(handleErrors);
-};
-
-function validateInput(params) {
-	var relativePathToData = params.relativePath;
-	var method = params.method;
-
-	// validate params
-	if (!relativePathToData || !process.env.STORAGE_PATH ||
-		!method || !method.standard || !method.version) {
-		console.log('Some vital parameters are missing.');
-		return false;
-	}
-
-	return true;
+		.all()
+		.then(updateJobStatus);
 }
 
 function readDataAsString(path) {
@@ -67,44 +92,25 @@ function dataToObjects(method, data, params) {
 }
 
 function produceInsertionToDatabasesJobs(videoMetadatas) {
-	return new Promise(function(resolve, reject) {
-		console.log('Producing save to databases jobs.');
-
-		produceSaveToMongoJob(videoMetadatas);
-		produceSaveToElasticJob(videoMetadatas);
-
-		resolve();
-	});
+	return [
+		produceSaveToDatabaseJob(videoMetadatas, 'MetadataToMongo'),
+		produceSaveToDatabaseJob(videoMetadatas, 'MetadataToElastic')
+	];
 }
 
-function produceSaveToMongoJob(videoMetadatas) {
-	console.log('Producing save to Mongo job...');
+function produceSaveToDatabaseJob(videoMetadatas, jobName) {
+	console.log('Producing %s job...', jobName);
 	var message = {
-		params: videoMetadatas
+		transactionId: _transactionId,
+		metadatas: videoMetadatas
 	};
-	var queueName = JobsService.getQueueName('MetadataToMongo');
+	var queueName = JobsService.getQueueName(jobName);
 	if (queueName) {
-		busService.produce(queueName, message);
-	} else {
-		throw new Error('Could not find queue name of the inserted job type');
+		return rabbit.produce(queueName, message);
 	}
+	return Promise.reject(Error('Could not find queue name of the inserted job type'));
 }
 
-function produceSaveToElasticJob(videoMetadatas) {
-	console.log('Producing save to Elastic job...');
-	var message = {
-		params: videoMetadatas
-	};
-	var queueName = JobsService.getQueueName('MetadataToElastic');
-	if (queueName) {
-		busService.produce(queueName, message);
-	} else {
-		throw new Error('Could not find queue name of the inserted job type');
-	}
-}
-
-function handleErrors(err) {
-	if (err) {
-		console.log(err);
-	}
+function updateJobStatus() {
+	return JobsService.updateJobStatus(_transactionId, jobStatusTag);
 }
