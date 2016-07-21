@@ -10,35 +10,28 @@ module.exports.start = function(params) {
 	addSubtitle(params);
 };
 
-function addSubtitle(res) {
+function addSubtitle(mdata) {
 	var path = process.env.STORAGE_PATH + '/captions/';
 	var videoId;
-	if (res === null) {
+	if (mdata === null) {
 		console.log('no Data Found ');
 		return;
 	}
-	videoId = res[0].videoId;
+	videoId = mdata[0].videoId;
 
-	var baseDate = new Date(res[0]._source.timestamp);
+	var baseDate = new Date(mdata[0].timestamp);
 	end = getFormatedTime(new Date(0));
-	res.forEach(function(r, i) {
+	mdata.forEach(function(r, i) {
 		start = end;
-		if (i < (res.length - 1)) {
-			console.log(res[i + 1]._source.timestamp, r._source.timestamp);
-			dif = new Date(getTimeDiff(new Date(res[i + 1]._source.timestamp), baseDate));
+		if (i < (mdata.length - 1)) {
+			dif = new Date(getTimeDiff(new Date(mdata[i + 1].timestamp), baseDate));
 			end = getFormatedTime(dif);
 		} else {
 			dif.setSeconds(dif.getSeconds() + 1);
 			end = getFormatedTime(dif);
 		}
 		timeLine = start + '-->' + end;
-		fs.appendFile(path + videoId + '.vtt', timeLine + '\n', function(err) {
-			if (err) {
-				return console.log(err);
-			}
-		});
-
-		fs.appendFile(path + videoId + '.vtt', JSON.stringify(r) + '\n', function(err) {
+		fs.appendFile(path + videoId + '.vtt', timeLine + '\n' + JSON.stringify(r) + '\n', function(err) {
 			if (err) {
 				return console.log(err);
 			}
