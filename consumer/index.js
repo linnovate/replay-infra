@@ -69,7 +69,7 @@ function handleMessage(message, err, done) {
 
 	// get the appropriate service name and start it
 	var serviceName = JobsService.getServiceName(jobType);
-	var service = require(path.join('./services/processing-services/', serviceName));
+	var service = require(path.join(__dirname, 'services/processing-services/', serviceName));
 	if (service) {
 		service.start(message, err, done);
 	} else {

@@ -1,28 +1,35 @@
 var Video = require('replay-schemas/Video'),
-	KalturaService = require('replay-kaltura-service');
+	KalturaService = require('replay-kaltura-service'),
+	JobService = require('replay-jobs-service');
 
-module.exports.fetch = function(params, err, done) {
+var _transactionId;
+var jobStatusTag = 'fetched-from-kaltura';
+
+module.exports.fetch = function(params, error, done) {
 	console.log('Kaltura Fetch Service started.');
 
 	if (!validateInput(params)) {
 		console.log('Some parameters are missing.');
-		done();
+		return error();
 	}
 
-	KalturaService.initialize()
-		.then(function() {
-			console.log('KalturaService initialized.');
-			console.log('Getting video object from kaltura...');
-
-			return KalturaService.getVideo(params.providerId);
+	getVideo(params.name)
+		.then(function(video) {
+			_transactionId = video.jobStatusId;
+			return JobService.findJobStatus(_transactionId);
 		})
-		.then(updateVideoInMongo)
-		.then(confirmUpdate)
+		.then(function(jobStatus) {
+			if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
+				// case we've already performed the action, ack the message
+				return Promise.resolve();
+			}
+			return performFetchChain(params);
+		})
 		.then(done)
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
-				err();
+				error();
 			}
 		});
 };
@@ -36,6 +43,23 @@ function validateInput(params) {
 	}
 
 	return true;
+}
+
+function performFetchChain(params) {
+	return KalturaService.initialize()
+		.then(function() {
+			console.log('KalturaService initialized.');
+			console.log('Getting video object from kaltura...');
+
+			return KalturaService.getVideo(params.providerId);
+		})
+		.then(updateVideoInMongo)
+		.then(confirmUpdate);
+}
+
+function getVideo(name) {
+	var query = { name: { $regex: name + '.*' } };
+	return Video.findOne(query);
 }
 
 function updateVideoInMongo(kalturaVideo) {

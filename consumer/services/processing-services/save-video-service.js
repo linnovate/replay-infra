@@ -1,17 +1,18 @@
 var rabbit = require('replay-rabbitmq'),
 	JobsService = require('replay-jobs-service'),
 	Video = require('replay-schemas/Video'),
-	JobStatus = require('replay-schemas/JobStatus'),
-	Promise = require('bluebird');
+	Promise = require('bluebird'),
+	JobService = require('replay-jobs-service');
 
 var _transactionId;
+var jobStatusTag = 'video-object-saved';
 
 module.exports.start = function(params, error, done) {
 	console.log('SaveVideoService started.');
 
 	if (!validateInput(params)) {
 		console.log('Some vital parameters are missing.');
-		error();
+		return error();
 	}
 
 	_transactionId = params.transactionId;
@@ -19,7 +20,7 @@ module.exports.start = function(params, error, done) {
 	// get job, try to save video to mongo if it wasn't done already,
 	// then produce the next jobs.
 	// after that, wait for all produces to finish successfuly then call done.
-	findOrCreateJobStatus()
+	JobService.findOrCreateJobStatus(_transactionId)
 		.then(function(jobStatus) {
 			return trySaveVideoToMongo(jobStatus, params);
 		})
@@ -57,10 +58,6 @@ function validateInput(params) {
 	return true;
 }
 
-function findOrCreateJobStatus() {
-	return JobStatus.findOneAndUpdate({ _id: _transactionId }, {}, { upsert: true, new: true, setDefaultsOnInsert: true });
-}
-
 //  save video to mongo only if we hadn't saved already;
 // if we already saved it, just get it from mongo and continue
 function trySaveVideoToMongo(jobStatus, params) {
@@ -69,7 +66,7 @@ function trySaveVideoToMongo(jobStatus, params) {
 		var videoQuery;
 
 		// check if we've already saved video or not
-		if (jobStatus.statuses.indexOf('video-object-saved') > -1) {
+		if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
 			videoQuery = getVideo;
 		} else {
 			videoQuery = saveVideoToMongo;
@@ -95,27 +92,24 @@ function saveVideoToMongo(params) {
 			sourceId: params.sourceId,
 			relativePath: params.videoRelativePath,
 			name: params.videoName,
-			receivingMethod: params.receivingMethod
+			receivingMethod: params.receivingMethod,
+			jobStatusId: _transactionId
 		})
 		.then(function(video) {
 			console.log('Video successfully saved to mongo:', video);
 
 			// update JobStatus status
-			return JobStatus.findOneAndUpdate({ _id: _transactionId }, { $addToSet: { statuses: 'video-object-saved' } })
-				.then(function() {
+			return JobService.updateJobStatus(_transactionId, jobStatusTag)
+				.then(function(jobStatus) {
 					return Promise.resolve(video);
 				});
 		});
 }
 
-function getVideo(params) {
+function getVideo() {
 	return Video
 		.findOne({
-			'sourceId': params.sourceId,
-			'relativePath': params.videoRelativePath,
-			'name': params.videoName,
-			'receivingMethod.standard': params.receivingMethod.standard,
-			'receivingMethod.version': params.receivingMethod.version
+			transactionId: _transactionId
 		});
 }
 
@@ -135,7 +129,8 @@ function produceMetadataParserJob(params) {
 		sourceId: params.sourceId,
 		videoId: params.videoId, // could be undefined
 		relativePath: params.dataRelativePath,
-		method: params.receivingMethod
+		method: params.receivingMethod,
+		transactionId: params.transactionId
 	};
 	var queueName = JobsService.getQueueName('MetadataParser');
 	if (queueName) {
@@ -151,7 +146,8 @@ function produceUploadToProviderJob(params) {
 	if (params.videoRelativePath && params.videoId) {
 		var message = {
 			videoName: params.videoName,
-			relativePath: params.videoRelativePath
+			relativePath: params.videoRelativePath,
+			transactionId: params.transactionId
 		};
 
 		var queueName = JobsService.getQueueName('UploadVideoToProvider');
