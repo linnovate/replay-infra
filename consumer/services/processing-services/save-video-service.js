@@ -5,7 +5,7 @@ var rabbit = require('replay-rabbitmq'),
 	JobService = require('replay-jobs-service');
 
 var _transactionId;
-var jobStatusTag = 'video-object-saved';
+var _jobStatusTag = 'video-object-saved';
 
 module.exports.start = function(params, error, done) {
 	console.log('SaveVideoService started.');
@@ -66,7 +66,7 @@ function trySaveVideoToMongo(jobStatus, params) {
 		var videoQuery;
 
 		// check if we've already saved video or not
-		if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
+		if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 			videoQuery = getVideo;
 		} else {
 			videoQuery = saveVideoToMongo;
@@ -99,7 +99,7 @@ function saveVideoToMongo(params) {
 			console.log('Video successfully saved to mongo:', video);
 
 			// update JobStatus status
-			return JobService.updateJobStatus(_transactionId, jobStatusTag)
+			return JobService.updateJobStatus(_transactionId, _jobStatusTag)
 				.then(function(jobStatus) {
 					return Promise.resolve(video);
 				});

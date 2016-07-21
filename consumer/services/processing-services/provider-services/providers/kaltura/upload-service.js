@@ -4,7 +4,7 @@ var fs = require('fs'),
 var	JobService = require('replay-jobs-service');
 
 var _transactionId;
-var jobStatusTag = 'uploaded-to-kaltura';
+var _jobStatusTag = 'uploaded-to-kaltura';
 
 module.exports.upload = function(params, error, done) {
 	console.log('Kaltura Upload Service started.');
@@ -18,7 +18,7 @@ module.exports.upload = function(params, error, done) {
 
 	JobService.findJobStatus(_transactionId)
 		.then(function(jobStatus) {
-			if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
+			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
 				done();
 			} else {
@@ -63,7 +63,7 @@ function copyToDropFolder(params, error, done) {
 
 		console.log('Video successfuly copied to dropfolder.');
 		// update status
-		JobService.updateJobStatus(_transactionId, jobStatusTag)
+		return JobService.updateJobStatus(_transactionId, _jobStatusTag)
 			.then(done)
 			.catch(function(err) {
 				if (err) {

@@ -6,7 +6,7 @@ var path = require('path');
 
 var fs = Promise.promisifyAll(require('fs')),
 	_transactionId,
-	jobStatusTag = 'parsed-metadata';
+	_jobStatusTag = 'parsed-metadata';
 
 module.exports.start = function(params, error, done) {
 	console.log('MetadataParserService started.');
@@ -20,7 +20,7 @@ module.exports.start = function(params, error, done) {
 
 	JobsService.findJobStatus(_transactionId)
 		.then(function(jobStatus) {
-			if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
+			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}
@@ -112,5 +112,5 @@ function produceSaveToDatabaseJob(videoMetadatas, jobName) {
 }
 
 function updateJobStatus() {
-	return JobsService.updateJobStatus(_transactionId, jobStatusTag);
+	return JobsService.updateJobStatus(_transactionId, _jobStatusTag);
 }

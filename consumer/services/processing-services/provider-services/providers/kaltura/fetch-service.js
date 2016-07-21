@@ -3,7 +3,7 @@ var Video = require('replay-schemas/Video'),
 	JobService = require('replay-jobs-service');
 
 var _transactionId;
-var jobStatusTag = 'fetched-from-kaltura';
+var _jobStatusTag = 'fetched-from-kaltura';
 
 module.exports.fetch = function(params, error, done) {
 	console.log('Kaltura Fetch Service started.');
@@ -19,7 +19,7 @@ module.exports.fetch = function(params, error, done) {
 			return JobService.findJobStatus(_transactionId);
 		})
 		.then(function(jobStatus) {
-			if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
+			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}

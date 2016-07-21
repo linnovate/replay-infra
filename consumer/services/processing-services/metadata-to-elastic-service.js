@@ -1,7 +1,7 @@
 var JobsService = require('replay-jobs-service');
 
 var _transactionId;
-var jobStatusTag = 'saved-metadata-to-elastic';
+var _jobStatusTag = 'saved-metadata-to-elastic';
 
 module.exports.start = function(params, error, done) {
 	console.log('MetadataToElastic service started.');
@@ -16,7 +16,7 @@ module.exports.start = function(params, error, done) {
 	// Make sure we haven't performed this job already
 	JobsService.findJobStatus(_transactionId)
 		.then(function(jobStatus) {
-			if (jobStatus.statuses.indexOf(jobStatusTag) > -1) {
+			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
 				done();
 			} else {
@@ -87,5 +87,5 @@ function videoMetadatasToElasticBulkRequest(videoMetadatas) {
 }
 
 function updateJobStatus() {
-	return JobsService.updateJobStatus(_transactionId, jobStatusTag);
+	return JobsService.updateJobStatus(_transactionId, _jobStatusTag);
 }
