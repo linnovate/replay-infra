@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "replay-bus-service": "^1.0.0"
+    "mongoose": "^4.5.5",
+    "replay-rabbitmq": "^1.0.0"
   }
 }

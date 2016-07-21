@@ -1,16 +1,23 @@
-var BusService = require('replay-bus-service');
+var rabbit = require('replay-rabbitmq'),
+	mongoose = require('mongoose');
 
-var busService = new BusService(process.env.REDIS_HOST, process.env.REDIS_PORT);
-var message = {
-	params: {
-		sourceId: '123',
-		videoName: 'sample.ts',
-		videoRelativePath: 'sample.ts',
-		dataRelativePath: 'sample.data',
-		receivingMethod: {
-			standard: 'VideoStandard',
-			version: '1.0'
-		}
-	}
-};
-busService.produce('NewVideosQueue', message);
+var rabbitHost = process.env.RABBITMQ_HOST || 'localhost';
+
+rabbit.connect(rabbitHost)
+	.then(function() {
+		var message = {
+			sourceId: '123',
+			videoName: 'sample.ts',
+			videoRelativePath: 'sample.ts',
+			dataRelativePath: 'sample.data',
+			receivingMethod: {
+				standard: 'VideoStandard',
+				version: '1.0'
+			},
+			transactionId: new mongoose.Types.ObjectId()
+		};
+		rabbit.produce('NewVideosQueue', message);
+	})
+	.catch(function(err) {
+		console.log(err);
+	});
