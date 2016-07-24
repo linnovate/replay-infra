@@ -42,7 +42,7 @@ module.exports = {
 					sensorTrace: {
 						relation: 'intersects',
 						shape: {
-							type: 'polygon',
+							type: 'Polygon',
 							coordinates: polygon
 						}
 					}

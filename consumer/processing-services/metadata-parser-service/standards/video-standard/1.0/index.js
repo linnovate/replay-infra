@@ -68,7 +68,7 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 // { type: 'polygon', coordinates: [[[lon, lat]]] }
 function tracePointsToGeoJson(tracePoints) {
 	var geoJson = {};
-	geoJson.type = 'polygon';
+	geoJson.type = 'Polygon';
 	// check there are at least 2 points (which is valid, we duplicate the first one)
 	if (tracePoints.length > 1) {
 		geoJson.coordinates = [[]];
