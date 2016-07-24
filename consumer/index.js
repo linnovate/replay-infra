@@ -1,13 +1,11 @@
 var rabbit = require('replay-rabbitmq'),
 	mongoose = require('mongoose'),
-	elasticsearch = require('elasticsearch'),
 	bluebird = require('bluebird'),
 	JobsService = require('replay-jobs-service');
 
 var path = require('path');
 
 var connectMongo = require('replay-schemas/connectMongo');
-var Promise = bluebird;
 
 // set mongoose promise library
 mongoose.Promise = bluebird.Promise;
@@ -24,7 +22,6 @@ if (!isInputValid()) {
 }
 
 connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
-	.then(connectElasticSearch)
 	.then(connectRabbitMQ)
 	.then(consumeRabbitMQ)
 	.catch(function(err) {
@@ -80,20 +77,3 @@ function handleMessage(message, error, done) {
 	return;
 }
 
-// connect to ElasticSearch once so the service won't have to re-create connection each time
-function connectElasticSearch() {
-	return new Promise(function(resolve, reject) {
-		var host = process.env.ELASTIC_HOST || 'localhost';
-		var port = process.env.ELASTIC_PORT || 9200;
-
-		var uri = host + ':' + port;
-		// connect to elastic
-		// keep-alive is true by default, which means forever
-		global.elasticsearch = new elasticsearch.Client({
-			host: uri,
-			log: ['error', 'warning']
-		});
-		console.log('Connected to elastic.');
-		resolve();
-	});
-}

@@ -8,12 +8,18 @@
  * For more information on bootstrapping your app, check out:
  * http://sailsjs.org/#!/documentation/reference/sails.config/sails.config.bootstrap.html
  */
+var elasticsearch = require('replay-elastic');
 var connectMongo = require('replay-schemas/connectMongo');
 
 module.exports.bootstrap = function(cb) {
 	// It's very important to trigger this callback method when you are finished
 	// with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
 	connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
+		.then(function() {
+			// elasticsearch connection doesn't return promise
+			elasticsearch.connect(process.env.ELASTIC_HOST, process.env.ELASTIC_PORT);
+			return Promise.resolve();
+		})
 		.then(cb)
 		.catch(function(err) {
 			console.log('An error occured in bootstrap.');

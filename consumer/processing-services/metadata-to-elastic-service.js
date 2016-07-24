@@ -1,5 +1,7 @@
-var JobsService = require('replay-jobs-service');
+var JobsService = require('replay-jobs-service'),
+	elasticsearch = require('replay-elastic');
 
+elasticsearch.connect(process.env.ELASTIC_HOST, process.env.ELASTIC_PORT);
 var _transactionId;
 var _jobStatusTag = 'saved-metadata-to-elastic';
 
@@ -44,13 +46,7 @@ function saveToElastic(videoMetadatas) {
 	if (videoMetadatas && videoMetadatas.length > 0) {
 		console.log('Saving to elastic...');
 
-		// convert xmls to bulk request object for elastic
-		var bulkRequest = videoMetadatasToElasticBulkRequest(videoMetadatas);
-
-		return global
-			.elasticsearch.bulk({
-				body: bulkRequest
-			})
+		return elasticsearch.bulkInsertVideoMetadatas(videoMetadatas)
 			.then(function() {
 				console.log('Bulk insertion to elastic succeed.');
 				return Promise.resolve();
@@ -59,28 +55,6 @@ function saveToElastic(videoMetadatas) {
 
 	console.log('No metadatas receieved.');
 	return Promise.resolve();
-}
-
-function videoMetadatasToElasticBulkRequest(videoMetadatas) {
-	var bulkRequest = [];
-
-	videoMetadatas.forEach(function(videoMetadata) {
-		// efficient way to remove auto generated _id
-		videoMetadata._id = undefined;
-
-		// push action
-		bulkRequest.push({
-			index: {
-				_index: 'videometadatas',
-				_type: 'videometadata'
-			}
-		});
-
-		// push document
-		bulkRequest.push(videoMetadata);
-	});
-
-	return bulkRequest;
 }
 
 function updateJobStatus() {

@@ -6,6 +6,7 @@
  */
 
 var Promise = require('bluebird'),
+	elasticsearch = require('replay-elastic'),
 	ObjectId = require('mongoose').Types.ObjectId,
 	Query = require('replay-schemas/Query'),
 	Video = require('replay-schemas/Video');
@@ -81,7 +82,7 @@ function saveQuery(req) {
 
 function performQuery(query) {
 	if (query.boundingShape.coordinates) {
-		return ElasticSearchService.searchVideoMetadata(query.boundingShape.coordinates)
+		return elasticsearch.searchVideoMetadata(query.boundingShape.coordinates)
 			.then(function(resp) {
 				return getVideosOfMetadatas(resp.hits.hits);
 			})
