@@ -51,8 +51,7 @@ function tryCreateCaptions(metadatas) {
 	console.log('=============================================');
 
 	if (metadatas.metadatas && metadatas.metadatas.length > 0) {
-		var captions = createCaptions(metadatas);
-		return Promise.resolve(captions);
+		return createCaptions(metadatas);
 	}
 	console.log('No metadatas receieved.');
 	return Promise.resolve();
