@@ -24,15 +24,12 @@ module.exports.start = function(params, error, done) {
 			}
 		})
 		.then(done)
+		.then(updateJobStatus)
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
 				error();
 			}
-		})
-		.finally(function() {
-			// update job status at last, so if it will fail it won't trigger re-insertion
-			return updateJobStatus();
 		});
 };
 

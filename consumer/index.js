@@ -93,7 +93,6 @@ function connectElasticSearch() {
 			host: uri,
 			log: ['error', 'warning']
 		});
-
 		console.log('Connected to elastic.');
 		resolve();
 	});
