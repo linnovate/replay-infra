@@ -199,10 +199,11 @@ function behaviorTests() {
 	describe('integration test -', function() {
 		var tmpPorc = null;
 		before(function() {
-			tmpPorc = execComand.exec('tsplay ./Test/src/Sample_Ts_File_For_Testing.ts 0.0.0.0:5555');
+			tmpPorc = execComand.spwan('tsplay ./Test/src/Sample_Ts_File_For_Testing.ts 0.0.0.0:5555');
 		});
 
 		after(function() {
+			tmpPorc.stdin.pause();
 			tmpPorc.kill('SIGKILL');
 		});
 		it('should Emit event "StreamingData" when data is streaming', function(done) {
