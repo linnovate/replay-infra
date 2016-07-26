@@ -52,8 +52,16 @@ function StreamListener() {
 				}
 			};
 
+			function _isParamsValid(params){
+				return (!params || !params.port || !params.ip);
+			}
+
+			function _isIpValid(ip){
+				return (typeof params.ip === 'string' && params.ip.match(IP_FORMAT));
+			}
+
 			// check params
-			if (!params || !params.port || !params.ip) {
+			if (_isParamsValid(params)) {
 				reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Some of the parameters doesn\'t exist');
 			} else {
 				_port = params.port;
@@ -61,7 +69,7 @@ function StreamListener() {
 				// check Ip in params
 				if (params.ip.toLowerCase() === 'localhost') {
 					_ip = LOCALHOST;
-				} else if (typeof params.ip === 'string' && params.ip.match(IP_FORMAT)) {
+				} else if (_isIpValid(params.ip)) {
 					_ip = params.ip;
 				} else {
 					return reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Some of the parameters doesn\'t vaildate');
@@ -109,21 +117,27 @@ function StreamListener() {
 				bindToTheAddress();
 
 				// on event of data flow
-				_server.on('message', function eventCallBack(msg, rinfo) {
+				_server.on('message', _handleMessageEvent);
+
+				// when start liten
+				_server.on('listening', _handleListeningEvent);
+
+				// when unexcepted error eccured.
+				_server.on('error', _handleErrorEvent);
+
+				function _handleMessageEvent() {
 					console.log(SERVICE_NAME, 'Stop listening, Data Was detected at ', _ip, ':', _port, ' !');
-					_server.removeListener('message', eventCallBack);
 					// close the server so that the port will be open for the ffmpeg process to recording
 					_closeServer();
 					// emit an event so it could go next processing
 					event.emit('StreamingData');
-				});
+				}
 
-				_server.on('listening', () => {
+				function _handleListeningEvent() {
 					afterBind();
-				});
+				}
 
-				// when unexcepted error eccured.
-				_server.on('error', (err) => {
+				function _handleErrorEvent(err) {
 					if (finishedBind) {
 						event.emit('unexceptedError_StreamListener', SERVICE_NAME + ' Unexcepted Error eccured while trying listen to the address ' +
 							_ip + ':' + _port + ' : ' + err);
@@ -133,7 +147,7 @@ function StreamListener() {
 							afterBind(err);
 						}, TIME_TO_WAIT_AFTER_FAILED);
 					}
-				});
+				}
 			}
 		});
 

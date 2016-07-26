@@ -407,7 +407,7 @@ function testPublicMethods() {
 
 	describe('Method: convertMpegTsFormatToMp4', function() {
 		it('should emit finish event + checking there is new file the convert', function(done) {
-			this.timeout(10000);
+			this.timeout(11000);
 			var spyOnSuccess = sinon.spy();
 			var spyOnFailure = sinon.spy();
 
@@ -431,7 +431,7 @@ function testPublicMethods() {
 					} else {
 						done('no events was called');
 					}
-				}, 8000);
+				}, 10000);
 			};
 
 			ffmpeg.convertMpegTsFormatToMp4({ filePath: './Test/src/Sample_Ts_File_For_Testing.ts' })
