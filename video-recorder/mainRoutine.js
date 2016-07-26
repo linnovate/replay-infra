@@ -106,21 +106,22 @@ function handleVideoSavingProcess(streamingSource) {
 
 	// When the streamListenerService found some streaming data in the address.
 	event.on('StreamingData', function() {
-		var pathForFFmpeg = STORAGE_PATH + '/' + streamingSource.SourceName + '/' + util.getCurrentDate();
-		var timeForFFmpeg = util.getCurrentTime();
+		var dateOfCreating = util.getCurrentDate();
+		var pathForFFmpeg = STORAGE_PATH + '/' + streamingSource.SourceID + '/' + dateOfCreating;
+		var FileNameForFFmpeg = streamingSource.SourceID + '_' + dateOfCreating + '_' + util.getCurrentTime();
 		// Check if the path exist,if not create it.
 		util.checkPath(pathForFFmpeg);
 
 		/************************************************************/
 		/*    Adding Data Manualy (It will be deleted!!!)           */
 		/************************************************************/
-		util.addMetadataManualy(pathForFFmpeg + '/' + timeForFFmpeg + '.data');
+		util.addMetadataManualy(pathForFFmpeg + '/' + FileNameForFFmpeg + '.data');
 		/************************************************************/
 		var ffmpegParams = {
 			inputs: ['udp://' + streamingSource.SourceIP + ':' + streamingSource.SourcePort],
 			duration: DURATION,
 			dir: pathForFFmpeg,
-			file: timeForFFmpeg
+			file: FileNameForFFmpeg
 		};
 		// starting the ffmpeg process
 		console.log(PROCESS_NAME + ' Record new video at: ', pathForFFmpeg);
@@ -243,7 +244,7 @@ function handleVideoSavingProcess(streamingSource) {
 		sendToJobQueue({
 			streamingSource: streamingSource,
 			videoPath: newFilePath,
-			dataPath: globals.metadataRelativeFilePath,
+			dataPath: newFilePath.replace('.mp4','.data'),
 			videoName: globals.fileName
 		});
 		try {
