@@ -147,20 +147,30 @@ module.exports = {
 
 		builder
 			.then(function(command) {
+				// Get the file path and change the suffix of the path e.g /my/path/file.ts --> /my/path/file.mp4
 				var newFilePath = params.filePath.replace('.ts', '.mp4');
+
+				console.log(SERVICE_NAME, 'converting the file:', params.filePath, 'to:', newFilePath);
+
 				command
+				// define the input.
 					.input(params.filePath)
+					// define the output.
 					.output(newFilePath)
+					// force the ffmpeg to override file with the same name.
 					.outputOptions(['-y'])
+					// force the ffmpeg to convert the video to mp4 format.
 					.format('mp4')
 					.on('start', function(commandLine) {
 						console.log(SERVICE_NAME, 'convert the file with the command:\n', commandLine);
 					})
+					// when any error happen when the ffmpeg process run.
 					.on('error', function(err) {
 						event.emit('FFmpegWrapper_errorOnConverting', err);
 					})
+					// when ffmpeg process done his job.
 					.on('end', function() {
-						event.emit('FFmpegWrapper_finishConverting', newFilePath);
+						event.emit('FFmpegWrapper_finishConverting', newFilePath, params.filePath);
 					})
 					.run();
 				return BluebirdPromise.resolve(command);
