@@ -134,7 +134,7 @@ function runCommand(command) {
 }
 
 function setEvents(command, params) {
-	var videoPath = params.dir + '/' + params.file + '.mp4';
+	var videoPath = params.dir + '/' + params.file + '.ts';
 	var telemetryPath = params.dir + '/' + params.file + '.data';
 	command
 		.on('start', function(commandLine) {
@@ -171,10 +171,10 @@ function initializeInputs(command, params) {
 
 // Define a origin video output
 function videoOutput(command, params) {
-	command.output(params.dir + '/' + params.file + '.mp4')
+	command.output(params.dir + '/' + params.file + '.ts')
 		.outputOptions(['-y'])
 		.duration(params.duration)
-		.format('mp4');
+		.format('mpegts');
 	return command;
 }
 
