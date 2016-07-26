@@ -29,15 +29,15 @@ module.exports = {
 			.then(function(command) {
 				return videoOutput(command, params);
 			})
-			.then(function(command) {
+/*			.then(function(command) {
 				return videoOutput360p(command, params);
-			})
+			})*/
 			.then(function(command) {
 				return extractData(command, params);
 			})
-			.then(function(command) {
+/*			.then(function(command) {
 				return videoOutput480p(command, params);
-			})
+			})*/
 			.then(function(command) {
 				return setEvents(command, params);
 			})
@@ -73,12 +73,12 @@ module.exports = {
 			.then(function(command) {
 				return videoOutput(command, params);
 			})
-			.then(function(command) {
+/*			.then(function(command) {
 				return videoOutput360p(command, params);
 			})
 			.then(function(command) {
 				return videoOutput480p(command, params);
-			})
+			})*/
 			.then(function(command) {
 				return setEvents(command, params);
 			})
@@ -179,24 +179,24 @@ function videoOutput(command, params) {
 }
 
 // Define a 360p video output
-function videoOutput360p(command, params) {
+/* function videoOutput360p(command, params) {
 	command.output(params.dir + '/' + params.file + '_320p.mp4')
 		.duration(params.duration)
 		.outputOptions(['-y'])
 		.format('mp4')
 		.size('480x360');
 	return command;
-}
+}*/
 
 // Define a 480p video output
-function videoOutput480p(command, params) {
+/* function videoOutput480p(command, params) {
 	command.output(params.dir + '/' + params.file + '_480p.mp4')
 		.duration(params.duration)
 		.outputOptions(['-y'])
 		.format('mp4')
 		.size('640x480');
 	return command;
-}
+}*/
 
 // Extracting binary data from stream
 function extractData(command, params) {
