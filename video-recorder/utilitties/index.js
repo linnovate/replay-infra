@@ -8,7 +8,8 @@ function Utilitties() {
 		checkPath: checkPath,
 		getCurrentDate: getCurrentDate,
 		getCurrentTime: getCurrentTime,
-		addMetadataManualy: addMetadataManualy
+		addMetadataManualy: addMetadataManualy,
+		deleteFile: deleteFile
 	};
 }
 
@@ -61,4 +62,14 @@ function checkTime(i) {
 		i = '0' + i;
 	}
 	return i;
+}
+
+// helper for delete file.
+function deleteFile(path) {
+	fs.unlink(path, function(err) {
+		if (err) {
+			throw err;
+		}
+		return true;
+	});
 }
