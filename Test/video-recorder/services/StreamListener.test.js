@@ -1,6 +1,6 @@
 var chai = require('chai');
 var execComand = require('child_process');
-//var sinon = require('sinon');
+// var sinon = require('sinon');
 var assert = chai.assert;
 var event = require('../../../video-recorder/services/EventEmitterSingleton');
 var streamListener = require('../../../video-recorder/services/StreamListener');
@@ -199,7 +199,7 @@ function behaviorTests() {
 	describe('integration test -', function() {
 		var tmpPorc = null;
 		before(function() {
-			tmpPorc = execComand.spwan('tsplay ./Test/src/Sample_Ts_File_For_Testing.ts 0.0.0.0:5555');
+			tmpPorc = execComand.exec('tsplay ./Test/src/Sample_Ts_File_For_Testing.ts 0.0.0.0:5555');
 		});
 
 		after(function() {

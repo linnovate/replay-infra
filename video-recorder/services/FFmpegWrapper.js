@@ -113,6 +113,61 @@ module.exports = {
 			});
 
 		return builder;
+	},
+
+	/*********************************************************************************************************
+	 *
+	 *	@author din
+	 *
+	 *	Convert the mpegts format video to mp4 format video
+	 *	@params {object} contain the file path[filePath].
+	 *	@return Promise when finished the preparing/unexcepted error eccured while preparing the converting.
+	 *
+	 *	@emit 'FFmpegWrapper_errorOnConverting' when error eccured on converting.
+	 *	@emit 'FFmpegWrapper_finishConverting' when finish the converting.
+	 *
+	 *********************************************************************************************************/
+	convertMpegTsFormatToMp4: function(params) {
+		var builder = new BluebirdPromise(function(resolve, reject) {
+			var command = ffmpeg();
+			resolve(command);
+		});
+
+		builder
+			.then(function(command) {
+				// Get the file path and change the suffix of the path e.g /my/path/file.ts --> /my/path/file.mp4
+				var newFilePath = params.filePath.replace('.ts', '.mp4');
+
+				console.log(SERVICE_NAME, 'converting the file:', params.filePath, 'to:', newFilePath);
+
+				command
+				// define the input.
+					.input(params.filePath)
+					// define the output.
+					.output(newFilePath)
+					// force the ffmpeg to override file with the same name.
+					.outputOptions(['-y'])
+					// force the ffmpeg to convert the video to mp4 format.
+					.format('mp4')
+					.on('start', function(commandLine) {
+						console.log(SERVICE_NAME, 'convert the file with the command:\n', commandLine);
+					})
+					// when any error happen when the ffmpeg process run.
+					.on('error', function(err) {
+						event.emit('FFmpegWrapper_errorOnConverting', err);
+					})
+					// when ffmpeg process done his job.
+					.on('end', function() {
+						event.emit('FFmpegWrapper_finishConverting', newFilePath, params.filePath);
+					})
+					.run();
+				return BluebirdPromise.resolve(command);
+			})
+			.catch(function(err) {
+				return BluebirdPromise.reject(err);
+			});
+
+		return builder;
 	}
 };
 
@@ -122,7 +177,7 @@ function runCommand(command) {
 }
 
 function setEvents(command, params) {
-	var videoPath = params.dir + '/' + params.file + '.mp4';
+	var videoPath = params.dir + '/' + params.file + '.ts';
 	var telemetryPath = params.dir + '/' + params.file + '.data';
 	command
 		.on('start', function(commandLine) {
@@ -159,15 +214,16 @@ function initializeInputs(command, params) {
 
 // Define a origin video output
 function videoOutput(command, params) {
-	command.output(params.dir + '/' + params.file + '.mp4')
+	command.output(params.dir + '/' + params.file + '.ts')
 		.outputOptions(['-y'])
 		.duration(params.duration)
-		.format('mp4');
+		.format('mpegts');
 	return command;
 }
 
 // Define a 360p video output
-/*function videoOutput360p(command, params) {
+
+/* function videoOutput360p(command, params) {
 	command.output(params.dir + '/' + params.file + '_320p.mp4')
 		.duration(params.duration)
 		.outputOptions(['-y'])
@@ -177,7 +233,8 @@ function videoOutput(command, params) {
 }*/
 
 // Define a 480p video output
-/*function videoOutput480p(command, params) {
+
+/* function videoOutput480p(command, params) {
 	command.output(params.dir + '/' + params.file + '_480p.mp4')
 		.duration(params.duration)
 		.outputOptions(['-y'])
