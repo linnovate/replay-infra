@@ -6,7 +6,8 @@ var event = require('./services/EventEmitterSingleton'),
 	streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
 	util = require('./utilitties'),
-	exitHendler = require('./utilitties/exitUtil');
+	exitHendler = require('./utilitties/exitUtil'),
+	ffmpegWrapper = require('./services/FFmpegWrapper.js');
 
 var viewStandardHandler = require('./services/ViewStandardHandler')(),
 	streamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
@@ -170,7 +171,6 @@ function handleVideoSavingProcess(streamingSource) {
 
 	// when FFmpeg done his progress,
 	event.on('FFmpegDone', function(paths) {
-		console.log(PROCESS_NAME, 'FFmpegDone emited!!!!!!!!!!!!');
 		promise.resolve()
 			.then(function() {
 				// Stop the file watcher.
@@ -178,12 +178,14 @@ function handleVideoSavingProcess(streamingSource) {
 				stopWatchFile(globals.fileWatcherTimer);
 			})
 			.then(function() {
-				sendToJobQueue({
-					streamingSource: streamingSource,
-					videoPath: globals.videoRelativeFilePath,
-					dataPath: globals.metadataRelativeFilePath,
-					videoName: globals.fileName
-				});
+				return convertMpegtsToMp4(paths.videoPath)
+					.then(function() {
+						return promise.resolve();
+					})
+					.catch(function(err) {
+						console.log('could not spwan the ffmpeg converting process,' + err + ' \n \n noving on');
+						return promise.reject();
+					});
 			})
 			.then(function() {
 				// Start the whole process again by listening to the address again.
@@ -220,12 +222,35 @@ function handleVideoSavingProcess(streamingSource) {
 		// kill The FFmpeg Process.
 		console.log(PROCESS_NAME + ' The Source stop stream data, Killing the ffmpeg process');
 		stopFFmpegProcess(globals.command);
+		convertMpegtsToMp4(STORAGE_PATH + '/' + globals.videoRelativeFilePath)
+			.then(function() {
+				return promise.resolve();
+			})
+			.catch(function(err) {
+				console.log('could not spwan the ffmpeg converting process,' + err + ' \n \n noving on');
+				return promise.reject();
+			});
+	});
+
+	// when error eccured on the converting.
+	event.on('FFmpegWrapper_errorOnConverting', function(err) {
+		console.log('FFmpegWrapper_errorOnConverting emited:', err);
+	});
+
+	// when converting finished.
+	event.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath) {
+		console.log('finish converting, send to jobqueue');
 		sendToJobQueue({
 			streamingSource: streamingSource,
-			videoPath: globals.videoRelativeFilePath,
+			videoPath: newFilePath,
 			dataPath: globals.metadataRelativeFilePath,
-			videoName: globals.fileNames
+			videoName: globals.fileName
 		});
+		try {
+			util.deleteFile(oldFilePath);
+		} catch (err) {
+			console.log('could not delete the ts file,', err, 'continue on');
+		}
 	});
 }
 
@@ -277,6 +302,11 @@ function stopFFmpegProcess(command, callBack) {
 	if (callBack) {
 		callBack();
 	}
+}
+
+// Convert the finished video to mp4 format
+function convertMpegtsToMp4(path) {
+	return ffmpegWrapper.convertMpegTsFormatToMp4({ filePath: path });
 }
 
 // Send message to the next service.
