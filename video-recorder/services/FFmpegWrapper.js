@@ -29,15 +29,15 @@ module.exports = {
 			.then(function(command) {
 				return videoOutput(command, params);
 			})
-/*			.then(function(command) {
-				return videoOutput360p(command, params);
-			})*/
+			/*			.then(function(command) {
+							return videoOutput360p(command, params);
+						})*/
 			.then(function(command) {
 				return extractData(command, params);
 			})
-/*			.then(function(command) {
-				return videoOutput480p(command, params);
-			})*/
+			/*			.then(function(command) {
+							return videoOutput480p(command, params);
+						})*/
 			.then(function(command) {
 				return setEvents(command, params);
 			})
@@ -73,12 +73,12 @@ module.exports = {
 			.then(function(command) {
 				return videoOutput(command, params);
 			})
-/*			.then(function(command) {
-				return videoOutput360p(command, params);
-			})
-			.then(function(command) {
-				return videoOutput480p(command, params);
-			})*/
+			/*			.then(function(command) {
+							return videoOutput360p(command, params);
+						})
+						.then(function(command) {
+							return videoOutput480p(command, params);
+						})*/
 			.then(function(command) {
 				return setEvents(command, params);
 			})
@@ -122,6 +122,51 @@ module.exports = {
 			})
 			.catch(function(err) {
 				event.emit('FFmpegError', err);
+			});
+
+		return builder;
+	},
+
+	/*********************************************************************************************************
+	 *
+	 *	@author din
+	 *
+	 *	Convert the mpegts format video to mp4 format video
+	 *	@params {object} contain the file path[filePath].
+	 *	@return Promise when finished the preparing/unexcepted error eccured while preparing the converting.
+	 *
+	 *	@emit 'FFmpegWrapper_errorOnConverting' when error eccured on converting.
+	 *	@emit 'FFmpegWrapper_finishConverting' when finish the converting.
+	 *
+	 *********************************************************************************************************/
+	convertMpegTsFormatToMp4: function(params) {
+		var builder = new BluebirdPromise(function(resolve, reject) {
+			var command = ffmpeg();
+			resolve(command);
+		});
+
+		builder
+			.then(function(command) {
+				var newFilePath = params.filePath.replace('.ts', '.mp4');
+				command
+					.input(params.filePath)
+					.output(newFilePath)
+					.outputOptions(['-y'])
+					.format('mp4')
+					.on('start', function(commandLine) {
+						console.log(SERVICE_NAME, 'convert the file with the command:\n', commandLine);
+					})
+					.on('error', function(err) {
+						event.emit('FFmpegWrapper_errorOnConverting', err);
+					})
+					.on('end', function() {
+						event.emit('FFmpegWrapper_finishConverting', newFilePath);
+					})
+					.run();
+				return BluebirdPromise.resolve(command);
+			})
+			.catch(function(err) {
+				return BluebirdPromise.reject(err);
 			});
 
 		return builder;
