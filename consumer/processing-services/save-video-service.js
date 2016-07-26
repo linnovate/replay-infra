@@ -109,7 +109,7 @@ function saveVideoToMongo(params) {
 function getVideo() {
 	return Video
 		.findOne({
-			transactionId: _transactionId
+			jobStatusId: _transactionId
 		});
 }
 
