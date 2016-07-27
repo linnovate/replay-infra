@@ -25,7 +25,9 @@ module.exports.fetch = function(params, error, done) {
 			}
 			return performFetchChain(params);
 		})
-		.then(done)
+		.then(function() {
+			done();
+		})
 		.catch(function(err) {
 			if (err) {
 				console.log(err);

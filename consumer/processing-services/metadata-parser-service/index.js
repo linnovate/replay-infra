@@ -13,7 +13,7 @@ module.exports.start = function(params, error, done) {
 
 	if (!validateInput(params)) {
 		console.log('Some vital parameters are missing.');
-		error();
+		return error();
 	}
 
 	_transactionId = params.transactionId;
@@ -43,7 +43,6 @@ function validateInput(params) {
 	// validate params
 	if (!relativePathToData || !process.env.STORAGE_PATH ||
 		!method || !method.standard || !method.version || !transactionId) {
-		console.log('Some vital parameters are missing.');
 		return false;
 	}
 

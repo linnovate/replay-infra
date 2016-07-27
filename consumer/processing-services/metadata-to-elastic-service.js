@@ -20,12 +20,14 @@ module.exports.start = function(params, error, done) {
 		.then(function(jobStatus) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
-				done();
-			} else {
-				return saveToElastic(params.metadatas);
+				return Promise.resolve();
 			}
+			return saveToElastic(params.metadatas);
 		})
-		.then(done)
+		.then(function() {
+			done();
+			return Promise.resolve();
+		})
 		.then(updateJobStatus)
 		.catch(function(err) {
 			if (err) {
