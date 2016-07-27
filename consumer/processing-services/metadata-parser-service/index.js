@@ -36,8 +36,8 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
-	var relativePathToData = params.relativePath;
-	var method = params.method;
+	var relativePathToData = params.dataRelativePath;
+	var method = params.receivingMethod;
 	var transactionId = params.transactionId;
 
 	// validate params
@@ -54,8 +54,8 @@ function validateInput(params) {
 // and then update the job status that we've parsed metadata.
 function performParseChain(params) {
 	// extract params and handle metadata
-	var relativePathToData = params.relativePath;
-	var method = params.method;
+	var relativePathToData = params.dataRelativePath;
+	var method = params.receivingMethod;
 
 	// concat full path
 	var pathToData = path.join(process.env.STORAGE_PATH, relativePathToData);

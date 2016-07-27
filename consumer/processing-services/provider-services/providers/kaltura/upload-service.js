@@ -39,11 +39,11 @@ module.exports.upload = function(params, error, done) {
 
 function validateInput(params) {
 	console.log('Video name is: ', params.videoName);
-	console.log('Relative path to video is: ', params.relativePath);
+	console.log('Relative path to video is: ', params.videoRelativePath);
 	console.log('Drop folder path is: ', process.env.DROP_FOLDER_PATH);
 	console.log('Transaction id is: ', params.transactionId);
 
-	if (!process.env.STORAGE_PATH || !process.env.DROP_FOLDER_PATH || !params.relativePath || !params.videoName || !params.transactionId) {
+	if (!process.env.STORAGE_PATH || !process.env.DROP_FOLDER_PATH || !params.videoRelativePath || !params.videoName || !params.transactionId) {
 		return false;
 	}
 
@@ -51,7 +51,7 @@ function validateInput(params) {
 }
 
 function copyToDropFolder(params, error, done) {
-	var sourceFilePath = path.join(process.env.STORAGE_PATH, params.relativePath);
+	var sourceFilePath = path.join(process.env.STORAGE_PATH, params.videoRelativePath);
 	var targetFilePath = path.join(process.env.DROP_FOLDER_PATH, params.videoName);
 
 	// copy video file into drop folder

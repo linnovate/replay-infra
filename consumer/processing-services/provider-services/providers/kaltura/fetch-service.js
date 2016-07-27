@@ -13,7 +13,7 @@ module.exports.fetch = function(params, error, done) {
 		return error();
 	}
 
-	getVideo(params.name)
+	getVideo(params.videoName)
 		.then(function(video) {
 			_transactionId = video.jobStatusId;
 			return JobService.findJobStatus(_transactionId);
@@ -36,9 +36,9 @@ module.exports.fetch = function(params, error, done) {
 
 function validateInput(params) {
 	console.log('Provider id is: ', params.providerId);
-	console.log('Video name is: ', params.name);
+	console.log('Video name is: ', params.videoName);
 
-	if (!params.providerId || !params.name) {
+	if (!params.providerId || !params.videoName) {
 		return false;
 	}
 

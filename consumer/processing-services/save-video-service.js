@@ -128,8 +128,8 @@ function produceMetadataParserJob(params) {
 	var message = {
 		sourceId: params.sourceId,
 		videoId: params.videoId, // could be undefined
-		relativePath: params.dataRelativePath,
-		method: params.receivingMethod,
+		dataRelativePath: params.dataRelativePath,
+		receivingMethod: params.receivingMethod,
 		transactionId: params.transactionId
 	};
 	var queueName = JobsService.getQueueName('MetadataParser');
@@ -146,7 +146,7 @@ function produceUploadToProviderJob(params) {
 	if (params.videoRelativePath && params.videoId) {
 		var message = {
 			videoName: params.videoName,
-			relativePath: params.videoRelativePath,
+			videoRelativePath: params.videoRelativePath,
 			transactionId: params.transactionId
 		};
 
