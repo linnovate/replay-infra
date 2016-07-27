@@ -158,7 +158,7 @@ module.exports = {
 					})
 					// when ffmpeg process done his job.
 					.on('end', function() {
-						event.emit('FFmpegWrapper_finishConverting', newFilePath, params.filePath);
+						event.emit('FFmpegWrapper_finishConverting', newFilePath, params.filePath, params.startTime);
 					})
 					.run();
 				return BluebirdPromise.resolve(command);
@@ -168,6 +168,29 @@ module.exports = {
 			});
 
 		return builder;
+	},
+
+	/*********************************************************************************************************
+	 *
+	 *	@author din
+	 *
+	 *	Get the duration of given video.
+	 *	@params {object} contain the file path[filePath].
+	 *	@return Promise with the duration/error.
+	 *
+	 *********************************************************************************************************/
+	getDurationOfVideo: function(params) {
+		var promise = new BluebirdPromise(function(resolve, reject) {
+			ffmpeg.ffprobe(params.filePath, function(err, data) {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(data.format.duration);
+				}
+			});
+		});
+
+		return promise;
 	}
 };
 
