@@ -57,7 +57,9 @@ function performFetchChain(params) {
 
 			return KalturaService.getVideo(params.providerId);
 		})
-		.then(updateVideoInMongo)
+		.then(function(kalturaVideo) {
+			return updateVideoInMongo(kalturaVideo, params.videoName);
+		})
 		.then(confirmUpdate);
 }
 
@@ -66,11 +68,11 @@ function getVideo(name) {
 	return Video.findOne(query);
 }
 
-function updateVideoInMongo(kalturaVideo) {
+function updateVideoInMongo(kalturaVideo, videoName) {
 	console.log('Updating video in mongo with the data from Kaltura...');
 
-	// update video with the same prefix name
-	var query = { name: { $regex: kalturaVideo.name + '.*' } };
+	// update video with the same name
+	var query = { name: videoName };
 
 	return Video.update(query, {
 		provider: 'kaltura',
