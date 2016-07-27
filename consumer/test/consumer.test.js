@@ -1,3 +1,4 @@
+require('./config');
 var path = require('path');
 var fork = require('child_process').fork;
 var consumerPath = path.join(__dirname, '../index');

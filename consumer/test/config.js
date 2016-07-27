@@ -1,6 +1,7 @@
 var path = require('path');
 
 var chai = require('chai'),
+	mongoose = require('mongoose'),
 	connectMongo = require('replay-schemas/connectMongo'),
 	Video = require('replay-schemas/Video'),
 	JobStatus = require('replay-schemas/JobStatus'),
@@ -42,4 +43,22 @@ module.exports.wipeMongoCollections = function() {
 		.then(function() {
 			return Query.remove({});
 		});
+};
+
+module.exports.generateValidMessage = function() {
+	return {
+		sourceId: '123',
+		videoName: 'sample.ts',
+		videoRelativePath: 'sample.ts',
+		dataRelativePath: 'sample.data',
+		receivingMethod: {
+			standard: 'VideoStandard',
+			version: '1.0'
+		},
+		transactionId: new mongoose.Types.ObjectId()
+	};
+};
+
+module.exports.generateJobStatus = function() {
+	return JobStatus.create({});
 };

@@ -54,6 +54,9 @@ function copyToDropFolder(params, error, done) {
 	var sourceFilePath = path.join(process.env.STORAGE_PATH, params.videoRelativePath);
 	var targetFilePath = path.join(process.env.DROP_FOLDER_PATH, params.videoName);
 
+	console.log(sourceFilePath);
+	console.log(targetFilePath);
+
 	// copy video file into drop folder
 	copyFile(sourceFilePath, targetFilePath, function(err) {
 		if (err) {

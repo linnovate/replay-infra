@@ -1,8 +1,7 @@
 var config = require('../config');
 
 var SaveVideoService = require('../../processing-services/save-video-service');
-var mongoose = require('mongoose'),
-	Video = require('replay-schemas/Video');
+var Video = require('replay-schemas/Video');
 
 describe('save-video-service tests', function() {
 	before(function() {
@@ -17,8 +16,12 @@ describe('save-video-service tests', function() {
 			return config.wipeMongoCollections();
 		});
 
+		afterEach(function() {
+			return config.wipeMongoCollections();
+		});
+
 		it('should insert video object to mongo', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 
 			SaveVideoService.start(message,
 				function _error() {
@@ -31,7 +34,7 @@ describe('save-video-service tests', function() {
 		});
 
 		it('should not insert video object to mongo due to replay of job', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 
 			SaveVideoService.start(message,
 				function _error() {
@@ -52,7 +55,7 @@ describe('save-video-service tests', function() {
 		});
 
 		it('should not insert video object to mongo due to lack of video', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 			message.videoName = undefined;
 			message.videoRelativePath = undefined;
 
@@ -68,62 +71,48 @@ describe('save-video-service tests', function() {
 
 	describe('bad input tests', function() {
 		it('lacks transactionId', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 			message.transactionId = undefined;
 
 			errornousInputTest(message, done);
 		});
 
 		it('has videoName but lacks videoRelativePath', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 			message.videoRelativePath = undefined;
 
 			errornousInputTest(message, done);
 		});
 
 		it('has videoRelativePath but lacks videoName', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 			message.videoName = undefined;
 
 			errornousInputTest(message, done);
 		});
 
 		it('lacks method', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 			message.receivingMethod = undefined;
 
 			errornousInputTest(message, done);
 		});
 
 		it('lacks method version field', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 			message.receivingMethod.version = undefined;
 
 			errornousInputTest(message, done);
 		});
 
 		it('lacks method standard field', function(done) {
-			var message = generateValidMessage();
+			var message = config.generateValidMessage();
 			message.receivingMethod.standard = undefined;
 
 			errornousInputTest(message, done);
 		});
 	});
 });
-
-function generateValidMessage() {
-	return {
-		sourceId: '123',
-		videoName: 'sample.ts',
-		videoRelativePath: 'sample.ts',
-		dataRelativePath: 'sample.data',
-		receivingMethod: {
-			standard: 'VideoStandard',
-			version: '1.0'
-		},
-		transactionId: new mongoose.Types.ObjectId()
-	};
-}
 
 function errornousInputTest(message, done) {
 	SaveVideoService.start(message,
