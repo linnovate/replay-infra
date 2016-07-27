@@ -59,7 +59,8 @@ function handleVideoSavingProcess(streamingSource) {
 		metadataRelativeFilePath: '',
 		fileName: '',
 		videoRelativePath: '',
-		command: null
+		command: null,
+		currentFileStartTime: null
 	};
 
 	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.SourcePort);
@@ -117,12 +118,17 @@ function handleVideoSavingProcess(streamingSource) {
 		/************************************************************/
 		util.addMetadataManualy(pathForFFmpeg + '/' + FileNameForFFmpeg + '.data');
 		/************************************************************/
+
+		// save the time that the video created.
+		globals.currentFileStartTime = moment();
+
 		var ffmpegParams = {
 			inputs: ['udp://' + streamingSource.SourceIP + ':' + streamingSource.SourcePort],
 			duration: DURATION,
 			dir: pathForFFmpeg,
 			file: FileNameForFFmpeg
 		};
+
 		// starting the ffmpeg process
 		console.log(PROCESS_NAME + ' Record new video at: ', pathForFFmpeg);
 		viewStandardHandler.realizeStandardCaptureMethod(streamingSource.SourceType, streamingSource.StreamingMethod.version)
@@ -179,7 +185,7 @@ function handleVideoSavingProcess(streamingSource) {
 				stopWatchFile(globals.fileWatcherTimer);
 			})
 			.then(function() {
-				return convertMpegtsToMp4(paths.videoPath)
+				return convertMpegtsToMp4(paths.videoPath, globals.currentFileStartTime)
 					.then(function() {
 						return promise.resolve();
 					})
@@ -223,7 +229,7 @@ function handleVideoSavingProcess(streamingSource) {
 		// kill The FFmpeg Process.
 		console.log(PROCESS_NAME + ' The Source stop stream data, Killing the ffmpeg process');
 		stopFFmpegProcess(globals.command);
-		convertMpegtsToMp4(STORAGE_PATH + '/' + globals.videoRelativeFilePath)
+		convertMpegtsToMp4(STORAGE_PATH + '/' + globals.videoRelativeFilePath, globals.currentFileStartTime)
 			.then(function() {
 				return promise.resolve();
 			})
@@ -239,19 +245,37 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// when converting finished.
-	event.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath) {
-		console.log('finish converting, send to jobqueue');
-		sendToJobQueue({
-			streamingSource: streamingSource,
-			videoPath: newFilePath,
-			dataPath: newFilePath.replace('.mp4','.data'),
-			videoName: globals.fileName
-		});
-		try {
-			util.deleteFile(oldFilePath);
-		} catch (err) {
-			console.log('could not delete the ts file,', err, 'continue on');
-		}
+	event.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath, startTime) {
+		var startDateTime, endDateTime;
+		// get the start time format.
+		startDateTime = startTime.format();
+
+		// get the duration of the video that was created.
+		ffmpegWrapper.getDurationOfVideo({ filePath: oldFilePath })
+			.then(function(duration) {
+				console.log('duration:', duration);
+				// add the duration time to the start time of the video to get the most exact time.
+				endDateTime = startTime.add(Math.ceil(duration), 's').format();
+				console.log('finish converting, send to jobqueue');
+				// send to the next job.
+				sendToJobQueue({
+					streamingSource: streamingSource,
+					videoPath: newFilePath,
+					dataPath: newFilePath.replace('.mp4', '.data'),
+					videoName: globals.fileName,
+					startTime: startDateTime,
+					endTime: endDateTime
+				});
+				try {
+					// delete the unnecessary ts file.
+					util.deleteFile(oldFilePath);
+				} catch (err) {
+					console.log('could not delete the ts file,', err, 'continue on');
+				}
+			})
+			.catch(function(err) {
+				console.log('couldnt get the duration, ignore and continue on,\n', err);
+			});
 	});
 }
 
@@ -306,8 +330,8 @@ function stopFFmpegProcess(command, callBack) {
 }
 
 // Convert the finished video to mp4 format
-function convertMpegtsToMp4(path) {
-	return ffmpegWrapper.convertMpegTsFormatToMp4({ filePath: path });
+function convertMpegtsToMp4(path, startTime) {
+	return ffmpegWrapper.convertMpegTsFormatToMp4({ filePath: path, startTime: startTime });
 }
 
 // Send message to the next service.
@@ -322,7 +346,9 @@ function sendToJobQueue(params) {
 			receivingMethod: {
 				standard: params.streamingSource.StreamingMethod.standard,
 				version: '1.0'
-			}
+			},
+			startTime: params.startTime,
+			endTime: params.endTime
 		}
 	};
 	console.log('message is ', message);
