@@ -5,6 +5,7 @@ var Video = require('replay-schemas/Video');
 
 describe('save-video-service tests', function() {
 	before(function() {
+		config.resetEnvironment();
 		return config.connectServices()
 			.then(function() {
 				return config.wipeMongoCollections();
@@ -41,7 +42,6 @@ describe('save-video-service tests', function() {
 					errCallback(done);
 				},
 				function _done() {
-					// testForOneVideo(done);
 					SaveVideoService.start(message,
 						function _error() {
 							errCallback(done);

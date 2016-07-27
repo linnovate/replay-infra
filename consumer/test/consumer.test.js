@@ -1,9 +1,13 @@
-require('./config');
+var config = require('./config');
 var path = require('path');
 var fork = require('child_process').fork;
 var consumerPath = path.join(__dirname, '../index');
 
 describe('consumer tests', function() {
+	before(function() {
+		config.resetEnvironment();
+	});
+
 	describe('bad input tests', function() {
 		it('lacks job type', function(done) {
 			var consumer = fork(consumerPath, undefined);

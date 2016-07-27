@@ -9,19 +9,25 @@ var chai = require('chai'),
 	Query = require('replay-schemas/Query'),
 	rabbit = require('replay-rabbitmq');
 
-// set env variables
-process.env.MONGO_HOST = 'localhost';
-process.env.MONGO_DATABASE = 'replay_test';
-process.env.STORAGE_PATH = path.join(__dirname, 'data');
-process.env.RABBITMQ_HOST = 'localhost';
-process.env.ELASTIC_HOST = 'localhost';
-
 // config chai
 chai.config.includeStack = true;
 global.expect = chai.expect;
 global.AssertionError = chai.AssertionError;
 global.Assertion = chai.Assertion;
 global.assert = chai.assert;
+
+module.exports.resetEnvironment = function() {
+	// set env variables
+	process.env.MONGO_HOST = 'localhost';
+	process.env.MONGO_DATABASE = 'replay_test';
+	process.env.STORAGE_PATH = path.join(__dirname, 'data');
+	process.env.RABBITMQ_HOST = 'localhost';
+	process.env.ELASTIC_HOST = 'localhost';
+	process.env.KALTURA_PARTNER_ID = 101;
+	process.env.PROVIDER = 'kaltura';
+	process.env.KALTURA_URL = 'http://vod.linnovate.net';
+	process.env.KALTURA_ADMIN_SECRET = '96f2df9a0071cd8024463509439fedb9';
+};
 
 // connect services
 module.exports.connectServices = function() {

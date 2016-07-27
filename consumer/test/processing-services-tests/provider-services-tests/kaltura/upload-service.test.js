@@ -14,6 +14,7 @@ var _transactionId;
 
 describe('kaltura upload-service tests', function() {
 	before(function() {
+		config.resetEnvironment();
 		return config.connectServices()
 			.then(function() {
 				return config.wipeMongoCollections();
@@ -36,7 +37,7 @@ describe('kaltura upload-service tests', function() {
 				})
 				.catch(function(err) {
 					if (err) {
-						done(new Error('error in creating temp drop folder'));
+						done(err);
 					}
 				});
 		});
@@ -57,7 +58,6 @@ describe('kaltura upload-service tests', function() {
 		});
 
 		it('should copy to folder', function(done) {
-			this.timeout(15000);
 			var message = config.generateValidMessage();
 			message.transactionId = _transactionId;
 
@@ -66,12 +66,16 @@ describe('kaltura upload-service tests', function() {
 					done(new Error('kaltura upload service errored.'));
 				},
 				function _done() {
-					isVideoExists(message, done);
+					try {
+						isVideoExists(message);
+						done();
+					} catch (e) {
+						done(new Error('file did not properly copy to drop folder'));
+					}
 				});
 		});
 
 		it('should not copy to folder due to replay of job', function(done) {
-			this.timeout(15000);
 			var message = config.generateValidMessage();
 			message.transactionId = _transactionId;
 
@@ -80,12 +84,21 @@ describe('kaltura upload-service tests', function() {
 					done(new Error('kaltura upload service errored.'));
 				},
 				function _done() {
-					UploadService.upload(message,
-						function _error() {
-							done(new Error('kaltura upload service errored.'));
-						},
-						function _done() {
-							isVideoExists(message, done);
+					removeDropFolder()
+						.then(function() {
+							UploadService.upload(message,
+								function _error() {
+									done(new Error('kaltura upload service errored.'));
+								},
+								function _done() {
+									// to make sure the second call didn't copy to drop folder, make sure it doesn't exist
+									try {
+										isVideoExists(message);
+										done(new Error('file was copied twice to drop folder'));
+									} catch (e) {
+										done();
+									}
+								});
 						});
 				});
 		});
@@ -94,7 +107,7 @@ describe('kaltura upload-service tests', function() {
 	describe('bad input tests', function() {
 		beforeEach(function() {
 			// reset the env variables
-			require('../../../config');
+			config.resetEnvironment();
 		});
 
 		it('lacks storage path', function(done) {
@@ -169,14 +182,9 @@ describe('kaltura upload-service tests', function() {
 	});
 });
 
-function isVideoExists(message, done) {
+function isVideoExists(message) {
 	var filepath = path.join(process.env.DROP_FOLDER_PATH, message.videoName);
-	try {
-		fs.accessSync(filepath, fs.F_OK);
-		done();
-	} catch (e) {
-		done(new Error('file did not properly copy to drop folder'));
-	}
+	fs.accessSync(filepath, fs.F_OK);
 }
 
 function createDropFolder() {
