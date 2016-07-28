@@ -8,7 +8,8 @@ var chai = require('chai'),
 	VideoMetadata = require('replay-schemas/VideoMetadata'),
 	Query = require('replay-schemas/Query'),
 	rabbit = require('replay-rabbitmq'),
-	Promise = require('bluebird');
+	Promise = require('bluebird'),
+	elasticsearch = require('replay-elastic');
 
 var fs = Promise.promisifyAll(require('fs'));
 
@@ -30,6 +31,9 @@ module.exports.resetEnvironment = function() {
 	process.env.STORAGE_PATH = path.join(__dirname, 'data');
 	process.env.RABBITMQ_HOST = 'localhost';
 	process.env.ELASTIC_HOST = 'localhost';
+	process.env.ELASTIC_PORT = 9200;
+	process.env.ELASTIC_VIDEO_METADATA_INDEX = 'videometadatas';
+	process.env.ELASTIC_VIDEO_METADATA_TYPE = 'videometadata';
 	process.env.KALTURA_PARTNER_ID = 101;
 	process.env.PROVIDER = 'kaltura';
 	process.env.KALTURA_URL = 'http://vod.linnovate.net';
@@ -56,6 +60,14 @@ module.exports.wipeMongoCollections = function() {
 		.then(function() {
 			return Query.remove({});
 		});
+};
+
+module.exports.wipeElasticIndices = function() {
+	return elasticsearch.deleteAllIndices();
+};
+
+module.exports.createElasticIndices = function() {
+	return elasticsearch.createVideoMetadataIndex();
 };
 
 module.exports.generateValidMessage = function() {
