@@ -1,8 +1,8 @@
 var chai = require('chai');
 var assert = chai.assert;
-var event = require('../../../video-recorder/services/EventEmitterSingleton');
+var event = require('../../services/EventEmitterSingleton');
 var rewire = require('rewire');
-var fileWatcher = rewire('../../../video-recorder/services/FileWatcher');
+var fileWatcher = rewire('../../services/FileWatcher');
 var sinon = require('sinon');
 
 function start() {

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha Test --recursive",
+    "coverage": "istanbul cover _mocha Test -- --recursive; sensible-browser coverage/lcov-report/index.html"
   },
   "repository": {
     "type": "git",

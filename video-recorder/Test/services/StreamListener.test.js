@@ -1,9 +1,9 @@
 var chai = require('chai');
 var execComand = require('child_process');
-//var sinon = require('sinon');
+// var sinon = require('sinon');
 var assert = chai.assert;
-var event = require('../../../video-recorder/services/EventEmitterSingleton');
-var streamListener = require('../../../video-recorder/services/StreamListener');
+var event = require('../../services/EventEmitterSingleton');
+var streamListener = require('../../services/StreamListener');
 
 function start() {
 	streamListenerService();
@@ -203,6 +203,7 @@ function behaviorTests() {
 		});
 
 		after(function() {
+			tmpPorc.stdin.pause();
 			tmpPorc.kill('SIGKILL');
 		});
 		it('should Emit event "StreamingData" when data is streaming', function(done) {

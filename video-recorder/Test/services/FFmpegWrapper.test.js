@@ -1,8 +1,9 @@
 var assert = require('chai').assert,
 	sinon = require('sinon');
-	// exec = require('child_process').exec;
-var ffmpeg = require('../../../video-recorder/services/FFmpegWrapper.js'),
-	event = require('../../../video-recorder/services/EventEmitterSingleton');
+var fs = require('fs');
+// exec = require('child_process').exec;
+var ffmpeg = require('../../services/FFmpegWrapper.js'),
+	event = require('../../services/EventEmitterSingleton');
 // const STREAM_COMMAND = 'tsplay ./Test/src/Sample_Ts_File_For_Testing.ts 238.0.0.1:1234 -loop';
 
 function test() {
@@ -399,6 +400,45 @@ function testPublicMethods() {
 					}, 2000);
 				});
 			});
+		});
+	});
+
+	/* din Tests */
+
+	describe('Method: convertMpegTsFormatToMp4', function() {
+		it('should emit finish event + checking there is new file the convert', function(done) {
+			this.timeout(11000);
+			var spyOnSuccess = sinon.spy();
+			var spyOnFailure = sinon.spy();
+
+			event.on('FFmpegWrapper_errorOnConverting', spyOnFailure);
+			event.on('FFmpegWrapper_finishConverting', spyOnSuccess);
+
+			var handleConverting = function(command) {
+				setTimeout(function() {
+					if (spyOnFailure.called) {
+						return done('FFmpegWrapper_errorOnConverting event was called');
+					} else
+					if (spyOnSuccess.called) {
+						fs.stat('./Test/src/Sample_Ts_File_For_Testing.mp4', function(err, stat) {
+							if (err) {
+								return done(err);
+							} else
+							if (stat.size > 0) {
+								return done();
+							}
+						});
+					} else {
+						done('no events was called');
+					}
+				}, 10000);
+			};
+
+			ffmpeg.convertMpegTsFormatToMp4({ filePath: './Test/src/Sample_Ts_File_For_Testing.ts' })
+				.then(handleConverting)
+				.catch(function(err) {
+					done(err);
+				});
 		});
 	});
 }
