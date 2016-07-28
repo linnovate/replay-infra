@@ -49,7 +49,7 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 		return {
 			sourceId: params.sourceId,
 			videoId: params.videoId,
-			receivingMethod: params.method,
+			receivingMethod: params.receivingMethod,
 			timestamp: moment(metadata.TimeTag.Time).utc().format(),
 			sensorPosition: {
 				lat: metadata.SensorPOV.Position.Latitude,
