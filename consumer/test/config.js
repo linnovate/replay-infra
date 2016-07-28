@@ -7,7 +7,10 @@ var chai = require('chai'),
 	JobStatus = require('replay-schemas/JobStatus'),
 	VideoMetadata = require('replay-schemas/VideoMetadata'),
 	Query = require('replay-schemas/Query'),
-	rabbit = require('replay-rabbitmq');
+	rabbit = require('replay-rabbitmq'),
+	Promise = require('bluebird');
+
+var fs = Promise.promisifyAll(require('fs'));
 
 chai.use(require('chai-datetime'));
 
@@ -17,6 +20,8 @@ global.expect = chai.expect;
 global.AssertionError = chai.AssertionError;
 global.Assertion = chai.Assertion;
 global.assert = chai.assert;
+
+var _validMetadataObjectsPath = 'expected_parsed_data.json';
 
 module.exports.resetEnvironment = function() {
 	// set env variables
@@ -69,4 +74,12 @@ module.exports.generateValidMessage = function() {
 
 module.exports.generateJobStatus = function() {
 	return JobStatus.create({});
+};
+
+module.exports.getValidMetadataObjects = function() {
+	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
+	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
+		.then(function(expectedDataAsString) {
+			return Promise.resolve(JSON.parse(expectedDataAsString));
+		});
 };

@@ -6,9 +6,7 @@ var fs = Promise.promisifyAll(require('fs'));
 var config = require('../../../../../config'),
 	Parser = require('../../../../../../processing-services/metadata-parser-service/standards/video-standard/1.0');
 
-var _expectedParsedDataObjectsPath = 'expected_parsed_data.json';
 var _dataAsString, _expectedParsedDataObjects;
-var _expectedDataLength = 20;
 var _videoId = '5799d24778b1f56a081e7029';
 
 describe('video standard 1.0 parser tests', function() {
@@ -22,11 +20,10 @@ describe('video standard 1.0 parser tests', function() {
 				return Promise.resolve();
 			})
 			.then(function() {
-				var fullpathToParsedData = path.join(process.env.STORAGE_PATH, _expectedParsedDataObjectsPath);
-				return fs.readFileAsync(fullpathToParsedData, 'utf8');
+				return config.getValidMetadataObjects();
 			})
-			.then(function(expectedDataAsString) {
-				_expectedParsedDataObjects = JSON.parse(expectedDataAsString);
+			.then(function(expectedDataAsObjects) {
+				_expectedParsedDataObjects = expectedDataAsObjects;
 				return Promise.resolve();
 			})
 			.then(function() {
@@ -40,12 +37,12 @@ describe('video standard 1.0 parser tests', function() {
 	});
 
 	describe('sanity tests', function() {
-		it('should parse xml to 20 objects', function(done) {
+		it('should parse xml to exact amount of expected objects', function(done) {
 			var params = generateParamsForParser();
 
 			var dataAsObjects = Parser.parse(_dataAsString, params);
 			expect(dataAsObjects).to.be.instanceOf(Array);
-			expect(dataAsObjects).to.have.lengthOf(_expectedDataLength);
+			expect(dataAsObjects).to.have.lengthOf(_expectedParsedDataObjects.length);
 			done();
 		});
 

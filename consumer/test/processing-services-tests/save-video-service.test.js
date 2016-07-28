@@ -131,6 +131,11 @@ function testForOneVideo(done) {
 		})
 		.then(function() {
 			done();
+		})
+		.catch(function(err) {
+			if (err) {
+				done(err);
+			}
 		});
 }
 
@@ -141,6 +146,11 @@ function testForNoVideos(done) {
 		})
 		.then(function() {
 			done();
+		})
+		.catch(function(err) {
+			if (err) {
+				done(err);
+			}
 		});
 }
 
