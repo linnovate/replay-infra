@@ -1,9 +1,10 @@
 var JobsService = require('replay-jobs-service'),
 	elasticsearch = require('replay-elastic');
 
-elasticsearch.connect(process.env.ELASTIC_HOST, process.env.ELASTIC_PORT);
 var _transactionId;
 var _jobStatusTag = 'saved-metadata-to-elastic';
+
+elasticsearch.connect(process.env.ELASTIC_HOST, process.env.ELASTIC_PORT);
 
 module.exports.start = function(params, error, done) {
 	console.log('MetadataToElastic service started.');
