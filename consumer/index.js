@@ -18,7 +18,7 @@ console.log('Consumer is up!');
 var _jobType = process.argv[2];
 if (!isInputValid()) {
 	console.log('Bad input was received.');
-	process.exit();
+	process.exit(1);
 }
 
 connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
@@ -26,7 +26,7 @@ connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_D
 	.then(consumeRabbitMQ)
 	.catch(function(err) {
 		console.log(err);
-		process.exit();
+		process.exit(1);
 	});
 
 // enforces basic validations on the environment input passed to process,
