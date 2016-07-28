@@ -9,6 +9,8 @@ var chai = require('chai'),
 	Query = require('replay-schemas/Query'),
 	rabbit = require('replay-rabbitmq');
 
+chai.use(require('chai-datetime'));
+
 // config chai
 chai.config.includeStack = true;
 global.expect = chai.expect;

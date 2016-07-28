@@ -26,7 +26,9 @@ module.exports.start = function(params, error, done) {
 			}
 			return performParseChain(params);
 		})
-		.then(done)
+		.then(function() {
+			done();
+		})
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
@@ -59,7 +61,7 @@ function performParseChain(params) {
 	// concat full path
 	var pathToData = path.join(process.env.STORAGE_PATH, relativePathToData);
 
-	readDataAsString(pathToData)
+	return readDataAsString(pathToData)
 		.then(function(data) {
 			return dataToObjects(method, data, params);
 		})
