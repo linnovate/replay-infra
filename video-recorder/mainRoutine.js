@@ -186,9 +186,6 @@ function handleVideoSavingProcess(streamingSource) {
 			})
 			.then(function() {
 				return convertMpegtsToMp4(paths.videoPath, globals.currentFileStartTime)
-					.then(function() {
-						return promise.resolve();
-					})
 					.catch(function(err) {
 						console.log('could not spwan the ffmpeg converting process,' + err + ' \n \n noving on');
 						return promise.reject();

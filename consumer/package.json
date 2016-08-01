@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha ./test/config.js ./test --recursive"
+    "test": "mocha ./test/config.js ./test --recursive",
+    "coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
   },
   "author": "",
   "license": "ISC",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-datetime": "^1.4.1",
+    "istanbul": "^0.4.4",
     "mkdirp": "^0.5.1",
     "mocha": "^2.5.3",
     "rimraf": "^2.5.4",

@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha Test --recursive",
-    "coverage": "istanbul cover _mocha Test -- --recursive; sensible-browser coverage/lcov-report/index.html"
+    "test": "mocha test --recursive",
+    "coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
   },
   "repository": {
     "type": "git",

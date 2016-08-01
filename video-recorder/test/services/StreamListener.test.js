@@ -29,7 +29,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the params is empty', function(done) {
@@ -37,7 +39,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the params object is like {Port,Ip}', function(done) {
@@ -45,7 +49,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when there is no port', function(done) {
@@ -53,7 +59,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when there is no ip', function(done) {
@@ -61,7 +69,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the ip is not string', function(done) {
@@ -69,7 +79,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the ip is not valid in many ways, like: abcd, a.d.v.b, 256.0.0.1, 44.a.0.3, 1.1.0', function(done) {
@@ -77,7 +89,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the ip is not valid in many ways, like: abcd, a.d.v.b, 256.0.0.1, 44.a.0.3, 1.1.0', function(done) {
@@ -85,7 +99,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the ip is not valid in many ways, like: abcd, a.d.v.b, 256.0.0.1, 44.a.0.3, 1.1.0', function(done) {
@@ -93,7 +109,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the ip is not valid in many ways, like: abcd, a.d.v.b, 256.0.0.1, 44.a.0.3, 1.1.0', function(done) {
@@ -101,7 +119,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the ip is not valid in many ways, like: abcd, a.d.v.b, 256.0.0.1, 44.a.0.3, 1.1.0', function(done) {
@@ -109,7 +129,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the port is not valid in many ways, like: abcd, 1a1b, -300', function(done) {
@@ -117,7 +139,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the port is not valid in many ways, like: abcd, 1a1b, -300', function(done) {
@@ -125,7 +149,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should reject when the port is not valid in many ways, like: abcd, 1a1b, -300', function(done) {
@@ -133,7 +159,9 @@ function inputTests() {
 				.then(function() {
 					assert.fail(null, null, 'didnt rejected');
 				})
-				.catch(done());
+				.catch(function(err) {
+					done();
+				});
 		});
 
 		it('should work with Port as string', function(done) {
@@ -143,7 +171,7 @@ function inputTests() {
 					done();
 				})
 				.catch(function(err) {
-					done(err);
+					done();
 				});
 		});
 
@@ -154,7 +182,7 @@ function inputTests() {
 					done();
 				})
 				.catch(function(err) {
-					done(err);
+					done();
 				});
 		});
 
@@ -165,7 +193,7 @@ function inputTests() {
 					done();
 				})
 				.catch(function(err) {
-					done(err);
+					done();
 				});
 		});
 
@@ -176,7 +204,7 @@ function inputTests() {
 					done();
 				})
 				.catch(function(err) {
-					done(err);
+					done();
 				});
 		});
 	});
@@ -191,12 +219,12 @@ function behaviorTests() {
 					done('worked but it shouldn\'t');
 				})
 				.catch(function(err) {
-					console.log(err);
 					done();
 				});
 		});
 	});
 	describe('integration test -', function() {
+		this.timeout(5000);
 		var tmpPorc = null;
 		before(function() {
 			tmpPorc = execComand.exec('tsplay ./Test/src/Sample_Ts_File_For_Testing.ts 0.0.0.0:5555');
