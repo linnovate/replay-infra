@@ -19,6 +19,7 @@ module.exports = {
 	find: function(req, res, next) {
 		validateRequest(req)
 			.then(saveQuery)
+			.then(buildQuery)
 			.then(performQuery)
 			.then(function(results) {
 				return res.json(results);
@@ -80,18 +81,45 @@ function saveQuery(req) {
 	});
 }
 
-function performQuery(query) {
+function buildQuery(query) {
+	// build the baseline of the query
+	var mongoQuery = {
+		status: 'ready'
+	};
+
+	// append the fields the user specified
+
+	if (query.fromVideoTime) {
+		mongoQuery.startTime = {
+			$gte: query.fromVideoTime
+		};
+	}
+
+	if (query.toVideoTime) {
+		mongoQuery.endTime = {
+			$lte: query.toVideoTime
+		};
+	}
+
+	// last case is special; if we have boundingShape in query, then query Elastic as well
 	if (query.boundingShape.coordinates) {
+		// search metadatas with the bounding shape
 		return elasticsearch.searchVideoMetadata(query.boundingShape.coordinates)
 			.then(function(resp) {
-				return getVideosOfMetadatas(resp.hits.hits);
-			})
-			.then(function(videos) {
-				return Promise.resolve(videos);
+				// append the video ids of retrieved metadatas to query
+				mongoQuery._id = {
+					$in: getMetadataVideosIds(resp.hits.hits)
+				};
+				return Promise.resolve(mongoQuery);
 			});
-	} else {
-		return getAllVideos();
 	}
+
+	return Promise.resolve(mongoQuery);
+}
+
+function performQuery(query) {
+	console.log('Performing query:', JSON.stringify(query));
+	return Video.find(query);
 }
 
 function elasticHitsToIdList(elasticHits) {
@@ -106,19 +134,11 @@ function removeDuplicateHits(elasticHits) {
 	});
 }
 
-function getVideosOfMetadatas(elasticHits) {
+function getMetadataVideosIds(elasticHits) {
 	// remove duplicate entries
 	var ids = removeDuplicateHits(elasticHits);
 	// convert to list of ObjectId
 	ids = elasticHitsToIdList(ids);
-	return Video.find({
-		_id: {
-			$in: ids
-		},
-		status: 'ready'
-	});
-}
 
-function getAllVideos() {
-	return Video.find({ status: 'ready' });
+	return ids;
 }

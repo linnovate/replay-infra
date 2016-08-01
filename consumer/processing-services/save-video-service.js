@@ -44,6 +44,8 @@ function validateInput(params) {
 	var sourceId = params.sourceId;
 	var method = params.receivingMethod;
 	var transactionId = params.transactionId;
+	var startTime = params.startTime;
+	var endTime = params.endTime;
 
 	// validate vital params
 	if (!method || !method.standard || !method.version || !transactionId) {
@@ -51,7 +53,7 @@ function validateInput(params) {
 	}
 
 	// validate that if there's a video, then all it's params exist
-	if ((videoName || relativePathToVideo) && !(videoName && relativePathToVideo && sourceId)) {
+	if ((videoName || relativePathToVideo) && !(videoName && relativePathToVideo && sourceId && startTime && endTime)) {
 		return false;
 	}
 
@@ -93,7 +95,9 @@ function saveVideoToMongo(params) {
 			relativePath: params.videoRelativePath,
 			name: params.videoName,
 			receivingMethod: params.receivingMethod,
-			jobStatusId: _transactionId
+			jobStatusId: _transactionId,
+			startTime: params.startTime,
+			endTime: params.endTime
 		})
 		.then(function(video) {
 			console.log('Video successfully saved to mongo:', video);

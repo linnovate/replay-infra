@@ -91,6 +91,20 @@ describe('save-video-service tests', function() {
 			errornousInputTest(message, done);
 		});
 
+		it('has videoRelativePath but lacks startTime', function(done) {
+			var message = config.generateValidMessage();
+			message.startTime = undefined;
+
+			errornousInputTest(message, done);
+		});
+
+		it('has videoRelativePath but lacks endTime', function(done) {
+			var message = config.generateValidMessage();
+			message.endTime = undefined;
+
+			errornousInputTest(message, done);
+		});
+
 		it('lacks method', function(done) {
 			var message = config.generateValidMessage();
 			message.receivingMethod = undefined;

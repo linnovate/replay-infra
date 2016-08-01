@@ -2,6 +2,8 @@ var rabbit = require('replay-rabbitmq'),
 	mongoose = require('mongoose');
 
 var rabbitHost = process.env.RABBITMQ_HOST || 'localhost';
+var startTime = new Date();
+var endTime = addMinutes(startTime, 30);
 
 rabbit.connect(rabbitHost)
 	.then(function() {
@@ -14,6 +16,8 @@ rabbit.connect(rabbitHost)
 				standard: 'VideoStandard',
 				version: '1.0'
 			},
+			startTime: startTime,
+			endTime: endTime,
 			transactionId: new mongoose.Types.ObjectId()
 		};
 		rabbit.produce('NewVideosQueue', message);
@@ -21,3 +25,7 @@ rabbit.connect(rabbitHost)
 	.catch(function(err) {
 		console.log(err);
 	});
+
+function addMinutes(date, minutes) {
+	return new Date(date.getTime() + minutes * 60000);
+}

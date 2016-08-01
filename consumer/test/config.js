@@ -71,6 +71,9 @@ module.exports.createElasticIndices = function() {
 };
 
 module.exports.generateValidMessage = function() {
+	var startTime = new Date();
+	var endTime = addMinutes(startTime, 30);
+
 	return {
 		sourceId: '123',
 		videoName: 'sample.ts',
@@ -80,6 +83,8 @@ module.exports.generateValidMessage = function() {
 			standard: 'VideoStandard',
 			version: '1.0'
 		},
+		startTime: startTime,
+		endTime: endTime,
 		transactionId: new mongoose.Types.ObjectId()
 	};
 };
@@ -95,3 +100,7 @@ module.exports.getValidMetadataObjects = function() {
 			return Promise.resolve(JSON.parse(expectedDataAsString));
 		});
 };
+
+function addMinutes(date, minutes) {
+	return new Date(date.getTime() + minutes * 60000);
+}

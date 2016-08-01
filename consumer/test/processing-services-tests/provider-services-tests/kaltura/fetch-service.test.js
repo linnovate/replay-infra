@@ -127,6 +127,8 @@ function createVideo(params) {
 			relativePath: params.videoRelativePath,
 			name: params.videoName,
 			receivingMethod: params.receivingMethod,
+			startTime: new Date(),
+			endTime: new Date(),
 			jobStatusId: params.transactionId
 		});
 }
