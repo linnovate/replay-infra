@@ -1,7 +1,9 @@
 // requires
 var promise = require('bluebird'),
 	moment = require('moment'),
-	BusService = require('replay-bus-service');
+	mongoose = require('mongoose'),
+	rabbit = require('replay-rabbitmq');
+
 var event = require('./services/EventEmitterSingleton'),
 	streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
@@ -22,8 +24,7 @@ const MONGO_HOST = process.env.MONGO_HOST,
 	MONGO_DATABASE = process.env.MONGO_DATABASE,
 	STORAGE_PATH = process.env.STORAGE_PATH || '/VideoRecorder',
 	INDEX = process.env.INDEX,
-	REDIS_HOST = process.env.REDIS_HOST,
-	REDIS_PORT = process.env.REDIS_PORT;
+	RABBITMQ_HOST = process.env.RABBITMQ_HOST || 'localhost';
 
 module.exports = function() {
 	console.log('Video recorder service is up.');
@@ -31,11 +32,13 @@ module.exports = function() {
 	console.log(PROCESS_NAME + ' Mongo port:', MONGO_PORT);
 	console.log(PROCESS_NAME + ' Mongo database:', MONGO_DATABASE);
 	console.log(PROCESS_NAME + ' Files storage path: ', STORAGE_PATH);
+	console.log(PROCESS_NAME + ' RabbitMQ host: ', RABBITMQ_HOST);
 
 	// index used to find my StreamingSource object in the DB collection
 	var StreamingSourceIndex = INDEX;
 
-	streamingSourceDAL.getStreamingSource(StreamingSourceIndex)
+	rabbit.connect(RABBITMQ_HOST)
+		.then(streamingSourceDAL.getStreamingSource(StreamingSourceIndex))
 		.then(handleVideoSavingProcess)
 		.catch(function(err) {
 			if (err) {
@@ -43,6 +46,7 @@ module.exports = function() {
 			}
 		});
 };
+
 /********************************************************************************************************************************************/
 /*                                                                                                                                          */
 /*    The main function of the service, register all events and start all capturing process.                                                */
@@ -333,23 +337,21 @@ function convertMpegtsToMp4(path, startTime) {
 
 // Send message to the next service.
 function sendToJobQueue(params) {
-	var busServiceProducer = new BusService(REDIS_HOST, REDIS_PORT);
 	var message = {
-		params: {
-			sourceId: params.streamingSource.SourceID,
-			videoName: params.videoName + '.mp4',
-			videoRelativePath: params.videoPath,
-			dataRelativePath: params.dataPath,
-			receivingMethod: {
-				standard: params.streamingSource.StreamingMethod.standard,
-				version: '1.0'
-			},
-			startTime: params.startTime,
-			endTime: params.endTime
-		}
+		sourceId: params.streamingSource.SourceID,
+		videoName: params.videoName + '.mp4',
+		videoRelativePath: params.videoPath,
+		dataRelativePath: params.dataPath,
+		receivingMethod: {
+			standard: params.streamingSource.StreamingMethod.standard,
+			version: '1.0'
+		},
+		startTime: params.startTime,
+		endTime: params.endTime,
+		transactionId: new mongoose.Types.ObjectId()
 	};
 	console.log('message is ', message);
-	busServiceProducer.produce('NewVideosQueue', message);
+	rabbit.produce('NewVideosQueue', message);
 }
 
 /********************************************************************************************/
