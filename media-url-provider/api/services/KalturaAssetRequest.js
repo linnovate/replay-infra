@@ -3,7 +3,7 @@ var request = require('request'),
 	Promise = require('bluebird');
 const MANIFEST_SUFFIX = '/manifest.mpd';
 
-module.exports = function KalturaAssetRequest() {
+function kalturaAssetRequest() {
 	var retriveMediaUrlFromKaltura = function (entryId) {
 		return new Promise(function(resolve, reject) {
 			var server = sails.config.settings.services.kaltura.server,
@@ -41,5 +41,6 @@ module.exports = function KalturaAssetRequest() {
 	return {
 		getMpd: getMpd
 	};
-};
+}
 
+module.exports = kalturaAssetRequest();
