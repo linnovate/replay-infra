@@ -101,6 +101,18 @@ function buildQuery(query) {
 		};
 	}
 
+	if (query.minVideoDuration) {
+		mongoQuery.durationInSeconds = {
+			$gte: query.minVideoDuration
+		};
+	}
+
+	if (query.maxVideoDuration) {
+		mongoQuery.durationInSeconds = {
+			$lte: query.maxVideoDuration
+		};
+	}
+
 	// last case is special; if we have boundingShape in query, then query Elastic as well
 	if (query.boundingShape.coordinates) {
 		// search metadatas with the bounding shape
