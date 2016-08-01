@@ -20,13 +20,15 @@ module.exports = {
 	// models: {
 	//   connection: 'someMongodbServer'
 	// }
-	port: process.env.PORT || 1338,
+	port: 1339,
 	settings: {
 		services: {
-			elastic: {
-				host: process.env.ELASTIC_HOST || 'localhost',
-				port: process.env.ELASTIC_PORT || 9200
+			kaltura: {
+				server: 'http:localhost',
+				port: '80',
+				partnerId: 101
 			}
 		}
 	}
+
 };

@@ -13,7 +13,7 @@ module.exports.fetch = function(params, error, done) {
 		return error();
 	}
 
-	getVideo(params.name)
+	getVideo(params.videoName)
 		.then(function(video) {
 			_transactionId = video.jobStatusId;
 			return JobService.findJobStatus(_transactionId);
@@ -25,7 +25,9 @@ module.exports.fetch = function(params, error, done) {
 			}
 			return performFetchChain(params);
 		})
-		.then(done)
+		.then(function() {
+			done();
+		})
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
@@ -36,9 +38,9 @@ module.exports.fetch = function(params, error, done) {
 
 function validateInput(params) {
 	console.log('Provider id is: ', params.providerId);
-	console.log('Video name is: ', params.name);
+	console.log('Video name is: ', params.videoName);
 
-	if (!params.providerId || !params.name) {
+	if (!params.providerId || !params.videoName) {
 		return false;
 	}
 
@@ -55,7 +57,9 @@ function performFetchChain(params) {
 
 			return KalturaService.getVideo(params.providerId);
 		})
-		.then(updateVideoInMongo)
+		.then(function(kalturaVideo) {
+			return updateVideoInMongo(kalturaVideo, params.videoName);
+		})
 		.then(confirmUpdate);
 }
 
@@ -64,11 +68,11 @@ function getVideo(name) {
 	return Video.findOne(query);
 }
 
-function updateVideoInMongo(kalturaVideo) {
+function updateVideoInMongo(kalturaVideo, videoName) {
 	console.log('Updating video in mongo with the data from Kaltura...');
 
-	// update video with the same prefix name
-	var query = { name: { $regex: kalturaVideo.name + '.*' } };
+	// update video with the same name
+	var query = { name: videoName };
 
 	return Video.update(query, {
 		provider: 'kaltura',

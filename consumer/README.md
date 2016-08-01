@@ -3,31 +3,7 @@ Install RabbitMQ according to the instructions [in replay-rabbitmq repo](https:/
 
 You can have have MongoDB and ElasticSearch installed locally, else you may configure them via the environment variables.
 
-Initialize ElasticSearch:
-```
-PUT videometadatas
-{
-   "settings" : {
-       "index" : {
-           "number_of_shards" :5,
-           "number_of_replicas" : 1
-       }
-   },
-   "mappings": {
-       "videometadata": {
-            "properties": {
-              "sourceId": { "type": "integer" },
-              "videoId": { "type": "string" },
-              "receivingMethod": { "type": "nested"},
-              "timestamp": { "type": "date" },
-              "sensorPosition": { "type": "geo_point" },
-              "sensorTrace": { "type": "geo_shape" },
-              "data": { "type": "object" }
-            }
-       }
-    }
-}
-```
+Initialize ElasticSearch according to the instructions [in replay-elastic repo](https://github.com/linnovate/replay-common/tree/develop/replay-elastic).
 
 Run app (default parameters will be used):
 ```
@@ -47,6 +23,8 @@ MONGO_PORT
 MONGO_DATABASE // mandatory
 ELASTIC_HOST
 ELASTIC_PORT
+ELASTIC_VIDEO_METADATA_INDEX
+ELASTIC_VIDEO_METADATA_TYPE
 RABBITMQ_HOST
 RABBITMQ_MAX_RESEND_ATTEMPS
 RABBITMQ_MAX_UNACKED_MESSAGES

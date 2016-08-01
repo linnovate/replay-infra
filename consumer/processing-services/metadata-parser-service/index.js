@@ -13,7 +13,7 @@ module.exports.start = function(params, error, done) {
 
 	if (!validateInput(params)) {
 		console.log('Some vital parameters are missing.');
-		error();
+		return error();
 	}
 
 	_transactionId = params.transactionId;
@@ -26,7 +26,9 @@ module.exports.start = function(params, error, done) {
 			}
 			return performParseChain(params);
 		})
-		.then(done)
+		.then(function() {
+			done();
+		})
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
@@ -36,14 +38,13 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
-	var relativePathToData = params.relativePath;
-	var method = params.method;
+	var relativePathToData = params.dataRelativePath;
+	var method = params.receivingMethod;
 	var transactionId = params.transactionId;
 
 	// validate params
 	if (!relativePathToData || !process.env.STORAGE_PATH ||
 		!method || !method.standard || !method.version || !transactionId) {
-		console.log('Some vital parameters are missing.');
 		return false;
 	}
 
@@ -54,13 +55,13 @@ function validateInput(params) {
 // and then update the job status that we've parsed metadata.
 function performParseChain(params) {
 	// extract params and handle metadata
-	var relativePathToData = params.relativePath;
-	var method = params.method;
+	var relativePathToData = params.dataRelativePath;
+	var method = params.receivingMethod;
 
 	// concat full path
 	var pathToData = path.join(process.env.STORAGE_PATH, relativePathToData);
 
-	readDataAsString(pathToData)
+	return readDataAsString(pathToData)
 		.then(function(data) {
 			return dataToObjects(method, data, params);
 		})

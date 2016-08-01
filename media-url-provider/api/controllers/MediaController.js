@@ -13,7 +13,7 @@ module.exports = {
 		var id = req.params.id;
 		getVideo(id)
 			.then(function(video) {
-				return WowzaService.getMpd(video.providerId);
+				return KalturaAssetRequest.getMpd(video.providerId);
 			})
 			.then(function(mpd) {
 				// res.setHeader('Content-Type', 'application/dash+xml');

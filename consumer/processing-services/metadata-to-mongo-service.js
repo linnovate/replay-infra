@@ -19,12 +19,14 @@ module.exports.start = function(params, error, done) {
 		.then(function(jobStatus) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
-				done();
-			} else {
-				return saveToMongo(params.metadatas);
+				return Promise.resolve();
 			}
+			return saveToMongo(params.metadatas);
 		})
-		.then(done)
+		.then(function() {
+			done();
+			return Promise.resolve();
+		})
 		.then(updateJobStatus)
 		.catch(function(err) {
 			if (err) {

@@ -20,10 +20,13 @@
 		"replay-eslint-config": "*"
 	},
 	"scripts": {
-		"test": "mocha Test --recursive",
+		"test": "mocha ./*/test --recursive",
 		"lint": "./lintStagedFiles.sh",
 		"lintAll": "eslint .",
-		"coverage": "istanbul cover _mocha Test -- --recursive; sensible-browser coverage/lcov-report/index.html"
+		"coverage": "istanbul cover _mocha ./*/test -- --recursive; sensible-browser coverage/lcov-report/index.html"
+	},
+	"eslintConfig": {
+		"extends": "./node_modules/replay-eslint-config/index.js"
 	},
 	"pre-commit": {
 		"run": "lint",
