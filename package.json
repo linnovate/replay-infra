@@ -25,6 +25,9 @@
 		"lintAll": "eslint .",
 		"coverage": "istanbul cover _mocha ./*/test -- --recursive; sensible-browser coverage/lcov-report/index.html"
 	},
+	"eslintConfig": {
+		"extends": "./node_modules/replay-eslint-config/index.js"
+	},
 	"pre-commit": {
 		"run": "lint",
 		"colors": true
