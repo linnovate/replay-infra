@@ -2,7 +2,7 @@ Video-recorder
 ==============================
 
 ##### Video-recorder is the _Capture_ component for the Replay project.
-In general word it's just a record tool for video/metadata broadcast streaming.  
+In general word it's just a record tool for video/metadata broadcast streaming.
 _"Just catch stream and save it" :smirk:_
 
 
@@ -10,16 +10,19 @@ Setup
 ------------------------------
 
 #### 1. [FFmpeg](https://ffmpeg.org/)
-This module uses the [fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg) and that requires FFmpeg to be installed on your computer.  
+This module uses the [fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg) and that requires FFmpeg to be installed on your computer.
 For more information (and installation instructions) please refer to [fluent-ffmpeg prerequisites](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg#prerequisites)
 
 #### 2. [MongoDB](https://www.mongodb.com/)
 First install MongoDB according to this ([installation tutorial](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)).
 After installation, add some initial mock values for streaming sources by initializing the mongo db:
 ``` bash
-db.streamingsources.save({"SourceID":100, "SourceName":"VideoMuxedStream", "SourceType":"VideoMuxedTelemetry", "SourceIP":"238.0.0.1", "SourcePort": 1234, "StreamingMethod":{"standard": "VideoStandard","version":"1.0"}, "StreamingStatus":{"status":"none", "lastUpdateTime":""}})
-db.streamingsources.save({"SourceID":101, "SourceName":"TelemetryStream", "SourceType":"Telemetry", "SourceIP":"238.0.0.1", "SourcePort": 1235, "StreamingMethod":{"standard": "VideoStandard","version":"0.9"}, "StreamingStatus":{"status":"none", "lastUpdateTime":""}})
-db.streamingsources.save({"SourceID":102, "SourceName":"VideoStream", "SourceType":"Video", "SourceIP":"238.0.0.1", "SourcePort": 1236, "StreamingMethod":{"standard": "VideoStandard","version":"0.9"}, "StreamingStatus":{"status":"none", "lastUpdateTime":""}})
+db.streamingsources.save({"sourceID":100, "sourceName":"VideoMuxedStream", "sourceType":"VideoMuxedTelemetry", "sourceIP":"238.0.0.1", "sourcePort": 1234,
+"streamingMethod":{"standard": "VideoStandard","version":"1.0"}, "streamingStatus":"NONE"})
+db.streamingsources.save({"sourceID":101, "sourceName":"TelemetryStream", "sourceType":"Telemetry", "sourceIP":"238.0.0.1", "sourcePort": 1235,
+"streamingMethod":{"standard": "VideoStandard","version":"0.9"}, "streamingStatus":"NONE"})
+db.streamingsources.save({"sourceID":102, "sourceName":"VideoStream", "sourceType":"Video", "sourceIP":"238.0.0.1", "sourcePort": 1236,
+"streamingMethod":{"standard": "VideoStandard","version":"0.9"}, "streamingStatus":"NONE"})
 ```
 
 #### 3. [tstools](https://github.com/kynesim/tstools)
