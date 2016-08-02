@@ -17,11 +17,11 @@ For more information (and installation instructions) please refer to [fluent-ffm
 First install MongoDB according to this ([installation tutorial](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)).
 After installation, add some initial mock values for streaming sources by initializing the mongo db:
 ``` bash
-db.streamingsources.save({"SourceID":100, "sourceName":"VideoMuxedStream", "sourceType":"VideoMuxedTelemetry", "sourceIP":"238.0.0.1", "sourcePort": 1234,
+db.streamingsources.save({"sourceID":100, "sourceName":"VideoMuxedStream", "sourceType":"VideoMuxedTelemetry", "sourceIP":"238.0.0.1", "sourcePort": 1234,
 "streamingMethod":{"standard": "VideoStandard","version":"1.0"}, "streamingStatus":"NONE"})
-db.streamingsources.save({"SourceID":101, "sourceName":"TelemetryStream", "sourceType":"Telemetry", "sourceIP":"238.0.0.1", "sourcePort": 1235,
+db.streamingsources.save({"sourceID":101, "sourceName":"TelemetryStream", "sourceType":"Telemetry", "sourceIP":"238.0.0.1", "sourcePort": 1235,
 "streamingMethod":{"standard": "VideoStandard","version":"0.9"}, "streamingStatus":"NONE"})
-db.streamingsources.save({"SourceID":102, "sourceName":"VideoStream", "sourceType":"Video", "sourceIP":"238.0.0.1", "sourcePort": 1236,
+db.streamingsources.save({"sourceID":102, "sourceName":"VideoStream", "sourceType":"Video", "sourceIP":"238.0.0.1", "sourcePort": 1236,
 "streamingMethod":{"standard": "VideoStandard","version":"0.9"}, "streamingStatus":"NONE"})
 ```
 
