@@ -4,6 +4,8 @@ var promise = require('bluebird'),
 	mongoose = require('mongoose'),
 	rabbit = require('replay-rabbitmq');
 
+var path = require('path');
+
 var event = require('./services/EventEmitterSingleton'),
 	streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
@@ -17,6 +19,8 @@ var viewStandardHandler = require('./services/ViewStandardHandler')(),
 const DURATION = process.env.DURATION || 10,
 	INTERVAL_TIME = process.env.INTERVAL_TIME || 5000,
 	PROCESS_NAME = '#MainRoutine#';
+/* VIDEO_SUFFIX = '.mp4',
+META_DATA_SUFFIX = '.data';*/
 
 // Configuration
 const MONGO_HOST = process.env.MONGO_HOST,
@@ -249,6 +253,7 @@ function handleVideoSavingProcess(streamingSource) {
 
 	// when converting finished.
 	event.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath, startTime) {
+		var relativePath = path.relative(STORAGE_PATH, newFilePath);
 		var startDateTime, endDateTime;
 		// get the start time format.
 		startDateTime = startTime.format();
@@ -263,11 +268,12 @@ function handleVideoSavingProcess(streamingSource) {
 				// send to the next job.
 				sendToJobQueue({
 					streamingSource: streamingSource,
-					videoPath: newFilePath,
-					dataPath: newFilePath.replace('.mp4', '.data'),
+					videoPath: relativePath,
+					dataPath: relativePath.replace('.mp4', '.data'),
 					videoName: globals.fileName,
 					startTime: startDateTime,
-					endTime: endDateTime
+					endTime: endDateTime,
+					duration: duration
 				});
 				try {
 					// delete the unnecessary ts file.
@@ -350,9 +356,9 @@ function sendToJobQueue(params) {
 		},
 		startTime: params.startTime,
 		endTime: params.endTime,
+		duration: params.duration,
 		transactionId: new mongoose.Types.ObjectId()
 	};
-	console.log('message is ', message);
 	rabbit.produce('NewVideosQueue', message);
 }
 
