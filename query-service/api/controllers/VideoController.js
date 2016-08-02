@@ -9,7 +9,8 @@ var Promise = require('bluebird'),
 	elasticsearch = require('replay-elastic'),
 	ObjectId = require('mongoose').Types.ObjectId,
 	Query = require('replay-schemas/Query'),
-	Video = require('replay-schemas/Video');
+	Video = require('replay-schemas/Video'),
+	Tag = require('replay-schemas/Tag');
 
 // trick sails to activate restful API to this controller
 sails.models.video = {};
@@ -17,7 +18,7 @@ sails.models.video = {};
 module.exports = {
 
 	find: function(req, res, next) {
-		validateRequest(req)
+		validateFindRequest(req)
 			.then(saveQuery)
 			.then(buildQuery)
 			.then(performQuery)
@@ -27,17 +28,29 @@ module.exports = {
 			.catch(function(err) {
 				return res.serverError(err);
 			});
+	},
+
+	update: function(req, res, next) {
+		validateUpdateRequest(req)
+			.then(performUpdate)
+			.then(function() {
+				return res.ok();
+			})
+			.catch(function(err) {
+				return res.serverError(err);
+			});
 	}
 };
 
-function validateRequest(req) {
+function validateFindRequest(req) {
 	return new Promise(function(resolve, reject) {
 		// make sure we have at least one attribute
 		if (!req.query) {
 			return reject(new Error('Empty query is not allowed.'));
 		}
+
 		// validate boundingShapeCoordinates is JSON parsable (since the array would be passed as string)
-		else if (req.query && req.query.boundingShapeCoordinates) {
+		if (req.query.boundingShapeCoordinates) {
 			try {
 				JSON.parse(req.query.boundingShapeCoordinates);
 			} catch (e) {
@@ -45,7 +58,30 @@ function validateRequest(req) {
 			}
 		}
 
+		if (req.query.tagsIds) {
+			try {
+				JSON.parse(req.query.tagsIds);
+			} catch (e) {
+				return reject(new Error('tagsIds is not parsable.'));
+			}
+		}
+
 		resolve(req);
+	});
+}
+
+function validateUpdateRequest(req) {
+	return new Promise(function(resolve, reject) {
+		// make sure we have at least one attribute
+		if (!req.query) {
+			return reject(new Error('Empty update is not allowed.'));
+		}
+		// allow update of specific fields only
+		else if (req.query && Object.keys(req.body).length === 1 && req.body.tag) {
+			return resolve(req);
+		}
+
+		reject(new Error('Update is not allowed for the specified fields.'));
 	});
 }
 
@@ -73,7 +109,8 @@ function saveQuery(req) {
 		copyright: req.query.copyright,
 		minTraceHeight: req.query.minTraceHeight,
 		minTraceWidth: req.query.minTraceWidth,
-		source: req.query.source,
+		sourceId: req.query.sourceId,
+		tagsIds: JSON.parse(req.query.tagsIds),
 		boundingShape: {
 			type: req.query.boundingShapeType,
 			coordinates: coordinates
@@ -113,6 +150,16 @@ function buildQuery(query) {
 		};
 	}
 
+	if (query.sourceId) {
+		mongoQuery.sourceId = query.sourceId;
+	}
+
+	if (query.tagsIds && query.tagsIds.length > 0) {
+		mongoQuery.tags = {
+			$in: query.tagsIds
+		};
+	}
+
 	// last case is special; if we have boundingShape in query, then query Elastic as well
 	if (query.boundingShape.coordinates) {
 		// search metadatas with the bounding shape
@@ -131,7 +178,7 @@ function buildQuery(query) {
 
 function performQuery(query) {
 	console.log('Performing query:', JSON.stringify(query));
-	return Video.find(query);
+	return Video.find(query).populate('tags');
 }
 
 function elasticHitsToIdList(elasticHits) {
@@ -153,4 +200,41 @@ function getMetadataVideosIds(elasticHits) {
 	ids = elasticHitsToIdList(ids);
 
 	return ids;
+}
+
+function performUpdate(req) {
+	var updateQuery = {};
+
+	if (req.body.tag) {
+		return findOrCreateTagByTitle(req.body.tag)
+			.then(function(tag) {
+				updateQuery.$addToSet = {
+					tags: tag._id
+				};
+				return updateVideo(req.params.id, updateQuery);
+
+			});
+	}
+
+	return updateVideo(req.params.id, updateQuery);
+}
+
+// find a Tag with such title or create one if not exists.
+function findOrCreateTagByTitle(title) {
+	// upsert: create if not exist; new: return updated value
+	return Tag.findOneAndUpdate({
+		title: title
+	}, {
+		title: title
+	}, {
+		upsert: true,
+		new: true
+	});
+}
+
+function updateVideo(id, updateQuery) {
+	console.log('Updating video by id', id, 'Update is:', updateQuery);
+	return Video.findOneAndUpdate({
+		_id: id
+	}, updateQuery);
 }

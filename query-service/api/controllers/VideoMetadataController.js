@@ -13,7 +13,7 @@ sails.models.videometadata = {};
 
 module.exports = {
 	find: function(req, res, next) {
-		validateRequest(req)
+		validateFindRequest(req)
 			.then(getVideoMetadatas)
 			.then(function(results) {
 				return res.json(results);
@@ -24,7 +24,7 @@ module.exports = {
 	}
 };
 
-function validateRequest(req) {
+function validateFindRequest(req) {
 	return new Promise(function(resolve, reject) {
 		// make sure we have at least one attribute
 		if (!req.query || !req.query.videoId) {
