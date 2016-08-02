@@ -38,7 +38,9 @@ module.exports = function() {
 	var StreamingSourceIndex = INDEX;
 
 	rabbit.connect(RABBITMQ_HOST)
-		.then(streamingSourceDAL.getStreamingSource(StreamingSourceIndex))
+		.then(function() {
+			return streamingSourceDAL.getStreamingSource(StreamingSourceIndex);
+		})
 		.then(handleVideoSavingProcess)
 		.catch(function(err) {
 			if (err) {
