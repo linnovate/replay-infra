@@ -1,72 +1,65 @@
-var mongoose = require('mongoose'),
-	promise = require('bluebird'),
-	moment = require('moment');
-var StreamingSource = require('../schemas/StreamingSource');
+var Promise = require('bluebird'),
+	StreamingSource = require('replay-schemas/StreamingSource'),
+	connectMongo = require('replay-schemas/connectMongo');
 
-// Optional streaming sources statuses
-const CAPTURING = 'CAPTURING',
-	NONE = 'NONE',
-	LISTENING = 'LISTENING',
-	SERVICE_NAME = '#StreamingSourceDAL#';
+var StreamingStatuses = require('../enums/StreamingStatuses');
+
+const SERVICE_NAME = '#StreamingSourceDAL#';
 
 module.exports = StreamingSourceDAL;
 
 function StreamingSourceDAL(host, port, db) {
 	if (!host || !port || !db) {
-		return promise.reject('#StreamingSourceDAL# bad conection params provided');
+		return Promise.reject(SERVICE_NAME + ' bad conection params provided');
 	}
-
-	mongoose.connect('mongodb://' + host + ':' + port + '/' + db);
+	connectMongo(host, port, db)
+		.catch(function(err) {
+			return Promise.reject('error connection mongo' + err);
+		});
 
 	// Retrives a stream source from the database by ID
-	var getStreamingSource = function(sourceId) {
-		return StreamingSource.findOne({ SourceID: sourceId }, function(err, StreamingSource) {
+	function getStreamingSource(sourceId) {
+		return StreamingSource.findOne({ sourceID: sourceId }, function(err, StreamingSource) {
 			// make sure StreamingSource exist and also our object at the specified sourceId
 			if (err) {
-				return promise.reject('StreamingSource has no object at sourceId ' + sourceId);
+				return Promise.reject('StreamingSource has no object at sourceId ' + sourceId);
 			}
 
 			if (!StreamingSource) {
 				console.log(SERVICE_NAME, 'no Streaming Source found');
-				return promise.reject('no stream source found');
+				return Promise.reject('no stream source found');
 			}
 
-			return promise.resolve(StreamingSource);
+			return Promise.resolve(StreamingSource);
 		});
-	};
+	}
 
 	// Help method to update data source
-	var updateSourceStatus = function(sourceStatus) {
-		StreamingSource.update(
-			{ SourceID: sourceStatus.sourceId }, {
-				StreamingStatus: {
-					status: sourceStatus.status,
-					lastUpdateTime: moment.now()
-				}
-			},
+	function updateSourceStatus(sourceStatus) {
+		StreamingSource.update({ sourceID: sourceStatus.sourceId }, { streamingStatus: sourceStatus.status },
 			null,
 			function(err, numEffected) {
 				if (err) {
-					return promise.reject('Canot update streaming source status: ' + err);
+					return Promise.reject('Canot update streaming source status: ' + err);
 				}
-				return promise.resolve(numEffected);
+				return Promise.resolve(numEffected);
 			});
-	};
+	}
 
 	// Update CAPTURING status and current update time
-	var notifySourceCapturing = function(sourceId) {
-		return updateSourceStatus({ sourceId: sourceId, status: CAPTURING });
-	};
+	function notifySourceCapturing(sourceId) {
+		return updateSourceStatus({ sourceId: sourceId, status: StreamingStatuses.CAPTURING });
+	}
 
 	// Update no action taken status and current update time
-	var notifySourceNone = function(sourceId) {
-		return updateSourceStatus({ sourceId: sourceId, status: NONE });
-	};
+	function notifySourceNone(sourceId) {
+		return updateSourceStatus({ sourceId: sourceId, status: StreamingStatuses.NONE });
+	}
 
 	// Update LISTENING status and current update time
-	var notifySourceListening = function(sourceId) {
-		return updateSourceStatus({ sourceId: sourceId, status: LISTENING });
-	};
+	function notifySourceListening(sourceId) {
+		return updateSourceStatus({ sourceId: sourceId, status: StreamingStatuses.LISTENING });
+	}
 
 	return {
 		getStreamingSource: getStreamingSource,

@@ -1,0 +1,5 @@
+module.exports = {
+	LISTENING: 'LISTENING',
+	NONE: 'NONE',
+	CAPTURING: 'CAPTURING'
+};

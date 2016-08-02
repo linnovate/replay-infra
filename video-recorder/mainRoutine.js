@@ -63,12 +63,12 @@ function handleVideoSavingProcess(streamingSource) {
 		currentFileStartTime: null
 	};
 
-	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.SourcePort);
+	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.sourcePort);
 	// Starting Listen to the address.
 	startStreamListener(streamingSource)
 		.then(function() {
 			globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-				streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+				streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 			});
 		})
 		.catch(function(err) {
@@ -97,7 +97,7 @@ function handleVideoSavingProcess(streamingSource) {
 		startStreamListener(streamingSource)
 			.then(function() {
 				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 				});
 			})
 			.catch(function(err) {
@@ -108,8 +108,8 @@ function handleVideoSavingProcess(streamingSource) {
 	// When the streamListenerService found some streaming data in the address.
 	event.on('StreamingData', function() {
 		var dateOfCreating = util.getCurrentDate();
-		var pathForFFmpeg = STORAGE_PATH + '/' + streamingSource.SourceID + '/' + dateOfCreating;
-		var FileNameForFFmpeg = streamingSource.SourceID + '_' + dateOfCreating + '_' + util.getCurrentTime();
+		var pathForFFmpeg = STORAGE_PATH + '/' + streamingSource.sourceID + '/' + dateOfCreating;
+		var FileNameForFFmpeg = streamingSource.sourceID + '_' + dateOfCreating + '_' + util.getCurrentTime();
 		// Check if the path exist,if not create it.
 		util.checkPath(pathForFFmpeg);
 
@@ -123,7 +123,7 @@ function handleVideoSavingProcess(streamingSource) {
 		globals.currentFileStartTime = moment();
 
 		var ffmpegParams = {
-			inputs: ['udp://' + streamingSource.SourceIP + ':' + streamingSource.SourcePort],
+			inputs: ['udp://' + streamingSource.sourceIP + ':' + streamingSource.sourcePort],
 			duration: DURATION,
 			dir: pathForFFmpeg,
 			file: FileNameForFFmpeg
@@ -131,7 +131,7 @@ function handleVideoSavingProcess(streamingSource) {
 
 		// starting the ffmpeg process
 		console.log(PROCESS_NAME + ' Record new video at: ', pathForFFmpeg);
-		viewStandardHandler.realizeStandardCaptureMethod(streamingSource.SourceType, streamingSource.StreamingMethod.version)
+		viewStandardHandler.realizeStandardCaptureMethod(streamingSource.sourceType, streamingSource.streamingMethod.version)
 			.then(function(captureCommand) {
 				return captureCommand(ffmpegParams);
 			})
@@ -144,7 +144,7 @@ function handleVideoSavingProcess(streamingSource) {
 				throw err;
 			});
 		globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-			streamingSourceDAL.notifySourceCapturing(streamingSource.SourceID);
+			streamingSourceDAL.notifySourceCapturing(streamingSource.sourceID);
 		});
 	});
 
@@ -197,7 +197,7 @@ function handleVideoSavingProcess(streamingSource) {
 				startStreamListener(streamingSource)
 					.then(function() {
 						globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-							streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+							streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 						});
 					})
 					.catch(function(err) {
@@ -213,7 +213,7 @@ function handleVideoSavingProcess(streamingSource) {
 		startStreamListener(streamingSource)
 			.then(function() {
 				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 				});
 			})
 			.catch(function(err) {
@@ -298,8 +298,8 @@ function setStatusTimer(timer, callBack) {
 // starting Listen to the stream
 function startStreamListener(streamingSource) {
 	var streamListenerParams = {
-		ip: streamingSource.SourceIP,
-		port: streamingSource.SourcePort
+		ip: streamingSource.sourceIP,
+		port: streamingSource.sourcePort
 	};
 	return streamListener.startListen(streamListenerParams);
 }
@@ -336,12 +336,12 @@ function sendToJobQueue(params) {
 	var busServiceProducer = new BusService(REDIS_HOST, REDIS_PORT);
 	var message = {
 		params: {
-			sourceId: params.streamingSource.SourceID,
+			sourceId: params.streamingSource.sourceID,
 			videoName: params.videoName + '.mp4',
 			videoRelativePath: params.videoPath,
 			dataRelativePath: params.dataPath,
 			receivingMethod: {
-				standard: params.streamingSource.StreamingMethod.standard,
+				standard: params.streamingSource.streamingMethod.standard,
 				version: '1.0'
 			},
 			startTime: params.startTime,
