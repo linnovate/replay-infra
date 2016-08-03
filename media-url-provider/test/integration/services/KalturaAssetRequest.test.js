@@ -4,7 +4,7 @@ var assert = require('chai').assert,
 // sinon = require('sinon'),
 // request = require('supertest');
 
-var kalturaAssetRequest = require('../../../api/services/KalturaAssetRequest.js')();
+var kalturaAssetRequest = require('../../../api/services/KalturaAssetRequest.js');
 
 const MANIFEST_SUFFIX = '/manifest.mpd';
 
