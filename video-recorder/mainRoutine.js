@@ -346,12 +346,12 @@ function convertMpegtsToMp4(path, startTime) {
 // Send message to the next service.
 function sendToJobQueue(params) {
 	var message = {
-		sourceId: params.streamingSource.SourceID,
+		sourceId: params.streamingSource.sourceID,
 		videoName: params.videoName + '.mp4',
 		videoRelativePath: params.videoPath,
 		dataRelativePath: params.dataPath,
 		receivingMethod: {
-			standard: params.streamingSource.StreamingMethod.standard,
+			standard: params.streamingSource.streamingMethod.standard,
 			version: '1.0'
 		},
 		startTime: params.startTime,
