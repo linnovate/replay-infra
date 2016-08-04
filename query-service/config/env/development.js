@@ -20,7 +20,7 @@ module.exports = {
 	// models: {
 	//   connection: 'someMongodbServer'
 	// }
-	port: process.env.PORT || 1339,
+	port: process.env.PORT || 1338,
 	settings: {
 		services: {
 			elastic: {

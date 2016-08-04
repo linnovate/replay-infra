@@ -9,13 +9,13 @@
     "elasticsearch": "^11.0.1",
     "include-all": "^0.1.6",
     "lodash": "^4.14.1",
-    "mongoose": "^4.5.7",
+    "mongoose": "^4.5.8",
     "rc": "^1.1.6",
-    "replay-elastic": "^1.0.2",
-    "replay-schemas": "^1.0.15",
-    "sails": "^0.12.3",
+    "replay-elastic": "^1.0.3",
+    "replay-schemas": "^1.0.18",
+    "sails": "^0.12.4",
     "sails-disk": "^0.10.10",
-    "sails-mongo": "^0.12.0"
+    "sails-mongo": "^0.12.1"
   },
   "scripts": {
     "debug": "node debug app.js",
