@@ -2,7 +2,8 @@
 var promise = require('bluebird'),
 	moment = require('moment'),
 	mongoose = require('mongoose'),
-	rabbit = require('replay-rabbitmq');
+	rabbit = require('replay-rabbitmq'),
+	ffmpegWrapper = require('replay-ffmpeg');
 
 var path = require('path');
 
@@ -10,8 +11,7 @@ var event = require('./services/EventEmitterSingleton'),
 	streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
 	util = require('./utilitties'),
-	exitHendler = require('./utilitties/exitUtil'),
-	ffmpegWrapper = require('./services/FFmpegWrapper.js');
+	exitHendler = require('./utilitties/exitUtil');
 
 var viewStandardHandler = require('./services/ViewStandardHandler')(),
 	streamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
@@ -160,7 +160,7 @@ function handleVideoSavingProcess(streamingSource) {
 
 	// When ffmpeg process begin.
 	// Expect to get path in object e.g {videoPath:'/path/to/video.mp4',telemetryPath:'/path/to/telemetry.data'}.
-	event.on('FFmpegBegin', function(paths) {
+	ffmpegWrapper.on('FFmpegBegin', function(paths) {
 		// start to watch the file that the ffmpeg will create
 		var pathToWatch;
 		if (!paths) {
@@ -187,7 +187,7 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// when FFmpeg done his progress,
-	event.on('FFmpegDone', function(paths) {
+	ffmpegWrapper.on('FFmpegDone', function(paths) {
 		promise.resolve()
 			.then(function() {
 				// Stop the file watcher.
@@ -217,7 +217,7 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// When Error eccured on FFmpeg service.
-	event.on('FFmpegError', function(err) {
+	ffmpegWrapper.on('FFmpegError', function(err) {
 		console.log(err);
 		stopWatchFile(globals.fileWatcherTimer);
 		startStreamListener(streamingSource)
@@ -247,12 +247,12 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// when error eccured on the converting.
-	event.on('FFmpegWrapper_errorOnConverting', function(err) {
+	ffmpegWrapper.on('FFmpegWrapper_errorOnConverting', function(err) {
 		console.log('FFmpegWrapper_errorOnConverting emited:', err);
 	});
 
 	// when converting finished.
-	event.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath, startTime) {
+	ffmpegWrapper.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath, startTime) {
 		var relativePath = path.relative(STORAGE_PATH, newFilePath);
 		var startDateTime, endDateTime;
 		// get the start time format.
