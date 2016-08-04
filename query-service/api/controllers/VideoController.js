@@ -6,8 +6,8 @@
  */
 
 var Promise = require('bluebird'),
+	_ = require('lodash'),
 	elasticsearch = require('replay-elastic'),
-	ObjectId = require('mongoose').Types.ObjectId,
 	Query = require('replay-schemas/Query'),
 	Video = require('replay-schemas/Video'),
 	Tag = require('replay-schemas/Tag');
@@ -19,9 +19,11 @@ module.exports = {
 
 	find: function(req, res, next) {
 		validateFindRequest(req)
-			.then(saveQuery)
-			.then(buildQuery)
-			.then(performQuery)
+			.then(saveUserQuery)
+			.then(buildMongoQuery)
+			.then(performMongoQuery)
+			.then(performElasticQuery)
+			.then(intersectResults)
 			.then(function(results) {
 				return res.json(results);
 			})
@@ -75,9 +77,8 @@ function validateUpdateRequest(req) {
 		// make sure we have at least one attribute
 		if (!req.query) {
 			return reject(new Error('Empty update is not allowed.'));
-		}
-		// allow update of specific fields only
-		else if (req.query && Object.keys(req.body).length === 1 && req.body.tag) {
+		} else if (req.query && Object.keys(req.body).length === 1 && req.body.tag) {
+			// allow update of specific fields only //
 			return resolve(req);
 		}
 
@@ -95,10 +96,16 @@ function hasAnyQueryParam(query) {
 	}
 }
 
-function saveQuery(req) {
-	var coordinates;
+function saveUserQuery(req) {
+	var coordinates, tagsIds;
+
+	// parse some specific fields if they exist
 	if (req.query.boundingShapeCoordinates) {
 		coordinates = JSON.parse(req.query.boundingShapeCoordinates);
+	}
+
+	if (req.query.tagsIds) {
+		tagsIds = JSON.parse(req.query.tagsIds);
 	}
 
 	return Query.create({
@@ -109,8 +116,9 @@ function saveQuery(req) {
 		copyright: req.query.copyright,
 		minTraceHeight: req.query.minTraceHeight,
 		minTraceWidth: req.query.minTraceWidth,
+		minMinutesInsideShape: req.query.minMinutesInsideShape,
 		sourceId: req.query.sourceId,
-		tagsIds: JSON.parse(req.query.tagsIds),
+		tagsIds: tagsIds,
 		boundingShape: {
 			type: req.query.boundingShapeType,
 			coordinates: coordinates
@@ -118,7 +126,7 @@ function saveQuery(req) {
 	});
 }
 
-function buildQuery(query) {
+function buildMongoQuery(query) {
 	// build the baseline of the query
 	var mongoQuery = {
 		status: 'ready'
@@ -160,44 +168,93 @@ function buildQuery(query) {
 		};
 	}
 
+	// return the original query for later use, and the built mongo query
+	return Promise.resolve({ query: query, mongoQuery: mongoQuery });
+}
+
+function performMongoQuery(queries) {
+	// extract mongo query from the previous build function
+	var mongoQuery = queries.mongoQuery;
+
+	console.log('Performing mongo query:', JSON.stringify(mongoQuery));
+
+	return Video.find(mongoQuery).populate('tags')
+		.then(function(videos) {
+			// set the result videos in the returned object
+			queries.videos = videos;
+			return Promise.resolve(queries);
+		});
+}
+
+function performElasticQuery(mongoQueryResult) {
+	// build the result object
+	var result = {
+		mongoResult: mongoQueryResult.videos,
+		elasticResult: undefined
+	};
+
+	// extract the video results from mongo as well as the original query object
+	var videosFromMongo = mongoQueryResult.videos;
+	var query = mongoQueryResult.query;
+
+	var videosIds = getVideosIds(videosFromMongo);
+
 	// last case is special; if we have boundingShape in query, then query Elastic as well
 	if (query.boundingShape.coordinates) {
 		// search metadatas with the bounding shape
-		return elasticsearch.searchVideoMetadata(query.boundingShape.coordinates)
+		return elasticsearch.searchVideoMetadata(query.boundingShape.coordinates, videosIds, ['videoId'])
 			.then(function(resp) {
-				// append the video ids of retrieved metadatas to query
-				mongoQuery._id = {
-					$in: getMetadataVideosIds(resp.hits.hits)
-				};
-				return Promise.resolve(mongoQuery);
+				// if user wants the results to sum up to a minimum time inside shape, make sure it conforms to this restriction
+				if (query.minMinutesInsideShape && query.minMinutesInsideShape < getMetadataDurationInMinutes(resp.hits.hits)) {
+					return Promise.resolve();
+				}
+				// set the hits in result object
+				result.elasticResult = resp.hits.hits;
+				return Promise.resolve(result);
 			});
 	}
 
-	return Promise.resolve(mongoQuery);
+	// case no special method had to be taken, just return the result
+	return Promise.resolve(result);
 }
 
-function performQuery(query) {
-	console.log('Performing query:', JSON.stringify(query));
-	return Video.find(query).populate('tags');
+function intersectResults(results) {
+	var mongoResults = results.mongoResult;
+	var elasticResults = results.elasticResult;
+
+	var intersectionResults;
+	// make sure we have results from elastic, since we might not query elastic every time
+	if (elasticResults && elasticResults.length) {
+		// remove duplicates
+		elasticResults = removeDuplicates(elasticResults, 'fields.videoId[0]');
+
+		// intersect results
+		intersectionResults = _.intersectionWith(mongoResults, elasticResults, function(mongoVideo, elasticHit) {
+			if (mongoVideo.id === elasticHit.fields.videoId[0]) {
+				return true;
+			}
+			return false;
+		});
+	} else {
+		intersectionResults = mongoResults;
+	}
+
+	return Promise.resolve(intersectionResults);
 }
 
-function elasticHitsToIdList(elasticHits) {
-	return _.map(elasticHits, function(hit) {
-		return new ObjectId(hit._source.videoId);
-	});
+function mapList(list, mapField) {
+	return _.map(list, mapField);
 }
 
-function removeDuplicateHits(elasticHits) {
-	return _.uniq(elasticHits, function(hit) {
-		return hit.videoId;
-	});
+function removeDuplicates(list, uniqueField) {
+	return _.uniq(list, uniqueField);
 }
 
-function getMetadataVideosIds(elasticHits) {
+function getVideosIds(videos) {
 	// remove duplicate entries
-	var ids = removeDuplicateHits(elasticHits);
+	var uniqueVideos = removeDuplicates(videos, 'id');
 	// convert to list of ObjectId
-	ids = elasticHitsToIdList(ids);
+	var ids = mapList(uniqueVideos, 'id');
 
 	return ids;
 }
@@ -212,7 +269,6 @@ function performUpdate(req) {
 					tags: tag._id
 				};
 				return updateVideo(req.params.id, updateQuery);
-
 			});
 	}
 
@@ -237,4 +293,9 @@ function updateVideo(id, updateQuery) {
 	return Video.findOneAndUpdate({
 		_id: id
 	}, updateQuery);
+}
+
+function getMetadataDurationInMinutes(metadata) {
+	// ceil so if length is less than 60, we'd get 1
+	return Math.ceil(metadata.length / 60);
 }
