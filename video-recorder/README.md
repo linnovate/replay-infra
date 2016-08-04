@@ -15,14 +15,13 @@ For more information (and installation instructions) please refer to [fluent-ffm
 
 #### 2. [MongoDB](https://www.mongodb.com/)
 First install MongoDB according to this ([installation tutorial](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)).
-After installation, add some initial mock values for streaming sources by initializing the mongo db:
+
+After installation, add some initial mock values for streaming sources by initializing the mongo db
+with the _mongo-init_ script in [replay-db-initialization](https://github.com/linnovate/replay-common/tree/develop/replay-db-initialization) using the _streaming-source_ data-file.
+
+For example, **inside _replay-db-initialization_** run the following command:
 ``` bash
-db.streamingsources.save({"sourceID":100, "sourceName":"VideoMuxedStream", "sourceType":"VideoMuxedTelemetry", "sourceIP":"238.0.0.1", "sourcePort": 1234,
-"streamingMethod":{"standard": "VideoStandard","version":"1.0"}, "streamingStatus":"NONE"})
-db.streamingsources.save({"sourceID":101, "sourceName":"TelemetryStream", "sourceType":"Telemetry", "sourceIP":"238.0.0.1", "sourcePort": 1235,
-"streamingMethod":{"standard": "VideoStandard","version":"0.9"}, "streamingStatus":"NONE"})
-db.streamingsources.save({"sourceID":102, "sourceName":"VideoStream", "sourceType":"Video", "sourceIP":"238.0.0.1", "sourcePort": 1236,
-"streamingMethod":{"standard": "VideoStandard","version":"0.9"}, "streamingStatus":"NONE"})
+MONGO_HOST=localhost MONGO_PORT=27017 MONGO_DATABASE=replay_dev REPLAY_SCHEMA=StreamingSource DATA_FILE=streaming-source npm run mongo-init
 ```
 
 #### 3. [tstools](https://github.com/kynesim/tstools)
@@ -66,8 +65,9 @@ Tests
 ------------------------------
 
 ### Run Tests
-To run the tests please ensure to be in the root directory of replay-infra and **not inside the video-recorder,** and then simply run the `npm test` command.
-(If there are any problems please follow the npm instructions).
+To run the video-recorder tests simply run the `npm test` command.  
+_You can also run the tests for all replay-infra by runing the `npm test` command in the root directory of replay-infra._  
+(If there are any problems/errors, please follow the npm instructions).
 
 
 ### Run Code coverege
