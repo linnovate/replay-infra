@@ -1,13 +1,17 @@
 // requires
 var promise = require('bluebird'),
 	moment = require('moment'),
-	BusService = require('replay-bus-service');
+	mongoose = require('mongoose'),
+	rabbit = require('replay-rabbitmq'),
+	ffmpegWrapper = require('replay-ffmpeg');
+
+var path = require('path');
+
 var event = require('./services/EventEmitterSingleton'),
 	streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
 	util = require('./utilitties'),
-	exitHendler = require('./utilitties/exitUtil'),
-	ffmpegWrapper = require('./services/FFmpegWrapper.js');
+	exitHendler = require('./utilitties/exitUtil');
 
 var viewStandardHandler = require('./services/ViewStandardHandler')(),
 	streamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
@@ -15,6 +19,8 @@ var viewStandardHandler = require('./services/ViewStandardHandler')(),
 const DURATION = process.env.DURATION || 10,
 	INTERVAL_TIME = process.env.INTERVAL_TIME || 5000,
 	PROCESS_NAME = '#MainRoutine#';
+/* VIDEO_SUFFIX = '.mp4',
+META_DATA_SUFFIX = '.data';*/
 
 // Configuration
 const MONGO_HOST = process.env.MONGO_HOST,
@@ -22,8 +28,7 @@ const MONGO_HOST = process.env.MONGO_HOST,
 	MONGO_DATABASE = process.env.MONGO_DATABASE,
 	STORAGE_PATH = process.env.STORAGE_PATH || '/VideoRecorder',
 	INDEX = process.env.INDEX,
-	REDIS_HOST = process.env.REDIS_HOST,
-	REDIS_PORT = process.env.REDIS_PORT;
+	RABBITMQ_HOST = process.env.RABBITMQ_HOST || 'localhost';
 
 module.exports = function() {
 	console.log('Video recorder service is up.');
@@ -31,11 +36,15 @@ module.exports = function() {
 	console.log(PROCESS_NAME + ' Mongo port:', MONGO_PORT);
 	console.log(PROCESS_NAME + ' Mongo database:', MONGO_DATABASE);
 	console.log(PROCESS_NAME + ' Files storage path: ', STORAGE_PATH);
+	console.log(PROCESS_NAME + ' RabbitMQ host: ', RABBITMQ_HOST);
 
 	// index used to find my StreamingSource object in the DB collection
 	var StreamingSourceIndex = INDEX;
 
-	streamingSourceDAL.getStreamingSource(StreamingSourceIndex)
+	rabbit.connect(RABBITMQ_HOST)
+		.then(function() {
+			return streamingSourceDAL.getStreamingSource(StreamingSourceIndex);
+		})
 		.then(handleVideoSavingProcess)
 		.catch(function(err) {
 			if (err) {
@@ -43,6 +52,7 @@ module.exports = function() {
 			}
 		});
 };
+
 /********************************************************************************************************************************************/
 /*                                                                                                                                          */
 /*    The main function of the service, register all events and start all capturing process.                                                */
@@ -63,12 +73,12 @@ function handleVideoSavingProcess(streamingSource) {
 		currentFileStartTime: null
 	};
 
-	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.SourcePort);
+	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.sourcePort);
 	// Starting Listen to the address.
 	startStreamListener(streamingSource)
 		.then(function() {
 			globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-				streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+				streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 			});
 		})
 		.catch(function(err) {
@@ -97,7 +107,7 @@ function handleVideoSavingProcess(streamingSource) {
 		startStreamListener(streamingSource)
 			.then(function() {
 				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 				});
 			})
 			.catch(function(err) {
@@ -108,8 +118,8 @@ function handleVideoSavingProcess(streamingSource) {
 	// When the streamListenerService found some streaming data in the address.
 	event.on('StreamingData', function() {
 		var dateOfCreating = util.getCurrentDate();
-		var pathForFFmpeg = STORAGE_PATH + '/' + streamingSource.SourceID + '/' + dateOfCreating;
-		var FileNameForFFmpeg = streamingSource.SourceID + '_' + dateOfCreating + '_' + util.getCurrentTime();
+		var pathForFFmpeg = STORAGE_PATH + '/' + streamingSource.sourceID + '/' + dateOfCreating;
+		var FileNameForFFmpeg = streamingSource.sourceID + '_' + dateOfCreating + '_' + util.getCurrentTime();
 		// Check if the path exist,if not create it.
 		util.checkPath(pathForFFmpeg);
 
@@ -123,7 +133,7 @@ function handleVideoSavingProcess(streamingSource) {
 		globals.currentFileStartTime = moment();
 
 		var ffmpegParams = {
-			inputs: ['udp://' + streamingSource.SourceIP + ':' + streamingSource.SourcePort],
+			inputs: ['udp://' + streamingSource.sourceIP + ':' + streamingSource.sourcePort],
 			duration: DURATION,
 			dir: pathForFFmpeg,
 			file: FileNameForFFmpeg
@@ -131,7 +141,7 @@ function handleVideoSavingProcess(streamingSource) {
 
 		// starting the ffmpeg process
 		console.log(PROCESS_NAME + ' Record new video at: ', pathForFFmpeg);
-		viewStandardHandler.realizeStandardCaptureMethod(streamingSource.SourceType, streamingSource.StreamingMethod.version)
+		viewStandardHandler.realizeStandardCaptureMethod(streamingSource.sourceType, streamingSource.streamingMethod.version)
 			.then(function(captureCommand) {
 				return captureCommand(ffmpegParams);
 			})
@@ -144,13 +154,13 @@ function handleVideoSavingProcess(streamingSource) {
 				throw err;
 			});
 		globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-			streamingSourceDAL.notifySourceCapturing(streamingSource.SourceID);
+			streamingSourceDAL.notifySourceCapturing(streamingSource.sourceID);
 		});
 	});
 
 	// When ffmpeg process begin.
 	// Expect to get path in object e.g {videoPath:'/path/to/video.mp4',telemetryPath:'/path/to/telemetry.data'}.
-	event.on('FFmpegBegin', function(paths) {
+	ffmpegWrapper.on('FFmpegBegin', function(paths) {
 		// start to watch the file that the ffmpeg will create
 		var pathToWatch;
 		if (!paths) {
@@ -177,7 +187,7 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// when FFmpeg done his progress,
-	event.on('FFmpegDone', function(paths) {
+	ffmpegWrapper.on('FFmpegDone', function(paths) {
 		promise.resolve()
 			.then(function() {
 				// Stop the file watcher.
@@ -186,9 +196,6 @@ function handleVideoSavingProcess(streamingSource) {
 			})
 			.then(function() {
 				return convertMpegtsToMp4(paths.videoPath, globals.currentFileStartTime)
-					.then(function() {
-						return promise.resolve();
-					})
 					.catch(function(err) {
 						console.log('could not spwan the ffmpeg converting process,' + err + ' \n \n noving on');
 						return promise.reject();
@@ -200,7 +207,7 @@ function handleVideoSavingProcess(streamingSource) {
 				startStreamListener(streamingSource)
 					.then(function() {
 						globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-							streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+							streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 						});
 					})
 					.catch(function(err) {
@@ -210,13 +217,13 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// When Error eccured on FFmpeg service.
-	event.on('FFmpegError', function(err) {
+	ffmpegWrapper.on('FFmpegError', function(err) {
 		console.log(err);
 		stopWatchFile(globals.fileWatcherTimer);
 		startStreamListener(streamingSource)
 			.then(function() {
 				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.SourceID);
+					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 				});
 			})
 			.catch(function(err) {
@@ -240,12 +247,13 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// when error eccured on the converting.
-	event.on('FFmpegWrapper_errorOnConverting', function(err) {
+	ffmpegWrapper.on('FFmpegWrapper_errorOnConverting', function(err) {
 		console.log('FFmpegWrapper_errorOnConverting emited:', err);
 	});
 
 	// when converting finished.
-	event.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath, startTime) {
+	ffmpegWrapper.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath, startTime) {
+		var relativePath = path.relative(STORAGE_PATH, newFilePath);
 		var startDateTime, endDateTime;
 		// get the start time format.
 		startDateTime = startTime.format();
@@ -260,11 +268,12 @@ function handleVideoSavingProcess(streamingSource) {
 				// send to the next job.
 				sendToJobQueue({
 					streamingSource: streamingSource,
-					videoPath: newFilePath,
-					dataPath: newFilePath.replace('.mp4', '.data'),
+					videoPath: relativePath,
+					dataPath: relativePath.replace('.mp4', '.data'),
 					videoName: globals.fileName,
 					startTime: startDateTime,
-					endTime: endDateTime
+					endTime: endDateTime,
+					duration: duration
 				});
 				try {
 					// delete the unnecessary ts file.
@@ -301,8 +310,8 @@ function setStatusTimer(timer, callBack) {
 // starting Listen to the stream
 function startStreamListener(streamingSource) {
 	var streamListenerParams = {
-		ip: streamingSource.SourceIP,
-		port: streamingSource.SourcePort
+		ip: streamingSource.sourceIP,
+		port: streamingSource.sourcePort
 	};
 	return streamListener.startListen(streamListenerParams);
 }
@@ -336,23 +345,21 @@ function convertMpegtsToMp4(path, startTime) {
 
 // Send message to the next service.
 function sendToJobQueue(params) {
-	var busServiceProducer = new BusService(REDIS_HOST, REDIS_PORT);
 	var message = {
-		params: {
-			sourceId: params.streamingSource.SourceID,
-			videoName: params.videoName + '.mp4',
-			videoRelativePath: params.videoPath,
-			dataRelativePath: params.dataPath,
-			receivingMethod: {
-				standard: params.streamingSource.StreamingMethod.standard,
-				version: '1.0'
-			},
-			startTime: params.startTime,
-			endTime: params.endTime
-		}
+		sourceId: params.streamingSource.sourceID,
+		videoName: params.videoName + '.mp4',
+		videoRelativePath: params.videoPath,
+		dataRelativePath: params.dataPath,
+		receivingMethod: {
+			standard: params.streamingSource.streamingMethod.standard,
+			version: '1.0'
+		},
+		startTime: params.startTime,
+		endTime: params.endTime,
+		duration: params.duration,
+		transactionId: new mongoose.Types.ObjectId()
 	};
-	console.log('message is ', message);
-	busServiceProducer.produce('NewVideosQueue', message);
+	rabbit.produce('NewVideosQueue', message);
 }
 
 /********************************************************************************************/

@@ -73,7 +73,7 @@ function startWatchFileBehaviorTests() {
 		this.timeout(3000);
 		var spy = sinon.spy();
 		event.on('FileWatchStop', spy);
-		fileWatcher.startWatchFile({ timeToWait: 500, path: './Test/src/Sample_Ts_File_For_Testing.ts' })
+		fileWatcher.startWatchFile({ timeToWait: 500, path: './test/src/Sample_Ts_File_For_Testing.ts' })
 			.then(function(timeThatWaited) {
 				setTimeout(function() {
 					assert.equal(spy.called, true);

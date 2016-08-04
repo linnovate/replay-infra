@@ -1,6 +1,6 @@
-var promise = require('bluebird');
-var FFmpegWrapper = require('./FFmpegWrapper'),
-	Standards = require('../enums/ViewStandards'),
+var promise = require('bluebird'),
+	FFmpegWrapper = require('replay-ffmpeg');
+var Standards = require('../enums/ViewStandards'),
 	TransportTypes = require('../enums/TransportTypes');
 
 module.exports = ViewStandards;

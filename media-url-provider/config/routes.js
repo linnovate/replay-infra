@@ -31,11 +31,7 @@ module.exports.routes = {
   * `assets` directory)                                                      *
   *                                                                          *
   ***************************************************************************/
-
-  '/': {
-    view: 'homepage'
-  }
-
+	'get /media/:id': 'MediaController.findOne'
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *
