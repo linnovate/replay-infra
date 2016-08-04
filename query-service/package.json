@@ -8,6 +8,7 @@
     "bluebird": "^3.4.1",
     "elasticsearch": "^11.0.1",
     "include-all": "^0.1.6",
+    "lodash": "^4.14.1",
     "mongoose": "^4.5.7",
     "rc": "^1.1.6",
     "replay-elastic": "^1.0.2",
