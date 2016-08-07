@@ -28,7 +28,9 @@ module.exports.start = function(params, error, done) {
 		})
 		.then(function() {
 			done();
+			return Promise.resolve();
 		})
+		.then(updateJobStatus)
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
@@ -51,8 +53,7 @@ function validateInput(params) {
 	return true;
 }
 
-// Read data from file, convert it to objects, produce insert-to-databases jobs,
-// and then update the job status that we've parsed metadata.
+// Read data from file, convert it to objects then produce insert-to-databases jobs.
 function performParseChain(params) {
 	// extract params and handle metadata
 	var relativePathToData = params.dataRelativePath;
@@ -68,8 +69,7 @@ function performParseChain(params) {
 		.then(function(videoMetadatas) {
 			return produceJobs(videoMetadatas);
 		})
-		.all()
-		.then(updateJobStatus);
+		.all();
 }
 
 function readDataAsString(path) {
@@ -113,6 +113,12 @@ function produceVideoMetadatasJobs(jobName, videoMetadatas) {
 	return Promise.reject(Error('Could not find queue name of the inserted job type'));
 }
 
+// update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
-	return JobsService.updateJobStatus(_transactionId, _jobStatusTag);
+	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
+		.catch(function(err) {
+			if(err) {
+				console.log(err);
+			}
+		});
 }
