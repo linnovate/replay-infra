@@ -141,7 +141,7 @@ function handleVideoSavingProcess(streamingSource) {
 
 		// starting the ffmpeg process
 		console.log(PROCESS_NAME + ' Record new video at: ', pathForFFmpeg);
-		viewStandardHandler.realizeStandardCaptureMethod(streamingSource.sourceType, streamingSource.streamingMethod.version)
+		viewStandardHandler.realizeStandardCaptureMethod(streamingSource.sourceType, streamingSource.streamingMethod)
 			.then(function(captureCommand) {
 				return captureCommand(ffmpegParams);
 			})
