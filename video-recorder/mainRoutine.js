@@ -259,7 +259,7 @@ function handleVideoSavingProcess(streamingSource) {
 		startDateTime = startTime.format();
 
 		// get the duration of the video that was created.
-		ffmpegWrapper.getDurationOfVideo({ filePath: oldFilePath })
+		ffmpegWrapper.duration({ filePath: oldFilePath })
 			.then(function(duration) {
 				console.log('duration:', duration);
 				// add the duration time to the start time of the video to get the most exact time.
