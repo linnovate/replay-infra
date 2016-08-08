@@ -2,18 +2,22 @@ var fs = require('fs'),
 	path = require('path');
 
 var JobsService = require('replay-jobs-service'),
-	Promise = require('bluebird');
+	Promise = require('bluebird'),
+	mkdirp = require('mkdirp');
 
 var _transactionId;
 var _jobStatusTag = 'created-captions-from-metadata';
 
+var LAST_CAPTIONS_TIME = 1; // in seconds
+
 module.exports.start = function(params, error, done) {
-	console.log('MetadataToCaptions service started.');
+	console.log('MetadataToCaptions service startTimeed.');
 
 	if (!validateInput(params)) {
 		console.log('Some vital parameters are missing.');
 		return error();
 	}
+	_transactionId = params.transactionId;
 
 	// Make sure we haven't done this job already
 	JobsService.findJobStatus(_transactionId)
@@ -21,7 +25,6 @@ module.exports.start = function(params, error, done) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				return Promise.resolve();
 			}
-
 			return tryCreateCaptions(params.metadatas);
 		})
 		.then(done)
@@ -34,21 +37,14 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
-	var transactionId = params.transactionId;
-
 	// validate params
-	if (!transactionId) {
+	if (!params.transactionId) {
 		return false;
 	}
-
 	return true;
 }
 
 function tryCreateCaptions(metadatas) {
-	console.log('=============================================');
-	console.log(JSON.stringify(metadatas, null, 2));
-	console.log('=============================================');
-
 	if (metadatas && metadatas.length > 0) {
 		return createCaptions(metadatas);
 	}
@@ -57,44 +53,58 @@ function tryCreateCaptions(metadatas) {
 }
 
 function createCaptions(metadatas) {
-	return new Promise(function(resolve, reject) {
-		var start, end;
-		var dif, timeLine;
+	var startTime, endTime, currentTimestamp;
+	var timeDiff, timeLine, fileName;
 
-		var captionsPath = path.join(process.env.STORAGE_PATH, '/captions/');
-		var videoId;
-		videoId = metadatas[0].videoId;
+	var captionsPath = path.join(process.env.STORAGE_PATH, 'captions');
+	checkAndCreatePath(captionsPath);
 
-		var baseDate = new Date(metadatas[0].timestamp);
-		end = getFormatedTime(new Date(0));
-		metadatas.forEach(function(r, i) {
-			start = end;
-			if (i < (metadatas.length - 1)) {
-				dif = new Date(getTimeDiff(new Date(metadatas[i + 1].timestamp), baseDate));
-				end = getFormatedTime(dif);
+	var videoId = metadatas[0].videoId;
+	var baseTimestamp = new Date(metadatas[0].timestamp);
+	endTime = getFormatedTime(new Date(0));
+
+	return Promise
+		.map(metadatas, function(item, index) {
+			startTime = endTime;
+			if (index < (metadatas.length - 1)) {
+				currentTimestamp = new Date(metadatas[index + 1].timestamp);
+				timeDiff = getTimeDiff(currentTimestamp, baseTimestamp);
+				endTime = getFormatedTime(timeDiff);
 			} else {
-				dif.setSeconds(dif.getSeconds() + 1);
-				end = getFormatedTime(dif);
+				timeDiff.setSeconds(timeDiff.getSeconds() + LAST_CAPTIONS_TIME);
+				endTime = getFormatedTime(timeDiff);
 			}
-			timeLine = start + '-->' + end;
-			fs.appendFile(captionsPath + videoId + '.vtt', timeLine + '\n' + JSON.stringify(r) + '\n', function(err) {
+			timeLine = startTime + '-->' + endTime;
+			fileName = path.join(captionsPath, videoId + '.vtt');
+			return fs.appendFile(fileName, timeLine + '\n' + JSON.stringify(item) + '\n', function(err) {
 				if (err) {
-					return reject(err);
+					return Promise.reject(err);
 				}
+				return Promise.resolve();
 			});
+		}).then(function() {
+			console.log('The file was saved!');
+			return Promise.resolve();
+		})
+		.catch(function(err) {
+			return Promise.reject(err);
 		});
-		console.log('The file was saved!');
-		resolve();
-	});
 }
 
-function getTimeDiff(time, baseDate) {
-	if (time === null || baseDate === null) {
-		console.log('error : ', 'time is missing');
-		return null;
+function checkAndCreatePath(path) {
+	try {
+		fs.accessSync(path, fs.F_OK);
+	} catch (err) {
+		mkdirp.sync(path);
 	}
-	var timeDiff = Math.abs(time.getTime() - baseDate.getTime());
-	return timeDiff;
+}
+
+function getTimeDiff(currentTimestamp, baseTimestamp) {
+	if (!currentTimestamp || baseTimestamp) {
+		throw new Error('Error! missing params (in function getTimeDiff)');
+	}
+	var timeDiff = Math.abs(currentTimestamp.getTime() - baseTimestamp.getTime());
+	return new Date(timeDiff);
 }
 
 function getFormatedTime(time) {
