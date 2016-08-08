@@ -73,7 +73,7 @@ function performParseChain(params) {
 }
 
 function readDataAsString(path) {
-	return fs.readFileAsync(path, 'utf8');
+	return fs.readFileAsync(path);
 }
 
 // apply specific logic to parse the different standards of metadatas
