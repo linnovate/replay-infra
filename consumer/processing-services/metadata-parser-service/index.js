@@ -80,14 +80,36 @@ function readDataAsString(path) {
 function dataToObjects(method, data, params) {
 	return new Promise(function(resolve, reject) {
 		var standardHandler;
-		if (method.standard === 'VideoStandard' && method.version === '0.9') {
-			standardHandler = require('./standards/video-standard/0.9');
-			resolve(standardHandler.parse(data));
-		} else if (method.standard === 'VideoStandard' && method.version === '1.0') {
-			standardHandler = require('./standards/video-standard/1.0');
-			resolve(standardHandler.parse(data, params));
-		} else {
-			return reject('Unsupported standard and version');
+		switch (method.standard) {
+			case 'VideoStandard':
+				switch (method.version) {
+					case '0.9':
+						standardHandler = require('./standards/video-standard/0.9');
+						resolve(standardHandler.parse(data));
+						break;
+					case '1.0':
+						standardHandler = require('./standards/video-standard/1.0');
+						resolve(standardHandler.parse(data, params));
+						break;
+					default:
+						reject('Unsupported version for video-standard');
+						break;
+				}
+				break;
+			case 'stanag':
+				switch (method.version) {
+					case '4609':
+						standardHandler = require('./standards/stanag/4609');
+						resolve(standardHandler.parse(data, params));
+						break;
+					default:
+						reject('Unsupported version for stanag');
+						break;
+				}
+				break;
+			default:
+				reject('Unsupported standard');
+				break;
 		}
 	});
 }
