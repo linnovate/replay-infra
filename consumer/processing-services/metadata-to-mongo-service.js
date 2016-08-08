@@ -1,4 +1,5 @@
 var VideoMetadata = require('replay-schemas/VideoMetadata'),
+	rabbit = require('replay-rabbitmq'),
 	JobsService = require('replay-jobs-service');
 
 var _transactionId;
@@ -24,6 +25,9 @@ module.exports.start = function(params, error, done) {
 			return saveToMongo(params.metadatas);
 		})
 		.then(function() {
+			produceBoundingPolygonJob(params);
+		})
+		.then(function() {
 			done();
 			return Promise.resolve();
 		})
@@ -35,6 +39,26 @@ module.exports.start = function(params, error, done) {
 			}
 		});
 };
+
+function produceBoundingPolygonJob(params) {
+	var videoIds = [];
+	params.metadatas.forEach(function(metadata) {
+		if (metadata.videoId !== undefined && videoIds.indexOf(metadata.videoId) === -1) {
+			videoIds.push(metadata.videoId);
+		}
+	});
+	console.log('video ids' + videoIds.length);
+	console.log('Producing MetadataParser job...');
+	var message = {
+		videoId: videoIds[0], // might change if metadata would handle several videos at one job
+		transactionId: params.transactionId
+	};
+	var queueName = JobsService.getQueueName('VideoBoundingPolygon');
+	if (queueName) {
+		return rabbit.produce(queueName, message);
+	}
+	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
+}
 
 function validateInput(params) {
 	if (!params.transactionId) {

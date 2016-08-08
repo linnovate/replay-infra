@@ -16,6 +16,7 @@
     "lodash": "^4.14.1",
     "moment": "^2.14.1",
     "mongoose": "^4.5.8",
+    "mongoose-geojson-schema": "^2.1.2",
     "replay-elastic": "^1.0.3",
     "replay-jobs-service": "^1.0.5",
     "replay-kaltura-service": "*",
@@ -23,6 +24,7 @@
     "replay-schemas": "^1.0.18",
     "sails-mongo": "^0.12.1",
     "stanag": "^1.0.2",
+    "turf-merge": "^1.0.2",
     "waterline": "^0.12.2",
     "xml2js": "^0.4.16"
   },
