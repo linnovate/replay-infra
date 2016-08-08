@@ -14,7 +14,7 @@ module.exports.start = function(params, error, done) {
 	console.log('MetadataToCaptions service startTimeed.');
 
 	if (!validateInput(params)) {
-		console.log('Some vital parameters are missing.');
+		console.log('MetadataToCaptions - Some vital parameters are missing.');
 		return error();
 	}
 	_transactionId = params.transactionId;
@@ -52,7 +52,7 @@ function tryCreateCaptions(metadatas) {
 	if (metadatas && metadatas.length > 0) {
 		return createCaptions(metadatas);
 	}
-	console.log('No metadatas receieved.');
+	console.log('MetadataToCaptions - No metadatas receieved.');
 	return Promise.resolve();
 }
 
@@ -87,7 +87,7 @@ function createCaptions(metadatas) {
 				return Promise.resolve();
 			});
 		}).then(function() {
-			console.log('The file was saved!');
+			console.log('Captions file created successfully!');
 			return Promise.resolve();
 		})
 		.catch(function(err) {
