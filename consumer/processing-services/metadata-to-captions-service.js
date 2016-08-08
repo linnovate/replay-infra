@@ -27,7 +27,11 @@ module.exports.start = function(params, error, done) {
 			}
 			return tryCreateCaptions(params.metadatas);
 		})
-		.then(done)
+		.then(function() {
+			done();
+			return Promise.resolve();
+		})
+		.then(updateJobStatus)
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
@@ -110,4 +114,8 @@ function getTimeDiff(currentTimestamp, baseTimestamp) {
 function getFormatedTime(time) {
 	return (time.getUTCMinutes() + ':' + time.getUTCSeconds() +
 		'.' + time.getUTCMilliseconds());
+}
+
+function updateJobStatus() {
+	return JobsService.updateJobStatus(_transactionId, _jobStatusTag);
 }
