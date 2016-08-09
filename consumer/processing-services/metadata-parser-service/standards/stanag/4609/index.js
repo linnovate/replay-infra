@@ -1,21 +1,23 @@
 var stanag = require('stanag'),
 	_ = require('lodash');
-	// parses the raw data from the metadata file into objects
+// parses the raw data from the metadata file into objects
 
 module.exports.parse = function(data, params) {
 	var metadata = stanag(data, 'name');
 	var result = metadataObjectsToVideoMetadata(metadata, params);
 	return result;
 };
+
 function metadataObjectsToVideoMetadata(metadatas, params) {
 	var polygon = {
-		type: 'polygon',
+		type: 'Polygon',
 		coordinates: [
 			[34.8, 32.1],
 			[34.8, 31.1],
 			[34.9, 31.1],
 			[34.9, 32.1],
-			[34.8, 32.1]]
+			[34.8, 32.1]
+		]
 	};
 
 	var mapping = _.map(metadatas, function(metadata) {
@@ -30,10 +32,10 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 			receivingMethod: params.receivingMethod,
 			timestamp: metadata.value.unixTimeStamp.value,
 			sensorPosition: {
-				lat: metadata.value.sensorLatitude,
-				lon: metadata.value.sensorLongitude
+				lat: metadata.value.sensorLatitude.value,
+				lon: metadata.value.sensorLongitude.value
 			},
-			sensorTrace: polygon,
+			sensorTrace: { type: polygon.type, coordinates: [polygon.coordinates] },
 			data: {}
 		};
 	});
@@ -65,4 +67,3 @@ function changeCoordinates(polygon) {
 // 	testDate.getSeconds()+'.'+testDate.getMilliseconds()+'Z';
 // 	return dateStr;
 // }
-

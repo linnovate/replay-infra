@@ -270,7 +270,7 @@ function handleVideoSavingProcess(streamingSource) {
 					streamingSource: streamingSource,
 					videoPath: relativePath,
 					dataPath: relativePath.replace('.mp4', '.data'),
-					videoName: globals.fileName,
+					videoName: path.parse(relativePath).base,
 					startTime: startDateTime,
 					endTime: endDateTime,
 					duration: duration
@@ -347,12 +347,12 @@ function convertMpegtsToMp4(path, startTime) {
 function sendToJobQueue(params) {
 	var message = {
 		sourceId: params.streamingSource.sourceID,
-		videoName: params.videoName + '.mp4',
+		videoName: params.videoName,
 		videoRelativePath: params.videoPath,
 		dataRelativePath: params.dataPath,
 		receivingMethod: {
 			standard: params.streamingSource.streamingMethod.standard,
-			version: '1.0'
+			version: params.streamingSource.streamingMethod.version
 		},
 		startTime: params.startTime,
 		endTime: params.endTime,
