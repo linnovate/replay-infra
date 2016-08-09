@@ -19,9 +19,7 @@ describe('video standard 1.0 parser tests', function() {
 				_dataAsString = dataAsString;
 				return Promise.resolve();
 			})
-			.then(function() {
-				return config.getValidMetadataObjects();
-			})
+			.then(config.getValidMetadataObjects)
 			.then(function(expectedDataAsObjects) {
 				_expectedParsedDataObjects = expectedDataAsObjects;
 				return Promise.resolve();

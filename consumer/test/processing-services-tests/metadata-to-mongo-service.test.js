@@ -10,12 +10,8 @@ describe('metadata-to-mongo-service tests', function() {
 	before(function() {
 		config.resetEnvironment();
 		return config.connectServices()
-			.then(function() {
-				return config.wipeMongoCollections();
-			})
-			.then(function() {
-				return config.getValidMetadataObjects();
-			})
+			.then(config.wipeMongoCollections)
+			.then(config.getValidMetadataObjects)
 			.then(function(expectedDataAsObjects) {
 				_expectedParsedDataObjects = expectedDataAsObjects;
 				return Promise.resolve();

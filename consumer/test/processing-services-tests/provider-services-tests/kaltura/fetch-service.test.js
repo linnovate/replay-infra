@@ -12,15 +12,9 @@ describe('kaltura fetch-service tests', function() {
 	before(function() {
 		config.resetEnvironment();
 		return config.connectServices()
-			.then(function() {
-				return config.wipeMongoCollections();
-			})
-			.then(function() {
-				return KalturaService.initialize();
-			})
-			.then(function() {
-				return KalturaService.generateMediaEntry();
-			})
+			.then(config.wipeMongoCollections)
+			.then(KalturaService.initialize)
+			.then(KalturaService.generateMediaEntry)
 			.then(function(mediaEntry) {
 				_entryId = mediaEntry.id;
 			});
