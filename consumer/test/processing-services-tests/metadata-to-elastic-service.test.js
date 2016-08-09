@@ -20,6 +20,11 @@ describe('metadata-to-elastic-service tests', function() {
 			});
 	});
 
+	after(function() {
+		return config.wipeMongoCollections()
+			.then(config.deleteAllQueues);
+	});
+
 	describe('sanity tests', function() {
 		beforeEach(function() {
 			return config.wipeElasticIndices()

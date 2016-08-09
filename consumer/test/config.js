@@ -1,6 +1,7 @@
 var path = require('path');
 
 var chai = require('chai'),
+	_ = require('lodash'),
 	mongoose = require('mongoose'),
 	connectMongo = require('replay-schemas/connectMongo'),
 	Video = require('replay-schemas/Video'),
@@ -9,7 +10,8 @@ var chai = require('chai'),
 	Query = require('replay-schemas/Query'),
 	rabbit = require('replay-rabbitmq'),
 	Promise = require('bluebird'),
-	elasticsearch = require('replay-elastic');
+	elasticsearch = require('replay-elastic'),
+	JobsService = require('replay-jobs-service');
 
 var fs = Promise.promisifyAll(require('fs'));
 
@@ -93,12 +95,40 @@ module.exports.generateJobStatus = function() {
 	return JobStatus.create({});
 };
 
+module.exports.generateVideo = function(params) {
+	return {
+		_id: new mongoose.Types.ObjectId('5799d24778b1f56a081e7029'),
+		sourceId: params.sourceId,
+		relativePath: params.videoRelativePath,
+		name: params.videoName,
+		receivingMethod: params.receivingMethod,
+		jobStatusId: _transactionId,
+		startTime: params.startTime,
+		endTime: params.endTime
+	};
+}
+
 module.exports.getValidMetadataObjects = function() {
 	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
 	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
 		.then(function(expectedDataAsString) {
 			return Promise.resolve(JSON.parse(expectedDataAsString));
 		});
+};
+
+module.exports.deleteAllQueues = function() {
+	var jobConfigs = JobsService.getAllJobConfigs();
+	var queueNames = _.map(jobConfigs, function(jobConfig) {
+		return jobConfig.queue;
+	});
+
+	var deleteQueuePromises = [];
+	for (var i = 0; i < queueNames.length; i++) {
+		var queueName = queueNames[i];
+		deleteQueuePromises.push(rabbit.deleteQueue(queueName));
+	}
+
+	return Promise.all(deleteQueuePromises);
 };
 
 function addMinutes(date, minutes) {

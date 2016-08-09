@@ -51,22 +51,23 @@ function validateInput(params) {
 		return false;
 	}
 
-	// we might receive videoMetadatas or video
-	if (!params.videoMetadatas || !params.video) {
-		return false;
+	// we might receive video metadatas or video
+	if (params.metadatas || params.video) {
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 function attachVideoToMetadata(params) {
-	// case we received videoMetadatas
-	if (params.videoMetadatas && params.videoMetadatas.length > 0) {
+	// case we received video metadatas
+	if (params.metadatas && params.metadatas.length > 0) {
 		// group by sourceId, then sort each group by ascending timestamp.
 		// now match videos to each of the created groups
-		return groupBySourceId(params.videoMetadatas)
+		return groupBySourceId(params.metadatas)
 			.then(sortByAscendingTimestamp)
-			.then(matchVideosToGroups);
+			.then(matchVideosToGroups)
+			.then(produceMetadataToMongoJob);
 	}
 	// case we receieved video
 	else {
@@ -93,15 +94,14 @@ function updateJobStatus() {
 }
 
 function updateMetadatasWithVideoId(video) {
-	return VideoMetadatas.update({
-			timestamp: {
-				$gte: video.startTime,
-				$lte: video.endTime,
-			},
-			videoId: null,
-			sourceId: video.sourceId,
+	return VideoMetadata.update({
+		timestamp: {
+			$gte: video.startTime,
+			$lte: video.endTime,
 		},
-		videoId: video.id, { multi: true });
+		videoId: null,
+		sourceId: video.sourceId,
+	}, { videoId: video.id }, { multi: true });
 }
 
 function groupBySourceId(metadatas) {
@@ -119,7 +119,7 @@ function sortByAscendingTimestamp(aggregatedMetadatas) {
 }
 
 // find the videos of each group (may be more than 1 for each group)
-// and update the videoMetadatas accordingly
+// and update the video metadatas accordingly
 function matchVideosToGroups(aggregatedMetadatas) {
 	return new Promise(function(resolve, reject) {
 		for (var sourceId in aggregatedMetadatas) {
@@ -165,9 +165,23 @@ function matchVideosToGroup(videos, metadatas) {
 		// loop through metadatas and find each one's corresponding video
 		for (var metadata in metadatas) {
 			var video = videos.pop();
-			if (metadata.timestamp < video.endTime){
+			if (metadata.timestamp < video.endTime) {
 				metadata.videoId = video.id;
 			}
 		}
 	});
+}
+
+function produceMetadataToMongoJob(videoMetadatas) {
+	var jobName = 'MetadataToMongo';
+	console.log('Producing %s job...', jobName);
+	var message = {
+		transactionId: _transactionId,
+		metadatas: videoMetadatas
+	};
+	var queueName = JobsService.getQueueName(jobName);
+	if (queueName) {
+		return rabbit.produce(queueName, message);
+	}
+	return Promise.reject(Error('Could not find queue name of the inserted job type'));
 }

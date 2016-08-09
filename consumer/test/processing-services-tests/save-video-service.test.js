@@ -10,6 +10,11 @@ describe('save-video-service tests', function() {
 			.then(config.wipeMongoCollections);
 	});
 
+	after(function() {
+		return config.wipeMongoCollections()
+			.then(config.deleteAllQueues);
+	});
+
 	describe('sanity tests', function() {
 		beforeEach(function() {
 			return config.wipeMongoCollections();

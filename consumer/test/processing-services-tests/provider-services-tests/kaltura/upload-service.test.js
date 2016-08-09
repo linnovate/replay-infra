@@ -19,6 +19,11 @@ describe('kaltura upload-service tests', function() {
 			.then(config.wipeMongoCollections);
 	});
 
+	after(function() {
+		return config.wipeMongoCollections()
+			.then(config.deleteAllQueues);
+	});
+
 	describe('sanity tests', function() {
 		beforeEach(function(done) {
 			process.env.DROP_FOLDER_PATH = path.join(process.env.STORAGE_PATH, _tempDropFolderName);

@@ -12,6 +12,11 @@ describe('metadata parser service tests', function() {
 			.then(config.wipeMongoCollections);
 	});
 
+	afterEach(function() {
+		return config.wipeMongoCollections()
+			.then(config.deleteAllQueues);
+	});
+
 	describe('sanity tests', function() {
 		beforeEach(function(done) {
 			return config.generateJobStatus()

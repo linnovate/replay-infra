@@ -13,11 +13,20 @@ describe('kaltura fetch-service tests', function() {
 		config.resetEnvironment();
 		return config.connectServices()
 			.then(config.wipeMongoCollections)
-			.then(KalturaService.initialize)
-			.then(KalturaService.generateMediaEntry)
+			.then(function() {
+				return KalturaService.initialize();
+			})
+			.then(function() {
+				return KalturaService.generateMediaEntry();
+			})
 			.then(function(mediaEntry) {
 				_entryId = mediaEntry.id;
 			});
+	});
+
+	after(function() {
+		return config.wipeMongoCollections()
+			.then(config.deleteAllQueues);
 	});
 
 	describe('sanity tests', function() {
