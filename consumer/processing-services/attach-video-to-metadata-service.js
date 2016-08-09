@@ -104,13 +104,6 @@ function updateMetadatasWithVideoId(video) {
 		videoId: video.id, { multi: true });
 }
 
-function updateMetadatasWithVideoId(videoMetadatas) {
-	if (videoMetadatas.length > 0) {
-		return VideoMetadata.update
-	}
-	return Promise.resolve();
-}
-
 function groupBySourceId(metadatas) {
 	return _.groupBy(metadatas, 'sourceId');
 }
@@ -129,7 +122,7 @@ function sortByAscendingTimestamp(aggregatedMetadatas) {
 // and update the videoMetadatas accordingly
 function matchVideosToGroups(aggregatedMetadatas) {
 	return new Promise(function(resolve, reject) {
-		for(var sourceId in aggregatedMetadatas) {
+		for (var sourceId in aggregatedMetadatas) {
 			// extract group metadatas
 			var metadatas = aggregatedMetadatas.sourceId;
 
@@ -137,13 +130,44 @@ function matchVideosToGroups(aggregatedMetadatas) {
 			var groupStartTime = metadatas[0].timestamp;
 			var groupEndTime = metadatas[metadatas.length - 1].timestamp;
 
-			// find matching videos
+			// find matching videos, select relevant fields and sort by ascending endTime
 			Video.find({
-				startTime:
-				endTime:
-				sourceId: sourceId
-			})
+					startTime: {
+						$gte: groupStartTime
+					},
+					endTime: {
+						$lte: groupEndTime
+					},
+					sourceId: sourceId
+				})
+				.select('endTime sourceId')
+				.sort('endTime')
+				.then(function(videos) {
+					return matchVideosToGroup(videos, metadatas);
+				})
+				.catch(function(err) {
+					if (err) {
+						console.log('Failed finding videos in order to match against aggregations.');
+						reject(err);
+					}
+				});
+		}
+	});
+}
 
+function matchVideosToGroup(videos, metadatas) {
+	return new Promise(function(resolve, reject) {
+		// case we don't have videos, just reject
+		if (!videos || videos.length == 0) {
+			return reject();
+		}
+
+		// loop through metadatas and find each one's corresponding video
+		for (var metadata in metadatas) {
+			var video = videos.pop();
+			if (metadata.timestamp < video.endTime){
+				metadata.videoId = video.id;
+			}
 		}
 	});
 }
