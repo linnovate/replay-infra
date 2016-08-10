@@ -73,7 +73,7 @@ function performParseChain(params) {
 }
 
 function readDataAsString(path) {
-	return fs.readFileAsync(path, 'utf8');
+	return fs.readFileAsync(path);
 }
 
 // apply specific logic to parse the different standards of metadatas
@@ -85,11 +85,11 @@ function dataToObjects(method, data, params) {
 				switch (method.version) {
 					case '0.9':
 						standardHandler = require('./standards/video-standard/0.9');
-						resolve(standardHandler.parse(data));
+						resolve(standardHandler.parse(data.toString('utf8')));
 						break;
 					case '1.0':
 						standardHandler = require('./standards/video-standard/1.0');
-						resolve(standardHandler.parse(data, params));
+						resolve(standardHandler.parse(data.toString('utf8'), params));
 						break;
 					default:
 						reject('Unsupported version for video-standard');
@@ -100,7 +100,7 @@ function dataToObjects(method, data, params) {
 				switch (method.version) {
 					case '4609':
 						standardHandler = require('./standards/stanag/4609');
-						resolve(standardHandler.parse(data.toString('binary'), params));
+						resolve(standardHandler.parse(data, params));
 						break;
 					default:
 						reject('Unsupported version for stanag');
