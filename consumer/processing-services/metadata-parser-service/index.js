@@ -73,7 +73,7 @@ function performParseChain(params) {
 }
 
 function readDataAsString(path) {
-	return fs.readFileAsync(path);
+	return fs.readFileAsync(path, 'utf8');
 }
 
 // apply specific logic to parse the different standards of metadatas
@@ -100,7 +100,7 @@ function dataToObjects(method, data, params) {
 				switch (method.version) {
 					case '4609':
 						standardHandler = require('./standards/stanag/4609');
-						resolve(standardHandler.parse(data, params));
+						resolve(standardHandler.parse(data.toString('binary'), params));
 						break;
 					default:
 						reject('Unsupported version for stanag');
