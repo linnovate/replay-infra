@@ -104,7 +104,7 @@ function checkAndCreatePath(path) {
 }
 
 function getTimeDiff(currentTimestamp, baseTimestamp) {
-	if (!currentTimestamp || baseTimestamp) {
+	if (!currentTimestamp || !baseTimestamp) {
 		throw new Error('Error! missing params (in function getTimeDiff)');
 	}
 	var timeDiff = Math.abs(currentTimestamp.getTime() - baseTimestamp.getTime());
