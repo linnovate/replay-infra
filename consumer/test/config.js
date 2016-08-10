@@ -95,7 +95,7 @@ module.exports.generateJobStatus = function() {
 	return JobStatus.create({});
 };
 
-module.exports.generateVideo = function(params) {
+module.exports.generateVideo = function(params, _transactionId) {
 	return {
 		_id: new mongoose.Types.ObjectId('5799d24778b1f56a081e7029'),
 		sourceId: params.sourceId,

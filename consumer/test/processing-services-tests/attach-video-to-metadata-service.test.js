@@ -1,5 +1,9 @@
 var elasticsearch = require('replay-elastic'),
-	rabbit = require('replay-rabbitmq');
+	rabbit = require('replay-rabbitmq'),
+	VideoMetadata = require('replay-schemas/VideoMetadata'),
+	Video = require('replay-schemas/Video'),
+	JobsService = require('replay-jobs-service'),
+	_ = require('lodash');
 
 var config = require('../config'),
 	AttachVideoToMetadataService = require('../../processing-services/attach-video-to-metadata-service');
@@ -27,40 +31,37 @@ describe('attach-video-to-metadata tests', function() {
 				.then(function(jobStatus) {
 					_transactionId = jobStatus.id;
 					return Promise.resolve();
-				});
+				})
+				.then(config.deleteAllQueues);
 		});
 
 		afterEach(function() {
 			return config.wipeMongoCollections();
 		});
 
-		// it('should attach videos to metadata which arrives after the video was saved', function(done) {
-		// 	var params = generateValidParams();
-		// 	generateAndSaveMetadatas()
-		// 		.then(function () {
-		// 			return generateAndSaveVideo(params);
-		// 		})
-		// 		.then(function(video) {
-		// 			video.receivingMethod = {
-		// 				standard: 'VideoStandard',
-		// 				version: '0.9'
-		// 			};
-		// 			params.video = video;
-		// 			AttachVideoToMetadataService.start(params,
-		// 				function _error() {
-		// 					errCallback(done);
-		// 				},
-		// 				function _done() {
-		// 					testMetadatasProduced(done);
-		// 				}
-		// 			);
-		// 		})
-		// 		.catch(function(err) {
-		// 			if (err) {
-		// 				done(err);
-		// 			}
-		// 		});
-		// });
+		it('should attach videos to metadata which arrives after the video was saved', function(done) {
+			var params = generateValidParams();
+			generateAndSaveMetadatas()
+				.then(function() {
+					return generateAndSaveVideo();
+				})
+				.then(function(video) {
+					params.video = video;
+					AttachVideoToMetadataService.start(params,
+						function _error() {
+							errCallback(done);
+						},
+						function _done() {
+							testMetadatasProduced(done);
+						}
+					);
+				})
+				.catch(function(err) {
+					if (err) {
+						done(err);
+					}
+				});
+		});
 	});
 
 	describe('bad input tests', function() {
@@ -99,15 +100,20 @@ function errornousInputTest(params, done) {
 }
 
 function testMetadatasProduced(done) {
-	var metadatas = config.getValidMetadataObjects();
-	var queueName = JobsService.getQueueName('MetadataToMongo');
-	rabbit.comsume(queueName, 1, function(params, _error, _done) {
-		expect(params.metadatas).to.have.lengthOf(metadatas.length);
-		var metadatasWithoutVideoId = _.filter(params.metadatas, function(metadata) {
-			return metadata.videoId == undefined;
+	console.log('Validating that metadatas were produced to MetadataToMongoQueue...');
+	config.getValidMetadataObjects()
+		.then(function(metadatas) {
+			var queueName = JobsService.getQueueName('MetadataToMongo');
+			return rabbit.consume(queueName, 1, function(params, _error, _done) {
+				console.log('consumed!');
+				expect(params.metadatas).to.have.lengthOf(metadatas.length);
+				var metadatasWithoutVideoId = _.filter(params.metadatas, function(metadata) {
+					return metadata.videoId == undefined;
+				});
+				expect(metadatasWithoutVideoId).to.have.lengthOf(0);
+				done();
+			});
 		});
-		expect(metadatasWithoutVideoId).to.have.lengthOf(0);
-	});
 }
 
 function testMetadatasInserted(done) {
@@ -156,15 +162,21 @@ function generateValidParams() {
 	};
 }
 
-function generateAndSaveVideo(params) {
-	return Video.create(config.generateVideo(params));
+function generateAndSaveVideo() {
+	var params = config.generateValidMessage();
+	params.receivingMethod = {
+		standard: 'VideoStandard',
+		version: '0.9'
+	};
+	var videoParams = config.generateVideo(params, _transactionId);
+	return Video.create(videoParams);
 }
 
 // generate and save metadatas without video id
 function generateAndSaveMetadatas() {
-	return getValidMetadataObjects()
+	return config.getValidMetadataObjects()
 		.then(function(metadatas) {
-			var metadatasWithoutVideoId = _.map(metadatas, function(metadata){
+			var metadatasWithoutVideoId = _.map(metadatas, function(metadata) {
 				metadata.videoId = undefined;
 				return metadata;
 			});

@@ -33,6 +33,7 @@ module.exports.start = function(params, error, done) {
 			return attachVideoToMetadata(params);
 		})
 		.then(function() {
+			console.log('Calling done and updating job status...');
 			done();
 			return Promise.resolve();
 		})
@@ -60,8 +61,10 @@ function validateInput(params) {
 }
 
 function attachVideoToMetadata(params) {
+	console.log('Starting process of attaching a video to it\'s metadatas...');
 	// case we received video metadatas
 	if (params.metadatas && params.metadatas.length > 0) {
+		console.log('We recieved metadatas...');
 		// group by sourceId, then sort each group by ascending timestamp.
 		// now match videos to each of the created groups
 		return groupBySourceId(params.metadatas)
@@ -74,6 +77,7 @@ function attachVideoToMetadata(params) {
 		// we only handle VideoStandard 0.9 videos
 		if (params.video.receivingMethod.method === 'VideoStandard' &&
 			params.video.receivingMethod.version === '0.9') {
+			console.log('Video is in VideoStandard 0.9, updating it\'s metadatas...');
 			// update all metadatas of the video with the videoId
 			return updateMetadatasWithVideoId(params.video);
 		}
@@ -183,5 +187,5 @@ function produceMetadataToMongoJob(videoMetadatas) {
 	if (queueName) {
 		return rabbit.produce(queueName, message);
 	}
-	return Promise.reject(Error('Could not find queue name of the inserted job type'));
+	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
 }
