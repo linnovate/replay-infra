@@ -18,6 +18,7 @@
     "mongoose": "^4.5.8",
     "mongoose-geojson-schema": "^2.1.2",
     "replay-elastic": "^1.0.3",
+    "replay-ffmpeg": "^1.0.4",
     "replay-jobs-service": "^1.0.5",
     "replay-kaltura-service": "*",
     "replay-rabbitmq": "^1.0.1",
