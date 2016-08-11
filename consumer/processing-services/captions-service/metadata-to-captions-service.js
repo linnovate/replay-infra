@@ -1,9 +1,9 @@
 var fs = require('fs'),
 	path = require('path');
 
-var JobsService = require('replay-jobs-service'),
-	Promise = require('bluebird'),
-	mkdirp = require('mkdirp');
+var Promise = require('bluebird'),
+	mkdirp = require('mkdirp'),
+	JobsService = require('replay-jobs-service');
 
 var _transactionId;
 var _jobStatusTag = 'created-captions-from-metadata';
@@ -23,6 +23,7 @@ module.exports.start = function(params, error, done) {
 	JobsService.findJobStatus(_transactionId)
 		.then(function(jobStatus) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
+				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}
 			return tryCreateCaptions(params.metadatas);
@@ -41,6 +42,8 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
+	console.log('Transaction id: ', params.transactionId);
+
 	// validate params
 	if (!params.transactionId) {
 		return false;
