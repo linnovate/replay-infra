@@ -17,7 +17,7 @@
     "mongoose": "^4.5.8",
     "replay-elastic": "^1.0.3",
     "replay-eslint-config": "^1.0.4",
-    "replay-jobs-service": "^1.0.5",
+    "replay-jobs-service": "^1.0.9",
     "replay-kaltura-service": "*",
     "replay-rabbitmq": "^1.0.1",
     "replay-schemas": "^1.0.18",
