@@ -134,3 +134,4 @@ module.exports.deleteAllQueues = function() {
 function addMinutes(date, minutes) {
 	return new Date(date.getTime() + minutes * 60000);
 }
+module.exports.addMinutes = addMinutes;

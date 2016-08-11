@@ -75,7 +75,7 @@ function attachVideoToMetadata(params) {
 	// case we receieved video
 	else {
 		// we only handle VideoStandard 0.9 videos
-		if (params.video.receivingMethod.method === 'VideoStandard' &&
+		if (params.video.receivingMethod.standard == 'VideoStandard' &&
 			params.video.receivingMethod.version === '0.9') {
 			console.log('Video is in VideoStandard 0.9, updating it\'s metadatas...');
 			// update all metadatas of the video with the videoId
@@ -90,6 +90,11 @@ function attachVideoToMetadata(params) {
 // update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
 	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
+		.then(function(jobStatus) {
+			if (jobStatus) {
+				console.log('Updated job status successfuly.');
+			}
+		})
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
@@ -97,15 +102,23 @@ function updateJobStatus() {
 		});
 }
 
+// update metadatas of the video with the video id.
+// update is done by making sure the metadatas are:
+// 1. in the time of the video
+// 2. have the same sourceId
+// 3. have no videoId
 function updateMetadatasWithVideoId(video) {
 	return VideoMetadata.update({
-		timestamp: {
-			$gte: video.startTime,
-			$lte: video.endTime,
-		},
-		videoId: null,
-		sourceId: video.sourceId,
-	}, { videoId: video.id }, { multi: true });
+			timestamp: {
+				$gte: video.startTime,
+				$lte: video.endTime,
+			},
+			videoId: null,
+			sourceId: video.sourceId,
+		}, { videoId: video.id }, { multi: true })
+		.then(function(res) {
+			console.log('Updated %s metadatas.', res.n);
+		});
 }
 
 function groupBySourceId(metadatas) {

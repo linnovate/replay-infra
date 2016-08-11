@@ -39,11 +39,19 @@ describe('attach-video-to-metadata tests', function() {
 			return config.wipeMongoCollections();
 		});
 
-		it('should attach videos to metadata which arrives after the video was saved', function(done) {
+		it('should attach videos to metadata in case video arrives after metadata', function(done) {
+			var metadatas;
 			var params = generateValidParams();
+			// remove metadatas as we only want to send video
+			params.metadatas = undefined;
+
 			generateAndSaveMetadatas()
-				.then(function() {
-					return generateAndSaveVideo();
+				.then(function(_metadatas) {
+					metadatas = _metadatas;
+					// generate video with overlapping time to metadata
+					var startTime = metadatas[0].timestamp;
+					var endTime = config.addMinutes(startTime, 30);
+					return generateAndSaveVideo(startTime, endTime);
 				})
 				.then(function(video) {
 					params.video = video;
@@ -52,7 +60,8 @@ describe('attach-video-to-metadata tests', function() {
 							errCallback(done);
 						},
 						function _done() {
-							testMetadatasProduced(done);
+							// testMetadatasProduced(done);
+							testMetadatasUpdated(video.id, metadatas.length, done);
 						}
 					);
 				})
@@ -116,10 +125,12 @@ function testMetadatasProduced(done) {
 		});
 }
 
-function testMetadatasInserted(done) {
-	VideoMetadata.count({})
+function testMetadatasUpdated(videoId, metadatasLength, done) {
+	VideoMetadata.count({
+			videoId: videoId
+		})
 		.then(function(count) {
-			expect(count).to.equal(_expectedParsedDataObjects.length);
+			expect(count).to.equal(metadatasLength);
 		})
 		.then(function() {
 			done();
@@ -162,12 +173,14 @@ function generateValidParams() {
 	};
 }
 
-function generateAndSaveVideo() {
+function generateAndSaveVideo(startTime, endTime) {
 	var params = config.generateValidMessage();
 	params.receivingMethod = {
 		standard: 'VideoStandard',
 		version: '0.9'
 	};
+	params.startTime = startTime;
+	params.endTime = endTime;
 	var videoParams = config.generateVideo(params, _transactionId);
 	return Video.create(videoParams);
 }
