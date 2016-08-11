@@ -90,11 +90,6 @@ function attachVideoToMetadata(params) {
 // update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
 	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
-		.then(function(jobStatus) {
-			if (jobStatus) {
-				console.log('Updated job status successfuly.');
-			}
-		})
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
