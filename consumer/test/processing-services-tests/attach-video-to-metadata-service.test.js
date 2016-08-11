@@ -1,5 +1,4 @@
-var elasticsearch = require('replay-elastic'),
-	rabbit = require('replay-rabbitmq'),
+var rabbit = require('replay-rabbitmq'),
 	VideoMetadata = require('replay-schemas/VideoMetadata'),
 	Video = require('replay-schemas/Video'),
 	JobsService = require('replay-jobs-service'),
@@ -40,12 +39,15 @@ describe('attach-video-to-metadata tests', function() {
 		});
 
 		it('should attach videos to metadata in case video arrives after metadata', function(done) {
-			var metadatas;
-			var params = generateValidParams();
-			// remove metadatas as we only want to send video
-			params.metadatas = undefined;
+			var metadatas, params;
 
-			generateAndSaveMetadatas()
+			generateValidParams()
+				.then(function(_params) {
+					params = _params;
+					// remove metadatas as we only want to send video
+					params.metadatas = undefined;
+				})
+				.then(generateAndSaveMetadatas)
 				.then(function(_metadatas) {
 					metadatas = _metadatas;
 					// generate video with overlapping time to metadata
@@ -60,8 +62,39 @@ describe('attach-video-to-metadata tests', function() {
 							errCallback(done);
 						},
 						function _done() {
-							// testMetadatasProduced(done);
 							testMetadatasUpdated(video.id, metadatas.length, done);
+						}
+					);
+				})
+				.catch(function(err) {
+					if (err) {
+						done(err);
+					}
+				});
+		});
+
+		it('should attach videos to metadata in case metadata arrives after video', function(done) {
+			var params;
+
+			generateValidParams()
+				.then(function(_params) {
+					params = _params;
+					return Promise.resolve();
+				})
+				.then(function() {
+					console.log('startTime', params.metadatas[0].timestamp, typeof (params.metadatas[0].timestamp));
+					// generate video with overlapping time to metadata
+					var startTime = params.metadatas[0].timestamp;
+					var endTime = config.addMinutes(startTime, 30);
+					return generateAndSaveVideo(startTime, endTime);
+				})
+				.then(function() {
+					AttachVideoToMetadataService.start(params,
+						function _error() {
+							errCallback(done);
+						},
+						function _done() {
+							testMetadatasProduced(done);
 						}
 					);
 				})
@@ -114,10 +147,9 @@ function testMetadatasProduced(done) {
 		.then(function(metadatas) {
 			var queueName = JobsService.getQueueName('MetadataToMongo');
 			return rabbit.consume(queueName, 1, function(params, _error, _done) {
-				console.log('consumed!');
 				expect(params.metadatas).to.have.lengthOf(metadatas.length);
 				var metadatasWithoutVideoId = _.filter(params.metadatas, function(metadata) {
-					return metadata.videoId == undefined;
+					return metadata.videoId === undefined;
 				});
 				expect(metadatasWithoutVideoId).to.have.lengthOf(0);
 				done();
@@ -126,7 +158,8 @@ function testMetadatasProduced(done) {
 }
 
 function testMetadatasUpdated(videoId, metadatasLength, done) {
-	VideoMetadata.count({
+	VideoMetadata
+		.count({
 			videoId: videoId
 		})
 		.then(function(count) {
@@ -142,20 +175,20 @@ function testMetadatasUpdated(videoId, metadatasLength, done) {
 		});
 }
 
-function testMetadatasNotInserted(done) {
-	VideoMetadata.count({})
-		.then(function(count) {
-			expect(count).to.equal(0);
-		})
-		.then(function() {
-			done();
-		})
-		.catch(function(err) {
-			if (err) {
-				done(err);
-			}
-		});
-}
+// function testMetadatasNotInserted(done) {
+// 	VideoMetadata.count({})
+// 		.then(function(count) {
+// 			expect(count).to.equal(0);
+// 		})
+// 		.then(function() {
+// 			done();
+// 		})
+// 		.catch(function(err) {
+// 			if (err) {
+// 				done(err);
+// 			}
+// 		});
+// }
 
 function errCallback(done) {
 	done(new Error('attach video to metadata service errored.'));
@@ -163,14 +196,15 @@ function errCallback(done) {
 
 function generateValidParams() {
 	var params = config.generateValidMessage();
-	var metadatas = config.getValidMetadataObjects();
-
-	return {
-		transactionId: _transactionId,
-		metadatas: metadatas,
-		sourceId: params.sourceId,
-		video: {}
-	};
+	return config.getValidMetadataObjects()
+		.then(function(metadatas) {
+			return Promise.resolve({
+				transactionId: _transactionId,
+				metadatas: metadatas,
+				sourceId: params.sourceId,
+				video: {}
+			});
+		});
 }
 
 function generateAndSaveVideo(startTime, endTime) {

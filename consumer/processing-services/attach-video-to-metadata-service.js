@@ -8,6 +8,7 @@ var VideoMetadata = require('replay-schemas/VideoMetadata'),
 	Video = require('replay-schemas/Video'),
 	JobsService = require('replay-jobs-service'),
 	_ = require('lodash'),
+	rabbit = require('replay-rabbit'),
 	Promise = require('bluebird');
 
 var _transactionId;
@@ -64,7 +65,7 @@ function attachVideoToMetadata(params) {
 	console.log('Starting process of attaching a video to it\'s metadatas...');
 	// case we received video metadatas
 	if (params.metadatas && params.metadatas.length > 0) {
-		console.log('We recieved metadatas...');
+		console.log('Recieved metadatas...');
 		// group by sourceId, then sort each group by ascending timestamp.
 		// now match videos to each of the created groups
 		return groupBySourceId(params.metadatas)
@@ -73,14 +74,13 @@ function attachVideoToMetadata(params) {
 			.then(produceMetadataToMongoJob);
 	}
 	// case we receieved video
-	else {
-		// we only handle VideoStandard 0.9 videos
-		if (params.video.receivingMethod.standard == 'VideoStandard' &&
-			params.video.receivingMethod.version === '0.9') {
-			console.log('Video is in VideoStandard 0.9, updating it\'s metadatas...');
-			// update all metadatas of the video with the videoId
-			return updateMetadatasWithVideoId(params.video);
-		}
+	console.log('Recieved video...');
+	// we only handle VideoStandard 0.9 videos
+	if (params.video.receivingMethod.standard === 'VideoStandard' &&
+		params.video.receivingMethod.version === '0.9') {
+		console.log('Video is in VideoStandard 0.9, updating it\'s metadatas...');
+		// update all metadatas of the video with the videoId
+		return updateMetadatasWithVideoId(params.video);
 	}
 
 	// we done nothing, resolve
@@ -103,13 +103,14 @@ function updateJobStatus() {
 // 2. have the same sourceId
 // 3. have no videoId
 function updateMetadatasWithVideoId(video) {
-	return VideoMetadata.update({
+	return VideoMetadata
+		.update({
 			timestamp: {
 				$gte: video.startTime,
-				$lte: video.endTime,
+				$lte: video.endTime
 			},
 			videoId: null,
-			sourceId: video.sourceId,
+			sourceId: video.sourceId
 		}, { videoId: video.id }, { multi: true })
 		.then(function(res) {
 			console.log('Updated %s metadatas.', res.n);
@@ -117,13 +118,17 @@ function updateMetadatasWithVideoId(video) {
 }
 
 function groupBySourceId(metadatas) {
-	return _.groupBy(metadatas, 'sourceId');
+	console.log('Grouping metadatas by source id...');
+	return Promise.resolve(_.groupBy(metadatas, 'sourceId'));
 }
 
 function sortByAscendingTimestamp(aggregatedMetadatas) {
+	console.log('Sorting aggregated metadatas by ascending timestamp...');
 	return new Promise(function(resolve, reject) {
-		for (var sourceId in aggregatedMetadatas) {
-			aggregatedMetadatas.sourceId = _.sortBy(aggregatedMetadatas.sourceId, 'timestamp');
+		// loop on aggregatedMetadatas sourceId: metadatas aggregations
+		for (var i = 0, keys = Object.keys(aggregatedMetadatas); i < keys.length; i++) {
+			var sourceId = keys[i];
+			aggregatedMetadatas[sourceId] = _.sortBy(aggregatedMetadatas[sourceId], 'timestamp');
 		}
 
 		resolve(aggregatedMetadatas);
@@ -133,17 +138,22 @@ function sortByAscendingTimestamp(aggregatedMetadatas) {
 // find the videos of each group (may be more than 1 for each group)
 // and update the video metadatas accordingly
 function matchVideosToGroups(aggregatedMetadatas) {
+	console.log('Matching videos to groups...');
 	return new Promise(function(resolve, reject) {
-		for (var sourceId in aggregatedMetadatas) {
+		// loop on aggregatedMetadatas sourceId: metadatas aggregations
+		for (var i = 0, keys = Object.keys(aggregatedMetadatas); i < keys.length; i++) {
+			var sourceId = keys[i];
+
 			// extract group metadatas
-			var metadatas = aggregatedMetadatas.sourceId;
+			var metadatas = aggregatedMetadatas[sourceId];
 
 			// find start & end time of the group
 			var groupStartTime = metadatas[0].timestamp;
 			var groupEndTime = metadatas[metadatas.length - 1].timestamp;
 
 			// find matching videos, select relevant fields and sort by ascending endTime
-			Video.find({
+			Video
+				.find({
 					startTime: {
 						$gte: groupStartTime
 					},
@@ -170,17 +180,19 @@ function matchVideosToGroups(aggregatedMetadatas) {
 function matchVideosToGroup(videos, metadatas) {
 	return new Promise(function(resolve, reject) {
 		// case we don't have videos, just reject
-		if (!videos || videos.length == 0) {
+		if (!videos || videos.length === 0) {
 			return reject();
 		}
 
 		// loop through metadatas and find each one's corresponding video
-		for (var metadata in metadatas) {
+		metadatas.forEach(function(metadata) {
 			var video = videos.pop();
 			if (metadata.timestamp < video.endTime) {
 				metadata.videoId = video.id;
 			}
-		}
+		});
+
+		resolve();
 	});
 }
 

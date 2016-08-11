@@ -106,9 +106,23 @@ module.exports.generateVideo = function(params, _transactionId) {
 		startTime: params.startTime,
 		endTime: params.endTime
 	};
-}
+};
 
+// returns metadata objects from the VideoMetadata schema
 module.exports.getValidMetadataObjects = function() {
+	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
+	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
+		.then(function(expectedDataAsString) {
+			var metadataObjects = JSON.parse(expectedDataAsString);
+			var videoMetadatas = _.map(metadataObjects, function(metadata) {
+				return new VideoMetadata(metadata);
+			});
+			return Promise.resolve(videoMetadatas);
+		});
+};
+
+// returns raw javascript metadata objects
+module.exports.getValidMetadataAsJson = function() {
 	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
 	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
 		.then(function(expectedDataAsString) {
