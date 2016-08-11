@@ -11,12 +11,13 @@ module.exports.start = function(params, error, done) {
 		return error();
 	}
 
-	proccesVideo(params)
-		.then(function() {
+	proccesTS(params)
+		.then(function(paths) {
 
 		})
-		.catch(function() {
-
+		.catch(function(err) {
+			console.log('error on:', CONSUMER_NAME, err);
+			error();
 		});
 };
 
@@ -41,30 +42,41 @@ function paramsIsValid(params) {
 }
 
 // understand what ts file we deal (video/data/video and data) and manipulate it.
-function proccesVideo(params) {
+function proccesTS(params) {
+	var processTsMethod;
+	// preaper the require params for the processing method.
+	var paramsForMethod = {
+		videoRelativePath: params.videoRelativePath,
+		dataRelativePath: params.dataRelativePath
+	};
+	// check the reciving method standart
 	switch (params.receivingMethod.standard) {
 		case 'VideoStandard':
+			// check the reciving method version
 			switch (params.receivingMethod.version) {
 				case '0.9':
+					processTsMethod = require('./unmux');
 					break;
 				case '1.0':
+					processTsMethod = require('./mux');
 					break;
 				default:
-					Promise.reject('Unsupported version for video-standard');
-					break;
+					return Promise.reject(CONSUMER_NAME + 'Unsupported version for video-standard');
 			}
 			break;
 		case 'stanag':
+			// check the reciving method version
 			switch (params.receivingMethod.version) {
 				case '4609':
+					processTsMethod = require('./mux');
 					break;
 				default:
-					Promise.reject('Unsupported version for stanag');
-					break;
+					return Promise.reject(CONSUMER_NAME + 'Unsupported version for stanag');
 			}
 			break;
 		default:
-			Promise.reject('Unsupported standard');
-			break;
+			return Promise.reject(CONSUMER_NAME + 'Unsupported standard');
 	}
+	// activate the processing method
+	return processTsMethod(paramsForMethod);
 }
