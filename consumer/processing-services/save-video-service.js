@@ -101,12 +101,9 @@ function saveVideoToMongo(params) {
 		})
 		.then(function(video) {
 			console.log('Video successfully saved to mongo:', video);
-
-			// update JobStatus status
-			return JobService.updateJobStatus(_transactionId, _jobStatusTag)
-				.then(function(jobStatus) {
-					return Promise.resolve(video);
-				});
+			// call update job status but don't depend on it's result as we already succeeded in saving video
+			updateJobStatus();
+			return Promise.resolve(video);
 		});
 }
 
@@ -162,4 +159,14 @@ function produceUploadToProviderJob(params) {
 	}
 
 	return Promise.resolve();
+}
+
+// update job status, swallaw errors so they won't invoke error() on message
+function updateJobStatus() {
+	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
+		.catch(function(err) {
+			if (err) {
+				console.log(err);
+			}
+		});
 }
