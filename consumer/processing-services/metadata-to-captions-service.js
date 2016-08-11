@@ -80,7 +80,7 @@ function createCaptions(metadatas) {
 			}
 			timeLine = startTime + '-->' + endTime;
 			fileName = path.join(captionsPath, videoId + '.vtt');
-			return fs.appendFile(fileName, timeLine + '\n' + JSON.stringify(item) + '\n', function(err) {
+			return fs.appendFile(fileName, timeLine + '\n' + JSON.stringify(item) + '\n\n', function(err) {
 				if (err) {
 					return Promise.reject(err);
 				}
