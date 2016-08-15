@@ -3,15 +3,17 @@ var fs = require('fs'),
 
 var Promise = require('bluebird'),
 	mkdirp = require('mkdirp'),
+	rabbit = require('replay-rabbitmq'),
 	JobsService = require('replay-jobs-service');
 
 var _transactionId;
 var _jobStatusTag = 'created-captions-from-metadata';
 
 var LAST_CAPTIONS_TIME = 1; // in seconds
+var CAPTIONS_PATH = 'captions';
 
 module.exports.start = function(params, error, done) {
-	console.log('MetadataToCaptions service startTimeed.');
+	console.log('MetadataToCaptions service started.');
 
 	if (!validateInput(params)) {
 		console.log('MetadataToCaptions - Some vital parameters are missing.');
@@ -26,7 +28,7 @@ module.exports.start = function(params, error, done) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}
-			return tryCreateCaptions(params.metadatas);
+			return performCaptionsChain(params.metadatas);
 		})
 		.then(function() {
 			done();
@@ -42,7 +44,7 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
-	console.log('Transaction id: ', params.transactionId);
+	console.log('Transaction id:', params.transactionId);
 
 	// validate params
 	if (!params.transactionId) {
@@ -51,22 +53,28 @@ function validateInput(params) {
 	return true;
 }
 
-function tryCreateCaptions(metadatas) {
+function performCaptionsChain(metadatas) {
 	if (metadatas && metadatas.length > 0) {
-		return createCaptions(metadatas);
+		return createCaptions(metadatas)
+			.then(produceCaptionsToDestinationJob)
+			.catch(function(err) {
+				return Promise.reject(err);
+			});
 	}
+	// else:
 	console.log('MetadataToCaptions - No metadatas receieved.');
 	return Promise.resolve();
 }
 
 function createCaptions(metadatas) {
-	var startTime, endTime, currentTimestamp;
-	var timeDiff, timeLine, fileName;
+	var startTime, endTime, currentTimestamp, timeDiff, timeLine;
 
-	var captionsPath = path.join(process.env.STORAGE_PATH, 'captions');
+	var captionsPath = path.join(process.env.STORAGE_PATH, CAPTIONS_PATH);
 	checkAndCreatePath(captionsPath);
 
 	var videoId = metadatas[0].videoId;
+	var fileName = videoId + '.vtt';
+	var captionsFullPath = path.join(captionsPath, fileName);
 	var baseTimestamp = new Date(metadatas[0].timestamp);
 	endTime = getFormatedTime(new Date(0));
 
@@ -82,8 +90,7 @@ function createCaptions(metadatas) {
 				endTime = getFormatedTime(timeDiff);
 			}
 			timeLine = startTime + '-->' + endTime;
-			fileName = path.join(captionsPath, videoId + '.vtt');
-			return fs.appendFile(fileName, timeLine + '\n' + JSON.stringify(item) + '\n\n', function(err) {
+			return fs.appendFile(captionsFullPath, timeLine + '\n' + JSON.stringify(item) + '\n\n', function(err) {
 				if (err) {
 					return Promise.reject(err);
 				}
@@ -91,7 +98,7 @@ function createCaptions(metadatas) {
 			});
 		}).then(function() {
 			console.log('Captions file created successfully!');
-			return Promise.resolve();
+			return Promise.resolve({ videoId: videoId, captionsRelativePath: CAPTIONS_PATH, captionsFileName: fileName });
 		})
 		.catch(function(err) {
 			return Promise.reject(err);
@@ -117,6 +124,23 @@ function getTimeDiff(currentTimestamp, baseTimestamp) {
 function getFormatedTime(time) {
 	return (time.getUTCMinutes() + ':' + time.getUTCSeconds() +
 		'.' + time.getUTCMilliseconds());
+}
+
+function produceCaptionsToDestinationJob(params) {
+	console.log('Producing CaptionsToDestination job...');
+
+	var message = {
+		videoId: params.videoId,
+		captionsRelativePath: params.captionsRelativePath,
+		captionsFileName: params.captionsFileName,
+		transactionId: _transactionId
+	};
+
+	var queueName = JobsService.getQueueName('CaptionsToDestination');
+	if (queueName) {
+		return rabbit.produce(queueName, message);
+	}
+	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
 }
 
 function updateJobStatus() {
