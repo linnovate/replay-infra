@@ -8,7 +8,7 @@ var VideoMetadata = require('replay-schemas/VideoMetadata'),
 	Video = require('replay-schemas/Video'),
 	JobsService = require('replay-jobs-service'),
 	_ = require('lodash'),
-	rabbit = require('replay-rabbit'),
+	rabbit = require('replay-rabbitmq'),
 	Promise = require('bluebird');
 
 var _transactionId;
@@ -71,6 +71,7 @@ function attachVideoToMetadata(params) {
 		return groupBySourceId(params.metadatas)
 			.then(sortByAscendingTimestamp)
 			.then(matchVideosToGroups)
+			.then(flattenAggregatedMetadatas)
 			.then(produceMetadataToMongoJob);
 	}
 	// case we receieved video
@@ -139,20 +140,21 @@ function sortByAscendingTimestamp(aggregatedMetadatas) {
 // and update the video metadatas accordingly
 function matchVideosToGroups(aggregatedMetadatas) {
 	console.log('Matching videos to groups...');
-	return new Promise(function(resolve, reject) {
-		// loop on aggregatedMetadatas sourceId: metadatas aggregations
-		for (var i = 0, keys = Object.keys(aggregatedMetadatas); i < keys.length; i++) {
-			var sourceId = keys[i];
 
-			// extract group metadatas
-			var metadatas = aggregatedMetadatas[sourceId];
+	var videoPromises = [];
+	var sourceIds = Object.keys(aggregatedMetadatas);
+	// loop on aggregatedMetadatas sourceId: metadatas aggregations
+	_.forEach(sourceIds, function(sourceId) {
+		// extract group metadatas
+		var metadatas = aggregatedMetadatas[sourceId];
 
-			// find start & end time of the group
-			var groupStartTime = metadatas[0].timestamp;
-			var groupEndTime = metadatas[metadatas.length - 1].timestamp;
+		// find start & end time of the group
+		var groupStartTime = metadatas[0].timestamp;
+		var groupEndTime = metadatas[metadatas.length - 1].timestamp;
 
-			// find matching videos, select relevant fields and sort by ascending endTime
-			Video
+		// find matching videos, select relevant fields and sort by ascending endTime
+		videoPromises.push(function() {
+			return Video
 				.find({
 					startTime: {
 						$gte: groupStartTime
@@ -166,15 +168,24 @@ function matchVideosToGroups(aggregatedMetadatas) {
 				.sort('endTime')
 				.then(function(videos) {
 					return matchVideosToGroup(videos, metadatas);
-				})
-				.catch(function(err) {
-					if (err) {
-						console.log('Failed finding videos in order to match against aggregations.');
-						reject(err);
-					}
 				});
-		}
+		});
 	});
+
+	return Promise.all(videoPromises)
+		.then(function() {
+			return aggregatedMetadatas;
+		});
+
+	// for (var i = 0, keys = Object.keys(aggregatedMetadatas); i < keys.length; i++) {
+	// 	var sourceId = keys[i];
+	// .catch(function(err) {
+	// 	if (err) {
+	// 		console.log('Failed finding videos in order to match against aggregations.');
+	// 		reject(err);
+	// 	}
+	// });
+	// }
 }
 
 function matchVideosToGroup(videos, metadatas) {
@@ -194,6 +205,15 @@ function matchVideosToGroup(videos, metadatas) {
 
 		resolve();
 	});
+}
+
+// reduce aggregated metadatas in form sourceId: [metadatas] to list of metadatas
+function flattenAggregatedMetadatas(aggregatedMetadatas) {
+	return _.reduce(aggregatedMetadatas, function(result, value, key) {
+		// concat value which is list of metadatas
+		result = result.concat(value);
+		return result;
+	}, []);
 }
 
 function produceMetadataToMongoJob(videoMetadatas) {

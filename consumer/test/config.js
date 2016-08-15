@@ -40,6 +40,7 @@ module.exports.resetEnvironment = function() {
 	process.env.PROVIDER = 'kaltura';
 	process.env.KALTURA_URL = 'http://vod.linnovate.net';
 	process.env.KALTURA_ADMIN_SECRET = '96f2df9a0071cd8024463509439fedb9';
+	process.env.RABBITMQ_MAX_RESEND_ATTEMPS = 1;
 };
 
 // connect services

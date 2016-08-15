@@ -82,7 +82,6 @@ describe('attach-video-to-metadata tests', function() {
 					return Promise.resolve();
 				})
 				.then(function() {
-					console.log('startTime', params.metadatas[0].timestamp, typeof (params.metadatas[0].timestamp));
 					// generate video with overlapping time to metadata
 					var startTime = params.metadatas[0].timestamp;
 					var endTime = config.addMinutes(startTime, 30);
@@ -141,7 +140,7 @@ function errornousInputTest(params, done) {
 		});
 }
 
-function testMetadatasProduced(done) {
+function testMetadatasProduced(testDone) {
 	console.log('Validating that metadatas were produced to MetadataToMongoQueue...');
 	config.getValidMetadataObjects()
 		.then(function(metadatas) {
@@ -152,7 +151,9 @@ function testMetadatasProduced(done) {
 					return metadata.videoId === undefined;
 				});
 				expect(metadatasWithoutVideoId).to.have.lengthOf(0);
-				done();
+				// call done on the message just to wipe it
+				_done();
+				testDone();
 			});
 		});
 }
@@ -174,21 +175,6 @@ function testMetadatasUpdated(videoId, metadatasLength, done) {
 			}
 		});
 }
-
-// function testMetadatasNotInserted(done) {
-// 	VideoMetadata.count({})
-// 		.then(function(count) {
-// 			expect(count).to.equal(0);
-// 		})
-// 		.then(function() {
-// 			done();
-// 		})
-// 		.catch(function(err) {
-// 			if (err) {
-// 				done(err);
-// 			}
-// 		});
-// }
 
 function errCallback(done) {
 	done(new Error('attach video to metadata service errored.'));
