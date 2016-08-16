@@ -47,7 +47,7 @@ function validateInput(params) {
 	console.log('Transaction id:', params.transactionId);
 
 	// validate params
-	if (!params.transactionId) {
+	if (!process.env.STORAGE_PATH || !params.transactionId) {
 		return false;
 	}
 	return true;
