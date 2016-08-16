@@ -98,7 +98,7 @@ module.exports.generateJobStatus = function() {
 
 module.exports.generateVideo = function(params, _transactionId) {
 	return {
-		_id: new mongoose.Types.ObjectId('5799d24778b1f56a081e7029'),
+		_id: new mongoose.Types.ObjectId(),
 		sourceId: params.sourceId,
 		relativePath: params.videoRelativePath,
 		name: params.videoName,

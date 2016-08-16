@@ -153,55 +153,58 @@ function matchVideosToGroups(aggregatedMetadatas) {
 		var groupEndTime = metadatas[metadatas.length - 1].timestamp;
 
 		// find matching videos, select relevant fields and sort by ascending endTime
-		videoPromises.push(function() {
-			return Video
-				.find({
-					startTime: {
-						$gte: groupStartTime
-					},
-					endTime: {
-						$lte: groupEndTime
-					},
-					sourceId: sourceId
-				})
-				.select('endTime sourceId')
-				.sort('endTime')
-				.then(function(videos) {
-					return matchVideosToGroup(videos, metadatas);
-				});
-		});
+		// NOTE: videos belongs to this metadata chunk if their start time is between the start & end time of this chunk
+		// later on, we will match every metadata to a video by checking if the metadata timestamp is smaller than the video end time
+		videoPromises.push(
+			Video
+			.find({
+				startTime: {
+					$gte: groupStartTime,
+					$lte: groupEndTime
+				},
+				sourceId: sourceId
+			})
+			.select('endTime sourceId')
+			.sort('endTime')
+			.then(function(videos) {
+				return matchVideosToGroup(videos, metadatas);
+			})
+		);
 	});
 
 	return Promise.all(videoPromises)
 		.then(function() {
 			return aggregatedMetadatas;
 		});
-
-	// for (var i = 0, keys = Object.keys(aggregatedMetadatas); i < keys.length; i++) {
-	// 	var sourceId = keys[i];
-	// .catch(function(err) {
-	// 	if (err) {
-	// 		console.log('Failed finding videos in order to match against aggregations.');
-	// 		reject(err);
-	// 	}
-	// });
-	// }
 }
 
+// match videos to a group of metadatas.
+// the videos are all the videos that their start time is between the metadatas chunk start & end times.
+// then, we will iterate on each metadata (they're sorted by timestamp), and match the metadata to a video
+// whose endTime is bigger than the timestamp of the metadata, means, the metadata belongs to him.
+// when the next metadata timestamp is after the current video end time, we will move to the next video.
 function matchVideosToGroup(videos, metadatas) {
 	return new Promise(function(resolve, reject) {
-		// case we don't have videos, just reject
+		// case we don't have videos, just resolve and continue
 		if (!videos || videos.length === 0) {
-			return reject();
+			return resolve();
 		}
 
 		// loop through metadatas and find each one's corresponding video
-		metadatas.forEach(function(metadata) {
-			var video = videos.pop();
-			if (metadata.timestamp < video.endTime) {
+		var video = videos.pop();
+		for (var i = 0; i < metadatas.length; i++) {
+			var metadata = metadatas[i];
+			if (metadata.timestamp <= video.endTime) {
 				metadata.videoId = video.id;
+			} else {
+				video = videos.pop();
+				i--;
+				// case we've finished videos, break the loop
+				if (!video) {
+					break;
+				}
 			}
-		});
+		}
 
 		resolve();
 	});
