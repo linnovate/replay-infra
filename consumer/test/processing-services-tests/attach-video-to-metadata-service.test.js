@@ -191,7 +191,8 @@ function testMetadatasProduced(testDone) {
 
 						// find all metadatas with the same sourceId and within the required times
 						var metadatas = _.filter(params.metadatas, function(metadata) {
-							return metadata.sourceId === sourceId && metadata.timestamp >= startTime && metadata.timestamp <= endTime;
+							return metadata.sourceId === sourceId &&
+								new Date(metadata.timestamp) >= startTime && new Date(metadata.timestamp) <= endTime;
 						});
 
 						expect(metadatas).to.have.lengthOf(expectedVideosAmounts[i++]);
