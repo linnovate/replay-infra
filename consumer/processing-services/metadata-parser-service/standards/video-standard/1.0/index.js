@@ -50,7 +50,7 @@ function metadataObjectsToVideoMetadata(metadatas, params) {
 			sourceId: params.sourceId,
 			videoId: params.videoId,
 			receivingMethod: params.receivingMethod,
-			timestamp: moment(metadata.TimeTag.Time).utc().format(),
+			timestamp: moment(metadata.TimeTag.Time).utc().format('YYYY-MM-DDTHH:mm:ss.SSS'),
 			sensorPosition: {
 				lat: metadata.SensorPOV.Position.Latitude,
 				lon: metadata.SensorPOV.Position.Longitude
