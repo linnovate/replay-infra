@@ -1,5 +1,6 @@
 var VideoMetadata = require('replay-schemas/VideoMetadata'),
 	rabbit = require('replay-rabbitmq'),
+	_ = require('lodash'),
 	JobsService = require('replay-jobs-service');
 
 var _transactionId;
@@ -24,14 +25,14 @@ module.exports.start = function(params, error, done) {
 			}
 			return saveToMongo(params.metadatas);
 		})
+		.then(updateJobStatus)
 		.then(function() {
-			produceBoundingPolygonJob(params);
+			return produceBoundingPolygonJob(params);
 		})
 		.then(function() {
 			done();
 			return Promise.resolve();
 		})
-		.then(updateJobStatus)
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
@@ -41,19 +42,17 @@ module.exports.start = function(params, error, done) {
 };
 
 function produceBoundingPolygonJob(params) {
-	var videoIds = [];
-	params.metadatas.forEach(function(metadata) {
-		if (metadata.videoId !== undefined && videoIds.indexOf(metadata.videoId) === -1) {
-			videoIds.push(metadata.videoId);
-		}
-	});
-	console.log('video ids' + videoIds.length);
-	console.log('Producing MetadataParser job...');
+	var jobName = 'VideoBoundingPolygon';
+
+	var videoIds = _.chain(params.metadatas).map('videoId').omit(_.isUndefined);
+	console.log('Video ids length:', videoIds.length);
+
+	console.log('Producing %s job...', jobName);
 	var message = {
 		videoId: videoIds[0], // might change if metadata would handle several videos at one job
 		transactionId: params.transactionId
 	};
-	var queueName = JobsService.getQueueName('VideoBoundingPolygon');
+	var queueName = JobsService.getQueueName(jobName);
 	if (queueName) {
 		return rabbit.produce(queueName, message);
 	}
@@ -86,7 +85,7 @@ function saveToMongo(videoMetadatas) {
 function updateJobStatus() {
 	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
 		.catch(function(err) {
-			if(err) {
+			if (err) {
 				console.log(err);
 			}
 		});
