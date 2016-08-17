@@ -68,38 +68,7 @@ describe('attach-video-to-metadata tests', function() {
 		});
 
 		it('should attach videos to metadata in case video arrives after metadata', function(done) {
-			var metadatas, params;
-
-			generateValidParams()
-				.then(function(_params) {
-					params = _params;
-					// remove metadatas as we only want to send video
-					params.metadatas = undefined;
-				})
-				.then(generateAndSaveMetadatas)
-				.then(function(_metadatas) {
-					metadatas = _metadatas;
-					// generate video with overlapping time to metadata
-					var startTime = metadatas[0].timestamp;
-					var endTime = config.addMinutes(startTime, 30);
-					return generateAndSaveVideo(startTime, endTime);
-				})
-				.then(function(video) {
-					params.video = video;
-					AttachVideoToMetadataService.start(params,
-						function _error() {
-							errCallback(done);
-						},
-						function _done() {
-							testMetadatasUpdated(video.id, metadatas.length, done);
-						}
-					);
-				})
-				.catch(function(err) {
-					if (err) {
-						done(err);
-					}
-				});
+			attachVideoToMetadataWithVideo(testMetadatasUpdated, done);
 		});
 
 		it('should attach videos to metadata in case metadata arrives after video', function(done) {
@@ -127,6 +96,30 @@ describe('attach-video-to-metadata tests', function() {
 					}
 				});
 		});
+
+		it('should not attach videos to metadata due to replay of job', function(done) {
+			// basically, VideoMetadatas are updated after the call to the service, so make sure that in second
+			// call the updated time is not progressing - then we know the job wasn't done
+			attachVideoToMetadataWithVideo(function(videoId, metadatasLength, done) {
+				var lastUpdateTime;
+				VideoMetadata.find({}).sort('updatedAt')
+					.then(function(metadatas) {
+						// save first update time
+						lastUpdateTime = metadatas[0].updatedAt;
+					})
+					.then(function() {
+						// perform the whole process again
+						attachVideoToMetadataWithVideo(function(videoId, metadatasLength, done) {
+							VideoMetadata.find({}).sort('updatedAt')
+								.then(function(metadatas) {
+									// make sure the video was not updated
+									expect(metadatas[0].updatedAt).to.equalDate(lastUpdateTime);
+									done();
+								});
+						}, done);
+					});
+			}, done);
+		});
 	});
 
 	describe('bad input tests', function() {
@@ -153,6 +146,41 @@ describe('attach-video-to-metadata tests', function() {
 		});
 	});
 });
+
+function attachVideoToMetadataWithVideo(testSuccessCallback, done) {
+	var metadatas, params;
+
+	generateValidParams()
+		.then(function(_params) {
+			params = _params;
+			// remove metadatas as we only want to send video
+			params.metadatas = undefined;
+		})
+		.then(generateAndSaveMetadatas)
+		.then(function(_metadatas) {
+			metadatas = _metadatas;
+			// generate video with overlapping time to metadata
+			var startTime = metadatas[0].timestamp;
+			var endTime = config.addMinutes(startTime, 30);
+			return generateAndSaveVideo(startTime, endTime);
+		})
+		.then(function(video) {
+			params.video = video;
+			AttachVideoToMetadataService.start(params,
+				function _error() {
+					errCallback(done);
+				},
+				function _done() {
+					testSuccessCallback(video.id, metadatas.length, done);
+				}
+			);
+		})
+		.catch(function(err) {
+			if (err) {
+				done(err);
+			}
+		});
+}
 
 function errornousInputTest(params, done) {
 	AttachVideoToMetadataService.start(params,
@@ -358,6 +386,10 @@ function generateAndSaveMetadatas() {
 		})
 		.then(function(metadatas) {
 			return VideoMetadata.insertMany(metadatas);
+		})
+		.then(function(metadatas) {
+			// sort metadatas
+			return Promise.resolve(_.sortBy(metadatas, 'timestamp'));
 		});
 }
 
