@@ -141,7 +141,7 @@ function matchVideosToGroups(aggregatedMetadatas) {
 	var videoPromises = [];
 	var sourceIds = Object.keys(aggregatedMetadatas);
 	// loop on aggregatedMetadatas sourceId: metadatas aggregations
-	_.forEach(sourceIds, function(sourceId) {
+	sourceIds.forEach(function(sourceId) {
 		// extract group metadatas
 		var metadatas = aggregatedMetadatas[sourceId];
 
