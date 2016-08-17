@@ -12,16 +12,18 @@
   "dependencies": {
     "bluebird": "^3.4.0",
     "elasticsearch": "^11.0.1",
-    "lodash": "^4.14.1",
+    "lodash": "^4.15.0",
     "moment": "^2.14.1",
-    "mongoose": "^4.5.8",
+    "mongoose": "^4.5.9",
+    "mongoose-geojson-schema": "^2.1.2",
     "replay-elastic": "^1.0.3",
     "replay-eslint-config": "^1.0.4",
-    "replay-jobs-service": "^1.0.9",
+    "replay-jobs-service": "^1.0.11",
     "replay-kaltura-service": "*",
-    "replay-rabbitmq": "^1.0.1",
-    "replay-schemas": "^1.0.18",
+    "replay-rabbitmq": "^1.0.3",
+    "replay-schemas": "^1.0.21",
     "stanag": "^1.0.2",
+    "turf-merge": "^1.0.2",
     "xml2js": "^0.4.16"
   },
   "devDependencies": {
