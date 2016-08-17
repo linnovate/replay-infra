@@ -21,9 +21,7 @@
     "replay-kaltura-service": "*",
     "replay-rabbitmq": "^1.0.1",
     "replay-schemas": "^1.0.18",
-    "sails-mongo": "^0.12.1",
     "stanag": "^1.0.2",
-    "waterline": "^0.12.2",
     "xml2js": "^0.4.16"
   },
   "devDependencies": {
