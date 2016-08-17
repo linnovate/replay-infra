@@ -10,7 +10,7 @@ var config = require('../config'),
 
 var _transactionId;
 // haven't used new Date() for easier tests
-var _now = moment.utc('1/1/2000').toDate();
+var _now = moment.utc().toDate();
 
 // this is a mapping used to diverse the homogenous created metadatas,
 // so they will have different sourceIds and different time intervals,
@@ -35,6 +35,7 @@ var sampleSourceIdToTimeMapping = {
 // I could have used the same logic of the service to check the results, but if I had a bug
 // in the logic then I would also have bug in checking the results are correct.
 // Therefore, I have to test against hardcoded values.
+// The numbers are the expected amount of metadatas in each time interval in sampleSourceIdToTimeMapping.
 var expectedVideosAmounts = [4, 3, 7, 2, 2, 2];
 
 describe('attach-video-to-metadata tests', function() {
