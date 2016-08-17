@@ -65,7 +65,7 @@ function attachVideoToMetadata(params) {
 	console.log('Starting process of attaching a video to it\'s metadatas...');
 	// case we received video metadatas
 	if (params.metadatas && params.metadatas.length > 0) {
-		console.log('Recieved metadatas...');
+		console.log('Received metadatas...');
 		// group by sourceId, then sort each group by ascending timestamp.
 		// now match videos to each of the created groups
 		return groupBySourceId(params.metadatas)
@@ -75,7 +75,7 @@ function attachVideoToMetadata(params) {
 			.then(produceMetadataToMongoJob);
 	}
 	// case we receieved video
-	console.log('Recieved video...');
+	console.log('Received video...');
 	// we only handle VideoStandard 0.9 videos
 	if (params.video.receivingMethod.standard === 'VideoStandard' &&
 		params.video.receivingMethod.version === '0.9') {

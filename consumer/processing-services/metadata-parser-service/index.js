@@ -67,7 +67,7 @@ function performParseChain(params) {
 			return dataToObjects(method, data, params);
 		})
 		.then(function(videoMetadatas) {
-			return produceJobs(videoMetadatas);
+			return produceJobs(params, videoMetadatas);
 		})
 		.all();
 }
@@ -92,11 +92,12 @@ function dataToObjects(method, data, params) {
 	});
 }
 
-function produceJobs(videoMetadatas) {
+function produceJobs(params, videoMetadatas) {
 	return [
 		produceVideoMetadatasJobs('MetadataToMongo', videoMetadatas),
 		produceVideoMetadatasJobs('MetadataToElastic', videoMetadatas),
-		produceVideoMetadatasJobs('MetadataToCaptions', videoMetadatas)
+		produceVideoMetadatasJobs('MetadataToCaptions', videoMetadatas),
+		produceAttachVideoToMetadataJob(videoMetadatas, params)
 	];
 }
 
@@ -113,11 +114,30 @@ function produceVideoMetadatasJobs(jobName, videoMetadatas) {
 	return Promise.reject(Error('Could not find queue name of the inserted job type'));
 }
 
+function produceAttachVideoToMetadataJob(videoMetadatas, params) {
+	var jobName = 'AttachVideoToMetadata';
+	// produce this job only if the receiving method is VideoStandard 0.9
+	if (params.receivingMethod.standard === 'VideoStandard' && params.receivingMethod.version === '0.9') {
+		console.log('Producing %s job...', jobName);
+		var message = {
+			transactionId: _transactionId,
+			sourceId: params.sourceId,
+			metadatas: videoMetadatas
+		};
+		var queueName = JobsService.getQueueName(jobName);
+		if (queueName) {
+			return rabbit.produce(queueName, message);
+		}
+		return Promise.reject(Error('Could not find queue name of the inserted job type'));
+	}
+	return Promise.resolve();
+}
+
 // update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
 	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
 		.catch(function(err) {
-			if(err) {
+			if (err) {
 				console.log(err);
 			}
 		});
