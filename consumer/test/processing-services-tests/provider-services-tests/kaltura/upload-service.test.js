@@ -138,7 +138,7 @@ describe('kaltura upload-service tests', function() {
 		it('lacks video relative path', function(done) {
 			var message = config.generateValidMessage();
 			message.videoRelativePath = undefined;
-			UploadService.upload({},
+			UploadService.upload(message,
 				function _error() {
 					done();
 				},
@@ -150,7 +150,7 @@ describe('kaltura upload-service tests', function() {
 		it('lacks video name', function(done) {
 			var message = config.generateValidMessage();
 			message.videoName = undefined;
-			UploadService.upload({},
+			UploadService.upload(message,
 				function _error() {
 					done();
 				},
@@ -162,19 +162,7 @@ describe('kaltura upload-service tests', function() {
 		it('lacks transaction id', function(done) {
 			var message = config.generateValidMessage();
 			message.transactionId = undefined;
-			UploadService.upload({},
-				function _error() {
-					done();
-				},
-				function _done() {
-					done(new Error('upload service should have errored.'));
-				});
-		});
-
-		it('lacks transaction id', function(done) {
-			var message = config.generateValidMessage();
-			message.transactionId = undefined;
-			UploadService.upload({},
+			UploadService.upload(message,
 				function _error() {
 					done();
 				},
