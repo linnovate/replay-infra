@@ -1,6 +1,7 @@
 var path = require('path');
 
 var chai = require('chai'),
+	_ = require('lodash'),
 	mongoose = require('mongoose'),
 	connectMongo = require('replay-schemas/connectMongo'),
 	Video = require('replay-schemas/Video'),
@@ -9,7 +10,8 @@ var chai = require('chai'),
 	Query = require('replay-schemas/Query'),
 	rabbit = require('replay-rabbitmq'),
 	Promise = require('bluebird'),
-	elasticsearch = require('replay-elastic');
+	elasticsearch = require('replay-elastic'),
+	JobsService = require('replay-jobs-service');
 
 var fs = Promise.promisifyAll(require('fs'));
 
@@ -38,6 +40,7 @@ module.exports.resetEnvironment = function() {
 	process.env.PROVIDER = 'kaltura';
 	process.env.KALTURA_URL = 'http://vod.linnovate.net';
 	process.env.KALTURA_ADMIN_SECRET = '96f2df9a0071cd8024463509439fedb9';
+	process.env.RABBITMQ_MAX_RESEND_ATTEMPS = 1;
 };
 
 // connect services
@@ -93,7 +96,34 @@ module.exports.generateJobStatus = function() {
 	return JobStatus.create({});
 };
 
+module.exports.generateVideo = function(params, _transactionId) {
+	return {
+		_id: new mongoose.Types.ObjectId(),
+		sourceId: params.sourceId,
+		relativePath: params.videoRelativePath,
+		name: params.videoName,
+		receivingMethod: params.receivingMethod,
+		jobStatusId: _transactionId,
+		startTime: params.startTime,
+		endTime: params.endTime
+	};
+};
+
+// returns metadata objects from the VideoMetadata schema
 module.exports.getValidMetadataObjects = function() {
+	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
+	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
+		.then(function(expectedDataAsString) {
+			var metadataObjects = JSON.parse(expectedDataAsString);
+			var videoMetadatas = _.map(metadataObjects, function(metadata) {
+				return new VideoMetadata(metadata);
+			});
+			return Promise.resolve(videoMetadatas);
+		});
+};
+
+// returns raw javascript metadata objects
+module.exports.getValidMetadataAsJson = function() {
 	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
 	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
 		.then(function(expectedDataAsString) {
@@ -101,6 +131,22 @@ module.exports.getValidMetadataObjects = function() {
 		});
 };
 
+module.exports.deleteAllQueues = function() {
+	var jobConfigs = JobsService.getAllJobConfigs();
+	var queueNames = _.map(jobConfigs, function(jobConfig) {
+		return jobConfig.queue;
+	});
+
+	var deleteQueuePromises = [];
+	for (var i = 0; i < queueNames.length; i++) {
+		var queueName = queueNames[i];
+		deleteQueuePromises.push(rabbit.deleteQueue(queueName));
+	}
+
+	return Promise.all(deleteQueuePromises);
+};
+
 function addMinutes(date, minutes) {
 	return new Date(date.getTime() + minutes * 60000);
 }
+module.exports.addMinutes = addMinutes;

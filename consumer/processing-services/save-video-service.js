@@ -76,7 +76,7 @@ function trySaveVideoToMongo(jobStatus, params) {
 
 		return videoQuery(params)
 			.then(function(video) {
-				params.videoId = video.id;
+				params.video = video;
 				return Promise.resolve(params);
 			});
 	}
@@ -101,12 +101,9 @@ function saveVideoToMongo(params) {
 		})
 		.then(function(video) {
 			console.log('Video successfully saved to mongo:', video);
-
-			// update JobStatus status
-			return JobService.updateJobStatus(_transactionId, _jobStatusTag)
-				.then(function(jobStatus) {
-					return Promise.resolve(video);
-				});
+			// call update job status but don't depend on it's result as we already succeeded in saving video
+			updateJobStatus();
+			return Promise.resolve(video);
 		});
 }
 
@@ -121,7 +118,8 @@ function getVideo() {
 function produceJobs(params) {
 	return [
 		produceMetadataParserJob(params),
-		produceUploadToProviderJob(params)
+		produceUploadToProviderJob(params),
+		produceAttachVideoToMetadataJob(params)
 	];
 	// etc...
 }
@@ -131,7 +129,7 @@ function produceMetadataParserJob(params) {
 
 	var message = {
 		sourceId: params.sourceId,
-		videoId: params.videoId, // could be undefined
+		videoId: params.video ? params.video.id : undefined, // could be undefined
 		dataRelativePath: params.dataRelativePath,
 		receivingMethod: params.receivingMethod,
 		transactionId: params.transactionId
@@ -147,7 +145,7 @@ function produceUploadToProviderJob(params) {
 	console.log('Producing UploadToProvider job...');
 
 	// upload to provider if video exists
-	if (params.videoRelativePath && params.videoId) {
+	if (params.videoRelativePath && params.video) {
 		var message = {
 			videoName: params.videoName,
 			videoRelativePath: params.videoRelativePath,
@@ -162,4 +160,35 @@ function produceUploadToProviderJob(params) {
 	}
 
 	return Promise.resolve();
+}
+
+function produceAttachVideoToMetadataJob(params) {
+	console.log('Producing AttachVideoToMetadata job...');
+
+	// upload to provider if video exists
+	if (params.videoRelativePath && params.video) {
+		var message = {
+			video: params.video,
+			sourceId: params.sourceId,
+			transactionId: params.transactionId
+		};
+
+		var queueName = JobsService.getQueueName('AttachVideoToMetadata');
+		if (queueName) {
+			return rabbit.produce(queueName, message);
+		}
+		return Promise.reject(new Error('Could not find queue name of the inserted job type'));
+	}
+
+	return Promise.resolve();
+}
+
+// update job status, swallaw errors so they won't invoke error() on message
+function updateJobStatus() {
+	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
+		.catch(function(err) {
+			if (err) {
+				console.log(err);
+			}
+		});
 }

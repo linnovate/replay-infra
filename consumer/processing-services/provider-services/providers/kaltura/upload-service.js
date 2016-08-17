@@ -1,7 +1,7 @@
 var fs = require('fs'),
 	path = require('path');
 
-var	JobService = require('replay-jobs-service');
+var JobsService = require('replay-jobs-service');
 
 var _transactionId;
 var _jobStatusTag = 'uploaded-to-kaltura';
@@ -16,7 +16,7 @@ module.exports.upload = function(params, error, done) {
 
 	_transactionId = params.transactionId;
 
-	JobService.findJobStatus(_transactionId)
+	JobsService.findJobStatus(_transactionId)
 		.then(function(jobStatus) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
@@ -66,16 +66,8 @@ function copyToDropFolder(params, error, done) {
 
 		console.log('Video successfuly copied to dropfolder.');
 		// update status
-		return JobService.updateJobStatus(_transactionId, _jobStatusTag)
-			.then(done)
-			.catch(function(err) {
-				if (err) {
-					console.log(err);
-					// NOTE: We do not error() on this, else duplicate entries would
-					// be uploaded to Kaltura!
-					done();
-				}
-			});
+		updateJobStatus()
+			.then(done);
 	});
 }
 
@@ -101,4 +93,14 @@ function copyFile(source, target, cb) {
 			cb(err);
 		}
 	}
+}
+
+// update job status, swallaw errors so they won't invoke error() on message
+function updateJobStatus() {
+	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
+		.catch(function(err) {
+			if (err) {
+				console.log(err);
+			}
+		});
 }

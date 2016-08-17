@@ -16,9 +16,12 @@ describe('kaltura upload-service tests', function() {
 	before(function() {
 		config.resetEnvironment();
 		return config.connectServices()
-			.then(function() {
-				return config.wipeMongoCollections();
-			});
+			.then(config.wipeMongoCollections);
+	});
+
+	after(function() {
+		return config.wipeMongoCollections()
+			.then(config.deleteAllQueues);
 	});
 
 	describe('sanity tests', function() {

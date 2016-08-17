@@ -12,9 +12,7 @@ describe('kaltura fetch-service tests', function() {
 	before(function() {
 		config.resetEnvironment();
 		return config.connectServices()
-			.then(function() {
-				return config.wipeMongoCollections();
-			})
+			.then(config.wipeMongoCollections)
 			.then(function() {
 				return KalturaService.initialize();
 			})
@@ -24,6 +22,11 @@ describe('kaltura fetch-service tests', function() {
 			.then(function(mediaEntry) {
 				_entryId = mediaEntry.id;
 			});
+	});
+
+	after(function() {
+		return config.wipeMongoCollections()
+			.then(config.deleteAllQueues);
 	});
 
 	describe('sanity tests', function() {

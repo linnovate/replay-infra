@@ -11,30 +11,25 @@ describe('metadata-to-elastic-service tests', function() {
 		config.resetEnvironment();
 		elasticsearch.connect(process.env.ELASTIC_HOST, process.env.ELASTIC_PORT);
 		return config.connectServices()
-			.then(function() {
-				return config.wipeElasticIndices();
-			})
-			.then(function() {
-				return config.createElasticIndices();
-			})
-			.then(function() {
-				return config.getValidMetadataObjects();
-			})
+			.then(config.wipeElasticIndices)
+			.then(config.createElasticIndices)
+			.then(config.getValidMetadataObjects)
 			.then(function(expectedDataAsObjects) {
 				_expectedParsedDataObjects = expectedDataAsObjects;
 				return Promise.resolve();
 			});
 	});
 
+	after(function() {
+		return config.wipeMongoCollections()
+			.then(config.deleteAllQueues);
+	});
+
 	describe('sanity tests', function() {
 		beforeEach(function() {
 			return config.wipeElasticIndices()
-				.then(function() {
-					return config.createElasticIndices();
-				})
-				.then(function() {
-					return config.generateJobStatus();
-				})
+				.then(config.createElasticIndices)
+				.then(config.generateJobStatus)
 				.then(function(jobStatus) {
 					_transactionId = jobStatus.id;
 					return Promise.resolve();
@@ -43,9 +38,7 @@ describe('metadata-to-elastic-service tests', function() {
 
 		afterEach(function() {
 			return config.wipeElasticIndices()
-				.then(function() {
-					return config.createElasticIndices();
-				});
+				.then(config.createElasticIndices);
 		});
 
 		it('should insert metadata objects to elastic', function(done) {
