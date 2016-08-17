@@ -61,7 +61,7 @@ function copyToDropFolder(params, error, done) {
 	copyFile(sourceFilePath, targetFilePath, function(err) {
 		if (err) {
 			console.log('Error copying video to dropfolder: ', err);
-			error();
+			return error();
 		}
 
 		console.log('Video successfuly copied to dropfolder.');
