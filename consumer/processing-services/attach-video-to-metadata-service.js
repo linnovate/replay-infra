@@ -125,15 +125,12 @@ function groupBySourceId(metadatas) {
 
 function sortByAscendingTimestamp(aggregatedMetadatas) {
 	console.log('Sorting aggregated metadatas by ascending timestamp...');
-	return new Promise(function(resolve, reject) {
-		// loop on aggregatedMetadatas sourceId: metadatas aggregations
-		for (var i = 0, keys = Object.keys(aggregatedMetadatas); i < keys.length; i++) {
-			var sourceId = keys[i];
-			aggregatedMetadatas[sourceId] = _.sortBy(aggregatedMetadatas[sourceId], 'timestamp');
-		}
-
-		resolve(aggregatedMetadatas);
+	// loop on aggregatedMetadatas sourceId: metadatas aggregations
+	Object.keys(aggregatedMetadatas).forEach(function(sourceId) {
+		aggregatedMetadatas[sourceId] = _.sortBy(aggregatedMetadatas[sourceId], 'timestamp');
 	});
+
+	return Promise.resolve(aggregatedMetadatas);
 }
 
 // find the videos of each group (may be more than 1 for each group)
