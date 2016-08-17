@@ -289,10 +289,14 @@ function generateValidDiversedParams() {
 // 2. diverse by time intervals so there would be several time intervals
 //    (mapped to different videos) in every sourceId chunk.
 function diverseMetadatas(metadatas) {
-	//
-	// diverse sourceId
-	//
+	var groupedMetadatasBySourceId = diverseMetadatasBySourceId(metadatas);
+	// diverse is happened inside the objects i.e. no objects are returned
+	diverseMetadatasByTimeIntervals(groupedMetadatasBySourceId);
+	return Promise.resolve(metadatas);
+}
 
+// diverse by sourceId so there would be several different sourceIds
+function diverseMetadatasBySourceId(metadatas) {
 	// first chunk the metadatas into N sub arrays, such that N is the amount of
 	// sourceIds we have.
 	var chunksLength = Math.ceil(metadatas.length / Object.keys(sampleSourceIdToTimeMapping).length);
@@ -309,11 +313,12 @@ function diverseMetadatas(metadatas) {
 	metadatas = [].concat.apply([], metadatasChunks);
 	// group metadatas by sourceId
 	var groupedMetadatasBySourceId = _.groupBy(metadatas, 'sourceId');
+	return groupedMetadatasBySourceId;
+}
 
-	//
-	// diverse times
-	//
-
+// diverse by time intervals so there would be several time intervals
+// (mapped to different videos) in every sourceId chunk.
+function diverseMetadatasByTimeIntervals(groupedMetadatasBySourceId) {
 	// for every group of the same sourceId metadatas, apply the matching time intervals
 	Object.keys(groupedMetadatasBySourceId).forEach(function(sourceId) {
 		// extract the metadatas of the group and it's time intervals
@@ -342,8 +347,6 @@ function diverseMetadatas(metadatas) {
 			});
 		});
 	});
-	console.log('Diveresed:', JSON.stringify(metadatas));
-	return Promise.resolve(metadatas);
 }
 
 // generate videos according to sampleSourceIdToTimeMapping
