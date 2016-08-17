@@ -44,7 +44,7 @@ module.exports.start = function(params, error, done) {
 function produceBoundingPolygonJob(params) {
 	var jobName = 'VideoBoundingPolygon';
 
-	var videoIds = _.chain(params.metadatas).map('videoId').omit(_.isUndefined);
+	var videoIds = _(params.metadatas).map('videoId').value();
 	console.log('Video ids length:', videoIds.length);
 
 	console.log('Producing %s job...', jobName);
