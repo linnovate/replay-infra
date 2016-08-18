@@ -6,11 +6,10 @@ var Promise = require('bluebird'),
 	rabbit = require('replay-rabbitmq'),
 	JobsService = require('replay-jobs-service');
 
+const LAST_CAPTIONS_TIME = 1; // in seconds
+
 var _transactionId;
 var _jobStatusTag = 'created-captions-from-metadata';
-
-var LAST_CAPTIONS_TIME = 1; // in seconds
-var CAPTIONS_PATH = 'captions';
 
 module.exports.start = function(params, error, done) {
 	console.log('MetadataToCaptions service started.');
@@ -44,10 +43,12 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
+	console.log('Storage path:', process.env.STORAGE_PATH);
+	console.log('Captions path:', process.env.CAPTIONS_PATH);
 	console.log('Transaction id:', params.transactionId);
 
 	// validate params
-	if (!process.env.STORAGE_PATH || !params.transactionId) {
+	if (!process.env.STORAGE_PATH || !process.env.CAPTIONS_PATH || !params.transactionId) {
 		return false;
 	}
 	return true;
@@ -69,11 +70,12 @@ function performCaptionsChain(metadatas) {
 function createCaptions(metadatas) {
 	var startTime, endTime, currentTimestamp, timeDiff, timeLine;
 
-	var captionsPath = path.join(process.env.STORAGE_PATH, CAPTIONS_PATH);
+	var captionsPath = path.join(process.env.STORAGE_PATH, process.env.CAPTIONS_PATH);
 	checkAndCreatePath(captionsPath);
 
 	var videoId = metadatas[0].videoId;
 	var fileName = videoId + '.vtt';
+	var captionsRelativePath = path.join(process.env.CAPTIONS_PATH, fileName);
 	var captionsFullPath = path.join(captionsPath, fileName);
 	var baseTimestamp = new Date(metadatas[0].timestamp);
 	endTime = getFormatedTime(new Date(0));
@@ -98,7 +100,7 @@ function createCaptions(metadatas) {
 			});
 		}).then(function() {
 			console.log('Captions file created successfully!');
-			return Promise.resolve({ videoId: videoId, captionsRelativePath: CAPTIONS_PATH, captionsFileName: fileName });
+			return Promise.resolve({ videoId: videoId, captionsRelativePath: captionsRelativePath });
 		})
 		.catch(function(err) {
 			return Promise.reject(err);
@@ -132,7 +134,6 @@ function produceCaptionsToDestinationJob(params) {
 	var message = {
 		videoId: params.videoId,
 		captionsRelativePath: params.captionsRelativePath,
-		captionsFileName: params.captionsFileName,
 		transactionId: _transactionId
 	};
 
