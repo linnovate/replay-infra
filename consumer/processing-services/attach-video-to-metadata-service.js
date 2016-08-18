@@ -12,7 +12,7 @@ var VideoMetadata = require('replay-schemas/VideoMetadata'),
 	Promise = require('bluebird');
 
 var _transactionId;
-var _jobStatusTag = 'attach-video-to-metadata';
+var _jobStatusTag = 'attached-video-to-0.9-metadata';
 
 module.exports.start = function(params, error, done) {
 	console.log('AttachVideoToMetadata service started.');
