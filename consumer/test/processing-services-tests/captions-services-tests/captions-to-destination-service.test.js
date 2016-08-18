@@ -7,7 +7,7 @@ var mkdirp = Promise.promisify(require('mkdirp')),
 	rimraf = Promise.promisify(require('rimraf'));
 
 var config = require('../../config');
-var CaptionsToDestinationService = require('../../../processing-services/captions-service/captions-to-destination-service');
+var CaptionsToDestinationService = require('../../../processing-services/captions-services/captions-to-destination-service');
 
 var _transactionId;
 
