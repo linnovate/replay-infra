@@ -59,45 +59,32 @@ function StreamListener() {
 				_closeServer();
 				return Promise.reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
 			}
-			_bindToTheAddress()
-				.then(function(res) {
-					console.log('bind to address resolved');
-					return Promise.resolve(res);
-				})
-				.catch(function(err) {
-					console.log('bind to address rejected');
-					return Promise.reject(err);
-				});
-		} else {
-			// check if the ip is not 0.0.0.0
-			if (_ip !== LOCALHOST) {
-				_server.addMembership(_ip);
-			}
-			console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
-			_finishedBind = true;
-			return Promise.resolve({ ip: _ip, port: _port, numOfAttempts: _bindingAttemptsCounts });
+			return _bindToTheAddress();
 		}
+		// check if the ip is not 0.0.0.0
+		if (_ip !== LOCALHOST) {
+			_server.addMembership(_ip);
+		}
+		console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
+		_finishedBind = true;
+		return Promise.resolve({ ip: _ip, port: _port, numOfAttempts: _bindingAttemptsCounts });
 	}
 
 	// bind to the address.
 	function _bindToTheAddress() {
-		try {
-			_server.bind({ port: _port, address: _ip, exclusive: false });
-			return Promise.resolve();
-		} catch (err) {
-			console.log('bind catch');
-			setTimeout(function() {
-				_afterBind(err)
-					.then(function(res) {
-						console.log('afterbind resolved');
-						return Promise.resolve(res);
-					})
-					.catch(function(err) {
-						console.log('afterbind reject');
-						return Promise.reject(err);
-					});
-			}, TIME_TO_WAIT_AFTER_FAILED);
-		}
+		var bindPromise = new Promise(function(resolve, reject) {
+			_server.bind({ port: _port, address: _ip, exclusive: false })
+				.on('error', reject)
+				.on('listening', resolve);
+		});
+		return bindPromise
+			.then(function() {
+				return _afterBind();
+			})
+			.catch(function(err) {
+				console.log('bind catch');
+				return _afterBind(err);
+			});
 	}
 
 	function _handleParamsValidation(params) {
