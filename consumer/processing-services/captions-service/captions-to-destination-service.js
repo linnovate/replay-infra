@@ -23,6 +23,7 @@ module.exports.start = function(params, error, done) {
 			}
 			return copyToDestination(params, error, done);
 		})
+		.then(done)
 		.catch(function(err) {
 			console.log(err);
 			error();
@@ -30,14 +31,14 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
+	console.log('Storage path:', process.env.STORAGE_PATH);
+	console.log('Destination path:', process.env.DESTINATION_PATH);
 	console.log('Transaction id:', params.transactionId);
 	console.log('Captions videoId:', params.videoId);
-	console.log('Captions file name:', params.captionsFileName);
 	console.log('Captions relative path:', params.captionsRelativePath);
-	console.log('Captions storage path:', process.env.STORAGE_PATH);
 
 	// validate params
-	if (!params.transactionId || !params.videoId || !params.captionsFileName || !params.captionsRelativePath || !process.env.STORAGE_PATH) {
+	if (!process.env.STORAGE_PATH || !process.env.DESTINATION_PATH || !params.transactionId || !params.videoId || !params.captionsRelativePath) {
 		return Promise.reject('CaptionsToDestination - Some vital parameters are missing.');
 	}
 
@@ -45,7 +46,7 @@ function validateInput(params) {
 }
 
 function copyToDestination(params, error, done) {
-	var sourceFilePath = path.join(process.env.STORAGE_PATH, params.captionsRelativePath, params.captionsFileName);
+	var sourceFilePath = path.join(process.env.STORAGE_PATH, params.captionsRelativePath);
 	var destinationFilePath = findCaptionsDestinationPath(params);
 
 	console.log('sourceFilePath:', sourceFilePath);
@@ -78,9 +79,14 @@ function findCaptionsDestinationPath(params) {
 	// var destinationPath = '/mnt/kaltura_content/captions/acona_matta.vtt';
 	var destinationPath = '/mnt/kaltura_content/20160728/0/0_ervwr6f7_0_83qjoyd1_2.vtt';
 
-	console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-	console.log('Currently destination path HARDCODED!');
-	console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+	console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+	console.log('Currently findCaptionsDestinationPath functions return a HARDCODED path!');
+	console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+
+	if (params.videoId === 'testVideoId') {
+		destinationPath = path.join(process.env.STORAGE_PATH, process.env.DESTINATION_PATH, params.captionsRelativePath);
+	}
+
 	return destinationPath;
 }
 
