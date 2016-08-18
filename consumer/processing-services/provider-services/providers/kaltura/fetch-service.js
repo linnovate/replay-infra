@@ -63,8 +63,8 @@ function performFetchChain(params) {
 		.then(confirmUpdate);
 }
 
-function getVideo(name) {
-	var query = { name: { $regex: name + '.*' } };
+function getVideo(videoName) {
+	var query = { name: { $regex: videoName + '.*' } };
 	return Video.findOne(query);
 }
 
@@ -72,7 +72,7 @@ function updateVideoInMongo(kalturaVideo, videoName) {
 	console.log('Updating video in mongo with the data from Kaltura...');
 
 	// update video with the same name
-	var query = { name: videoName };
+	var query = { name: { $regex: videoName + '.*' } };
 
 	return Video.update(query, {
 		provider: 'kaltura',
