@@ -10,6 +10,7 @@ var _entryId;
 
 describe('kaltura fetch-service tests', function() {
 	before(function() {
+		this.timeout(15000);
 		config.resetEnvironment();
 		return config.connectServices()
 			.then(config.wipeMongoCollections)
@@ -21,6 +22,7 @@ describe('kaltura fetch-service tests', function() {
 			})
 			.then(function(mediaEntry) {
 				_entryId = mediaEntry.id;
+				return Promise.resolve();
 			});
 	});
 
@@ -58,6 +60,7 @@ describe('kaltura fetch-service tests', function() {
 		});
 
 		it('should not update video in mongo due to replay of job', function(done) {
+			this.timeout(15000);
 			var message = config.generateValidMessage();
 			message.transactionId = _transactionId;
 			message.providerId = _entryId;
@@ -121,7 +124,7 @@ function createVideo(params) {
 }
 
 function hasVideoUpdated(transactionId, done) {
-	return Video
+	Video
 		.findOne({
 			jobStatusId: transactionId
 		})
@@ -145,7 +148,7 @@ function hasVideoUpdated(transactionId, done) {
 }
 
 function verifyUpdateHasntOccured(message, done) {
-	return Video
+	Video
 		.update({ transactionId: _transactionId }, { providerId: undefined })
 		.then(function() {
 			FetchService.fetch(message,
@@ -159,6 +162,7 @@ function verifyUpdateHasntOccured(message, done) {
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
+				done(err);
 			}
 		});
 }
