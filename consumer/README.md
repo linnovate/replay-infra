@@ -24,6 +24,8 @@ Set environment variables to config the app:
 | KALTURA_PARTNER_ID            | The partner ID in kaltura                    |                |
 | KALTURA_ADMIN_SECRET          | Kaltura's admin secret                       |                |
 | KALTURA_URL                   | Kaltura URI                                  |                |
+| CAPTIONS_PATH                 | Path to pass captions through                |                |
+| DESTINATION_PATH              | Path to which captions will be thrown        |                |
 
 Run app:
 ```

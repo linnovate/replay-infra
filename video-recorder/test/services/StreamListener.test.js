@@ -235,13 +235,11 @@ function behaviorTests() {
 			tmpPorc.kill('SIGKILL');
 		});
 		it('should Emit event "StreamingData" when data is streaming', function(done) {
+			event.on('StreamingData', function tempFunc() {
+				event.removeListener('StreamingData', tempFunc);
+				done();
+			});
 			streamListener.startListen({ ip: '0.0.0.0', port: 5555 })
-				.then(function(res) {
-					event.on('StreamingData', function tempFunc() {
-						event.removeListener('StreamingData', tempFunc);
-						done();
-					});
-				})
 				.catch(function(err) {
 					assert.fail(null, null, 'the method should work but somthing happend : ' + err);
 					done();
