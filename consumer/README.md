@@ -37,3 +37,14 @@ Job types are found in [in replay-jobs-service repo](https://github.com/linnovat
 The consumer service is given a command line argument to decide which job it should handle.
 
 With this job type, it can find out the service which handles this job and also the queue to listen to even get those jobs.
+
+## Tests
+We use mocha as our tests framework, therefore install mocha globally:
+```
+sudo npm install mocha -g
+```
+
+Now simply run the tests with npm:
+```
+npm test
+```
