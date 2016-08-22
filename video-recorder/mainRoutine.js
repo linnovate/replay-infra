@@ -352,7 +352,7 @@ function sendToJobQueue(params) {
 		dataRelativePath: params.dataPath,
 		receivingMethod: {
 			standard: params.streamingSource.streamingMethod.standard,
-			version: params.streamingSource.streamingMethod.version
+			version: '1.0'
 		},
 		startTime: params.startTime,
 		endTime: params.endTime,
