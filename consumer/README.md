@@ -6,7 +6,7 @@ You can have have MongoDB and ElasticSearch installed locally, else you may conf
 Initialize ElasticSearch according to the instructions [in replay-elastic repo](https://github.com/linnovate/replay-common/tree/develop/replay-elastic), or via the helper module [replay-db-initialization](https://github.com/linnovate/replay-common/tree/develop/replay-db-initialization).
 
 Set environment variables to config the app:
-```
+
 | Name                          | Description                                  | Default        |
 |-------------------------------|----------------------------------------------|----------------|
 | MONGO_HOST                    | Mongo host URI                               | localhost      |
@@ -24,7 +24,7 @@ Set environment variables to config the app:
 | KALTURA_PARTNER_ID            | The partner ID in kaltura                    |                |
 | KALTURA_ADMIN_SECRET          | Kaltura's admin secret                       |                |
 | KALTURA_URL                   | Kaltura URI                                  |                |
-```
+
 
 Run app:
 ```
