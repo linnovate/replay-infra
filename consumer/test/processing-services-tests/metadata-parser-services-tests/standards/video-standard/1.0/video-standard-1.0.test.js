@@ -10,11 +10,11 @@ var _dataAsString, _expectedParsedDataObjects;
 var _videoId = '5799d24778b1f56a081e7029';
 
 describe('video standard 1.0 parser tests', function() {
-	before(function(done) {
+	before(function() {
 		config.resetEnvironment();
 		var message = config.generateValidMessage();
 		var fullpathToData = path.join(process.env.STORAGE_PATH, message.dataRelativePath);
-		fs.readFileAsync(fullpathToData, 'utf8')
+		return fs.readFileAsync(fullpathToData, 'utf8')
 			.then(function(dataAsString) {
 				_dataAsString = dataAsString;
 				return Promise.resolve();
@@ -23,14 +23,6 @@ describe('video standard 1.0 parser tests', function() {
 			.then(function(expectedDataAsObjects) {
 				_expectedParsedDataObjects = expectedDataAsObjects;
 				return Promise.resolve();
-			})
-			.then(function() {
-				done();
-			})
-			.catch(function(err) {
-				if (err) {
-					done(err);
-				}
 			});
 	});
 

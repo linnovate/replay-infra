@@ -25,39 +25,19 @@ describe('kaltura upload-service tests', function() {
 	});
 
 	describe('sanity tests', function() {
-		beforeEach(function(done) {
+		beforeEach(function() {
 			process.env.DROP_FOLDER_PATH = path.join(process.env.STORAGE_PATH, _tempDropFolderName);
 			return createDropFolder()
-				.then(function() {
-					return config.generateJobStatus();
-				})
+				.then(config.generateJobStatus)
 				.then(function(jobStatus) {
 					_transactionId = jobStatus.id;
 					return Promise.resolve();
-				})
-				.then(function() {
-					done();
-				})
-				.catch(function(err) {
-					if (err) {
-						done(err);
-					}
 				});
 		});
 
-		afterEach(function(done) {
-			removeDropFolder()
-				.then(function() {
-					return config.wipeMongoCollections();
-				})
-				.then(function() {
-					done();
-				})
-				.catch(function(err) {
-					if (err) {
-						done(err);
-					}
-				});
+		afterEach(function() {
+			return removeDropFolder()
+				.then(config.wipeMongoCollections);
 		});
 
 		it('should copy to folder', function(done) {

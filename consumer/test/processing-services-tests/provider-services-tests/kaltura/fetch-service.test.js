@@ -30,33 +30,17 @@ describe('kaltura fetch-service tests', function() {
 	});
 
 	describe('sanity tests', function() {
-		beforeEach(function(done) {
+		beforeEach(function() {
 			return config.generateJobStatus()
 				.then(function(jobStatus) {
 					var message = config.generateValidMessage();
 					message.transactionId = _transactionId = jobStatus.id;
 					return createVideo(message);
-				})
-				.then(function() {
-					done();
-				})
-				.catch(function(err) {
-					if (err) {
-						done(err);
-					}
 				});
 		});
 
-		afterEach(function(done) {
-			return config.wipeMongoCollections()
-				.then(function() {
-					done();
-				})
-				.catch(function(err) {
-					if (err) {
-						done(err);
-					}
-				});
+		afterEach(function() {
+			return config.wipeMongoCollections();
 		});
 
 		it('should update video in mongo', function(done) {
