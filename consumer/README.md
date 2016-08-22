@@ -25,7 +25,6 @@ Set environment variables to config the app:
 | KALTURA_ADMIN_SECRET          | Kaltura's admin secret                       |                |
 | KALTURA_URL                   | Kaltura URI                                  |                |
 
-
 Run app:
 ```
 node index.js MetadataParser
