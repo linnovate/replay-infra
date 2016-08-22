@@ -3,58 +3,36 @@ Install RabbitMQ according to the instructions [in replay-rabbitmq repo](https:/
 
 You can have have MongoDB and ElasticSearch installed locally, else you may configure them via the environment variables.
 
-Initialize ElasticSearch according to the instructions [in replay-elastic repo](https://github.com/linnovate/replay-common/tree/develop/replay-elastic).
+Initialize ElasticSearch according to the instructions [in replay-elastic repo](https://github.com/linnovate/replay-common/tree/develop/replay-elastic), or via the helper module [replay-db-initialization](https://github.com/linnovate/replay-common/tree/develop/replay-db-initialization).
 
-Run app (default parameters will be used):
+Set environment variables to config the app:
 ```
-MONGO_DATABASE=replay_dev STORAGE_PATH=/tmp node index.js MetadataParser
+| Name                          | Description                                  | Default        |
+|-------------------------------|----------------------------------------------|----------------|
+| MONGO_HOST                    | Mongo host URI                               | localhost      |
+| MONGO_PORT                    | Mongo port                                   | 27017          |
+| MONGO_DATABASE                | Mongo database name                          | replay_dev     |
+| ELASTIC_HOST                  | Elastic host URI                             | localhost      |
+| ELASTIC_PORT                  | Elastic port                                 | 9200           |
+| ELASTIC_VIDEO_METADATA_INDEX  | The index of the VideoMetadata in Elastic    | videometadatas |
+| ELASTIC_VIDEO_METADATA_TYPE   | The type of the VideoMetadata in Elastic     | videometadata  |
+| RABBITMQ_HOST                 | RabbitMQ host URI                            | localhost      |
+| RABBITMQ_MAX_RESEND_ATTEMPS   | Max attempts to resend messages              | 3              |
+| RABBITMQ_MAX_UNACKED_MESSAGES | Max parallel messages to process without ACK |                |
+| PROVIDER                      | Video CMS provider                           |                |
+| DROP_FOLDER_PATH              | Kaltura's drop folder relative path          |                |
+| KALTURA_PARTNER_ID            | The partner ID in kaltura                    |                |
+| KALTURA_ADMIN_SECRET          | Kaltura's admin secret                       |                |
+| KALTURA_URL                   | Kaltura URI                                  |                |
 ```
 
-Command line arguments to config the app:
+Run app:
 ```
-<JobType> // e.g. MetadataParser
-```
-
-Environment variables to config the app:
-```
-STORAGE_PATH // mandatory
-MONGO_HOST
-MONGO_PORT
-MONGO_DATABASE // mandatory
-ELASTIC_HOST
-ELASTIC_PORT
-ELASTIC_VIDEO_METADATA_INDEX
-ELASTIC_VIDEO_METADATA_TYPE
-RABBITMQ_HOST
-RABBITMQ_MAX_RESEND_ATTEMPS
-RABBITMQ_MAX_UNACKED_MESSAGES
-PROVIDER
-DROP_FOLDER_PATH
-KALTURA_PARTNER_ID
-KALTURA_ADMIN_SECRET
-KALTURA_URL
+node index.js MetadataParser
 ```
 
 ## Job types
-Job types are found under the /job-types folder.
-
-Job should contain the following fields:
-
-| Property      | type          |      Example     |
-|:------------- |:--------------|:-----------------|
-| params        | json          | someJson         |
-
-```
-someJson example:
-{
-	videoId: someVideoId
-	relativePath: '/relative/path/to/metadata',
-	method: {
-		standard: 'VideoStandard',
-		version: 1.0
-	}
-}
-```
+Job types are found in [in replay-jobs-service repo](https://github.com/linnovate/replay-common/tree/develop/replay-jobs-service) under the /queues-config folder.
 
 The consumer service is given a command line argument to decide which job it should handle.
 
