@@ -26,6 +26,17 @@ Set environment variables to config the app:
 | KALTURA_URL                   | Kaltura URI                                  |                |
 
 
+Format of script initilize enviroment variables:  
+export MONGO_HOST=localhost  
+export MONGO_PORT=27017  
+export MONGO_DATABASE=replay_dev  
+export ELASTIC_HOST=localhost  
+export ELASTIC_PORT=9200  
+export ELASTIC_VIDEO_METADATA_INDEX=videometadatas  
+export ELASTIC_VIDEO_METADATA_TYPE=videometadata  
+export RABBITMQ_HOST=localhost  
+export RABBITMQ_MAX_RESEND_ATTEMPS=3  
+
 Run app:
 ```
 node index.js MetadataParser
