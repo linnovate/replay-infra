@@ -15,7 +15,7 @@ var event = require('./EventEmitterSingleton');
 const SERVICE_NAME = '#StreamListener#',
 	LOCALHOST = '0.0.0.0',
 	MAX_BINDING_TRIES = 3,
-	TIME_TO_WAIT_AFTER_FAILED = 3000,
+	TIME_TO_WAIT_AFTER_FAILED = 1000,
 	IP_FORMAT = new RegExp('^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.' +
 		'(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$');
 
@@ -48,26 +48,52 @@ function StreamListener() {
 		}
 	}
 
-	// function that called after the binding.
-	function _afterBind(err) {
-		console.log('afterbind start');
+	// // function that called after the binding.
+	// function _afterBind(err) {
+	// 	console.log('afterbind start');
+	// 	const METHOD_NAME = 'StartListen';
+	// 	if (err) {
+	// 		_bindingAttemptsCounts++;
+	// 		console.log('try binding no', _bindingAttemptsCounts, 'failed...\n' + err);
+	// 		if (_bindingAttemptsCounts === MAX_BINDING_TRIES) {
+	// 			_closeServer();
+	// 			return Promise.reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
+	// 		}
+	// 		return _bindToTheAddress();
+	// 	}
+	// 	// check if the ip is not 0.0.0.0
+	// 	if (_ip !== LOCALHOST) {
+	// 		_server.addMembership(_ip);
+	// 	}
+	// 	console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
+	// 	_finishedBind = true;
+	// 	return Promise.resolve({ ip: _ip, port: _port, numOfAttempts: _bindingAttemptsCounts });
+	// }
+
+	function _tryBinding(maxRetries) {
 		const METHOD_NAME = 'StartListen';
-		if (err) {
-			_bindingAttemptsCounts++;
-			console.log('try binding no', _bindingAttemptsCounts, 'failed...\n' + err);
-			if (_bindingAttemptsCounts === MAX_BINDING_TRIES) {
-				_closeServer();
-				return Promise.reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
-			}
-			return _bindToTheAddress();
+		if (maxRetries > 0) {
+			console.log('inside mehtod');
+			// Try again if we haven't reached maxRetries yet
+			return _bindToTheAddress().delay(TIME_TO_WAIT_AFTER_FAILED)
+				.then(function() {
+					// check if the ip is not 0.0.0.0
+					if (_ip !== LOCALHOST) {
+						_server.addMembership(_ip);
+					}
+					console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
+					_finishedBind = true;
+					return Promise.resolve({ ip: _ip, port: _port, numOfAttempts: _bindingAttemptsCounts });
+				})
+				.catch(function(err) {
+					console.log('binding attempt no.' +
+						(MAX_BINDING_TRIES + 1 - maxRetries) +
+						' failed with error' + err);
+					return _tryBinding(maxRetries - 1);
+				});
 		}
-		// check if the ip is not 0.0.0.0
-		if (_ip !== LOCALHOST) {
-			_server.addMembership(_ip);
-		}
-		console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
-		_finishedBind = true;
-		return Promise.resolve({ ip: _ip, port: _port, numOfAttempts: _bindingAttemptsCounts });
+		return Promise.reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
+
 	}
 
 	// bind to the address.
@@ -77,14 +103,7 @@ function StreamListener() {
 				.on('error', reject)
 				.on('listening', resolve);
 		});
-		return bindPromise
-			.then(function() {
-				return _afterBind();
-			})
-			.catch(function(err) {
-				console.log('bind catch');
-				return _afterBind(err);
-			});
+		return bindPromise;
 	}
 
 	function _handleParamsValidation(params) {
@@ -109,19 +128,11 @@ function StreamListener() {
 		event.emit('StreamingData');
 	}
 
-	function _handleListeningEvent() {
-		_afterBind();
-	}
-
 	function _handleErrorEvent(err) {
 		if (_finishedBind) {
 			event.emit('unexceptedError_StreamListener', SERVICE_NAME + ' Unexcepted Error eccured while trying listen to the address ' +
 				_ip + ':' + _port + ' : ' + err);
 			_closeServer();
-		} else {
-			setTimeout(function() {
-				_afterBind(err);
-			}, TIME_TO_WAIT_AFTER_FAILED);
 		}
 	}
 
@@ -136,10 +147,8 @@ function StreamListener() {
 		}
 		// create socket server
 		_server = dgram.createSocket({ type: 'udp4', reuseAddr: true });
-		// on event of data flow
+		// on event of data flow.
 		_server.on('message', _handleMessageEvent);
-		// when start liten
-		_server.on('listening', _handleListeningEvent);
 		// when unexcepted error eccured.
 		_server.on('error', _handleErrorEvent);
 	}
@@ -157,7 +166,7 @@ function StreamListener() {
 				})
 				.then(function() {
 					console.log('first bind');
-					return _bindToTheAddress();
+					return _tryBinding(MAX_BINDING_TRIES);
 				})
 				.then(function(res) {
 					return resolve(res);
