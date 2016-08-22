@@ -1,31 +1,26 @@
 {
-  "name": "video-recorder",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "mocha test --recursive",
-    "coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/CodeJjang/video-recorder.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/CodeJjang/video-recorder/issues"
-  },
-  "homepage": "https://github.com/CodeJjang/video-recorder#readme",
-  "dependencies": {
-    "bluebird": "^3.4.0",
-    "express": "^4.13.4",
-    "fluent-ffmpeg": "^2.1.0",
-    "mkdirp": "^0.5.1",
-    "moment": "^2.13.0",
-    "mongoose": "^4.4.19",
-    "replay-ffmpeg": "1.0.4",
-    "replay-rabbitmq": "*",
-    "replay-schemas": "^1.0.15"
-  }
+	"name": "video-recorder",
+	"version": "1.0.0",
+	"description": "Video-recorder is the 'Capture' component for the Replay project.",
+	"main": "index.js",
+	"scripts": {
+		"test": "mocha ./test --recursive",
+		"coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
+	},
+	"dependencies": {
+		"bluebird": "^3.4.0",
+		"mkdirp": "^0.5.1",
+		"moment": "^2.13.0",
+		"mongoose": "^4.5.9",
+		"replay-ffmpeg": "^1.0.4",
+		"replay-schemas": "^1.0.21",
+		"replay-rabbitmq": "^1.0.3"
+	},
+	"devDependencies": {
+		"mocha": "^2.5.3",
+		"chai": "^3.5.0",
+		"sinon": "^1.17.5",
+		"rewire": "^2.5.2",
+		"istanbul": "^0.4.5"
+	}
 }

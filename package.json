@@ -1,45 +1,36 @@
 {
-  "name": "replay-infra",
-  "version": "1.0.0",
-  "description": "1. videoRecorder- capture streams video.",
-  "main": "index.js",
-  "dependencies": {
-    "bluebird": "^3.4.0",
-    "busmq": "^1.5.9",
-    "chai": "^3.5.0",
-    "lodash": "^4.14.2",
-    "mocha": "^2.5.3",
-    "mongoose": "^4.5.8",
-    "rewire": "^2.5.2",
-    "sinon": "^1.17.5",
-    "stanag": "^1.0.2",
-    "supertest": "^1.2.0"
-  },
-  "devDependencies": {
-    "pre-commit": "^1.1.3",
-    "replay-eslint-config": "*"
-  },
-  "scripts": {
-    "test": "mocha ./*/test --recursive",
-    "lint": "./lintStagedFiles.sh",
-    "lintAll": "eslint .",
-    "coverage": "istanbul cover _mocha ./*/test -- --recursive; sensible-browser coverage/lcov-report/index.html"
-  },
-  "eslintConfig": {
-    "extends": "./node_modules/replay-eslint-config/index.js"
-  },
-  "pre-commit": {
-    "run": "lint",
-    "colors": true
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/linnovate/replay-infra.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/linnovate/replay-infra/issues"
-  },
-  "homepage": "https://github.com/linnovate/replay-infra#readme"
+	"name": "replay-infra",
+	"version": "1.0.0",
+	"description": "1. videoRecorder- capture streams video.",
+	"main": "index.js",
+	"dependencies": {
+		"mocha": "^2.5.3"
+	},
+	"devDependencies": {
+		"pre-commit": "^1.1.3",
+		"replay-eslint-config": "*"
+	},
+	"scripts": {
+		"test": "mocha ./*/test --recursive",
+		"lint": "./lintStagedFiles.sh",
+		"lintAll": "eslint .",
+		"coverage": "istanbul cover _mocha ./*/test -- --recursive; sensible-browser coverage/lcov-report/index.html"
+	},
+	"eslintConfig": {
+		"extends": "./node_modules/replay-eslint-config/index.js"
+	},
+	"pre-commit": {
+		"run": "lint",
+		"colors": true
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/linnovate/replay-infra.git"
+	},
+	"author": "replay_team",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/linnovate/replay-infra/issues"
+	},
+	"homepage": "https://github.com/linnovate/replay-infra#readme"
 }
