@@ -7,10 +7,12 @@ const _jobStatusTag = 'added-video-bounding-polygon-to-mongo';
 
 module.exports.start = function(params, error, done) {
 	console.log('Video Boundries service started.');
-	var _transactionId = params.transactionId; // Queue job identifier
-	var _videoId = params.videoId; // Video to bound
+	var _transactionId, _videoId;
 	// throw error for no video or job
-	if (!_transactionId || !_videoId) {
+	if (validateParams(params)) {
+		_transactionId = params.transactionId; // Queue job identifier
+		_videoId = params.videoId; // Video to bound
+	} else {
 		console.log('Some parameters are missing.');
 		return error();
 	}
@@ -20,24 +22,31 @@ module.exports.start = function(params, error, done) {
 		.then(validateJob)
 		.then(function() {
 			// Return a bounding polygon
-			return getBoundingPolygon(_videoId);
+			return createBoundingPolygon(_videoId);
 		})
 		.then(function(mergedPolygon) {
 			console.log('got merged polygon');
 			// Save bounding polygon to video object in db
 			return saveToMongo(mergedPolygon, _videoId);
 		})
+		.catch(function(err) {
+			console.log(err);
+			error();
+		})
 		.then(function() {
 			done();
 			console.log('finished Job sucessfuly');
 			// Notify for job complete
 			return updateJobStatus(_transactionId);
-		})
-		.catch(function(err) {
-			console.log(err);
-			error();
 		});
 };
+
+function validateParams(params) {
+	if (params.transactionId && params.videoId) {
+		return true;
+	}
+	return false;
+}
 
 // function for validating job operation
 function validateJob(jobStatus) {
@@ -50,14 +59,15 @@ function validateJob(jobStatus) {
 }
 
 // function that return a bounding polygon of video
-function getBoundingPolygon(videoId) {
+function createBoundingPolygon(videoId) {
 	console.log('find video in mongo by: ' + videoId);
 	// retrive all metada of video from db
 	return VideoMetadata.find({ videoId: videoId })
 		// pass to merging function of geometries
 		.then(mergeMetadataPolygons)
 		.catch(function(err) {
-			return Promise.reject('failed retrive video metadata: ' + err);
+			console.log('failed retrive video metadata: ');
+			return Promise.reject(err);
 		});
 }
 
@@ -88,19 +98,11 @@ function mergeMetadataPolygons(metadatas) {
 function saveToMongo(polygon, videoId) {
 	// insert only if we have metadatas
 	if (polygon !== undefined && videoId !== undefined) {
-		// retrive video object from mongo by id
-		return Video.findOne({ _id: videoId })
-			.then(function(video) {
-				video.boundingPolygon = polygon;
-				console.log('Saving to mongo...');
-				// save the changes in video object
-				return video.save()
-					.then(function() {
-						return Promise.resolve();
-					})
-					.catch(function(err) {
-						return Promise.reject(err);
-					});
+		// update video object in mongo by id
+		return Video.update({ _id: videoId }, { boundingPolygon: polygon })
+			.then(function(affected) {
+				console.log(affected + 'documents affected');
+				return Promise.resolve();
 			})
 			.catch(function(err) {
 				return Promise.reject('video object doesnt exists' + err);

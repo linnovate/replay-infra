@@ -48,28 +48,6 @@ function StreamListener() {
 		}
 	}
 
-	// // function that called after the binding.
-	// function _afterBind(err) {
-	// 	console.log('afterbind start');
-	// 	const METHOD_NAME = 'StartListen';
-	// 	if (err) {
-	// 		_bindingAttemptsCounts++;
-	// 		console.log('try binding no', _bindingAttemptsCounts, 'failed...\n' + err);
-	// 		if (_bindingAttemptsCounts === MAX_BINDING_TRIES) {
-	// 			_closeServer();
-	// 			return Promise.reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
-	// 		}
-	// 		return _bindToTheAddress();
-	// 	}
-	// 	// check if the ip is not 0.0.0.0
-	// 	if (_ip !== LOCALHOST) {
-	// 		_server.addMembership(_ip);
-	// 	}
-	// 	console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
-	// 	_finishedBind = true;
-	// 	return Promise.resolve({ ip: _ip, port: _port, numOfAttempts: _bindingAttemptsCounts });
-	// }
-
 	function _tryBinding(maxRetries) {
 		const METHOD_NAME = 'StartListen';
 		if (maxRetries > 0) {
@@ -93,7 +71,6 @@ function StreamListener() {
 				});
 		}
 		return Promise.reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
-
 	}
 
 	// bind to the address.
