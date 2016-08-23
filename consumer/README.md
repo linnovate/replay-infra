@@ -1,9 +1,9 @@
 ## Installation
 Install RabbitMQ according to the instructions [in replay-rabbitmq repo](https://github.com/linnovate/replay-common/tree/develop/replay-rabbitmq).
 
-You can have have MongoDB and ElasticSearch installed locally, else you may configure them via the environment variables.
+You can have have MongoDB installed locally, else you may configure it via the environment variables.
 
-Initialize ElasticSearch according to the instructions [in replay-elastic repo](https://github.com/linnovate/replay-common/tree/develop/replay-elastic), or via the helper module [replay-db-initialization](https://github.com/linnovate/replay-common/tree/develop/replay-db-initialization).
+Initialize Mongo with the default required collections via the helper module [replay-db-initialization](https://github.com/linnovate/replay-common/tree/develop/replay-db-initialization).
 
 Set environment variables to config the app:
 

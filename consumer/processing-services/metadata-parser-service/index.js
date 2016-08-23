@@ -117,7 +117,6 @@ function dataToObjects(method, data, params) {
 function produceJobs(params, videoMetadatas) {
 	return [
 		produceVideoMetadatasJobs('MetadataToMongo', videoMetadatas),
-		produceVideoMetadatasJobs('MetadataToElastic', videoMetadatas),
 		produceVideoMetadatasJobs('MetadataToCaptions', videoMetadatas),
 		produceAttachVideoToMetadataJob(videoMetadatas, params)
 	];

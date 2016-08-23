@@ -16,7 +16,6 @@
 		"turf-merge": "^1.0.2",
 		"mongoose": "^4.5.9",
 		"mongoose-geojson-schema": "^2.1.2",
-		"replay-elastic": "^1.0.3",
 		"replay-schemas": "^1.0.21",
 		"replay-rabbitmq": "^1.0.3",
 		"replay-jobs-service": "^1.0.12",
