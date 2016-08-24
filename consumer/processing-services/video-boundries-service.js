@@ -20,6 +20,9 @@ module.exports.start = function(params, error, done) {
 	JobsService.findJobStatus(_transactionId)
 		// Make sure we haven't performed this job already
 		.then(validateJob)
+		.catch(function(err) {
+			console.log(err);
+		})
 		.then(function() {
 			// Return a bounding polygon
 			return createBoundingPolygon(_videoId);
@@ -46,6 +49,12 @@ function validateParams(params) {
 		return true;
 	}
 	return false;
+}
+
+// function for validation of GeoJson feature for boundingPolygon
+function validateMergedPolygons(mergedPolygonFeature) {
+	return (mergedPolygonFeature.geometry &&
+		(mergedPolygonFeature.geometry.type == 'Polygon' || mergedPolygonFeature.geometry.type == 'MultiPolygon'));
 }
 
 // function for validating job operation
@@ -90,8 +99,12 @@ function mergeMetadataPolygons(metadatas) {
 		});
 	});
 	// merge function of feature collection to polygon or multiPolygon
-	var mergedPolygon = turf(polygons);
-	return Promise.resolve(mergedPolygon);
+	var mergedPolygonFeature = turf(polygons);
+	if (validateMergedPolygons(mergedPolygonFeature)) {
+		return Promise.resolve(mergedPolygonFeature.geometry);
+	} else {
+		return Promise.reject('Merged feature object is defected');
+	}
 }
 
 // save to mongo bounding polygon by video ID
