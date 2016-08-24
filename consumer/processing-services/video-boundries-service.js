@@ -54,7 +54,7 @@ function validateParams(params) {
 // function for validation of GeoJson feature for boundingPolygon
 function validateMergedPolygons(mergedPolygonFeature) {
 	return (mergedPolygonFeature.geometry &&
-		(mergedPolygonFeature.geometry.type == 'Polygon' || mergedPolygonFeature.geometry.type == 'MultiPolygon'));
+		(mergedPolygonFeature.geometry.type === 'Polygon' || mergedPolygonFeature.geometry.type === 'MultiPolygon'));
 }
 
 // function for validating job operation
@@ -102,9 +102,8 @@ function mergeMetadataPolygons(metadatas) {
 	var mergedPolygonFeature = turf(polygons);
 	if (validateMergedPolygons(mergedPolygonFeature)) {
 		return Promise.resolve(mergedPolygonFeature.geometry);
-	} else {
-		return Promise.reject('Merged feature object is defected');
 	}
+	return Promise.reject('Merged feature object is defected');
 }
 
 // save to mongo bounding polygon by video ID
