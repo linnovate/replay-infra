@@ -1,6 +1,6 @@
 var Promise = require('bluebird');
 
-const CONSUMER_NAME = '#video-proccesing#';
+const CONSUMER_NAME = '#transportStream-proccesing#';
 
 /*******************************************************************************************************
 !!!!!!!!!!!!!!!now assumesing that the message come from video recorder!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -13,8 +13,9 @@ module.exports.start = function(params, error, done) {
 
 	proccesTS(params)
 		.then(function(paths) {
-
+			return produceJobs(params, paths);
 		})
+		.then(done)
 		.catch(function(err) {
 			console.log('error on:', CONSUMER_NAME, err);
 			error();
@@ -61,7 +62,7 @@ function proccesTS(params) {
 					processTsMethod = require('./mux');
 					break;
 				default:
-					return Promise.reject(CONSUMER_NAME + 'Unsupported version for video-standard');
+					return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported version for video-standard'));
 			}
 			break;
 		case 'stanag':
@@ -71,12 +72,18 @@ function proccesTS(params) {
 					processTsMethod = require('./mux');
 					break;
 				default:
-					return Promise.reject(CONSUMER_NAME + 'Unsupported version for stanag');
+					return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported version for stanag'));
 			}
 			break;
 		default:
-			return Promise.reject(CONSUMER_NAME + 'Unsupported standard');
+			return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported standard'));
 	}
 	// activate the processing method
 	return processTsMethod(paramsForMethod);
+}
+
+function produceJobs(params, paths) {
+	/*
+	need to know what the next job before writing the method.
+	*/
 }
