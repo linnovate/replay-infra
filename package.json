@@ -1,10 +1,11 @@
 {
 	"name": "replay-infra",
 	"version": "1.0.0",
-	"description": "1. videoRecorder- capture streams video.",
+	"description": "Infrastructure microservices of Replay app",
 	"main": "index.js",
 	"dependencies": {
-		"mocha": "^2.5.3"
+		"mocha": "^3.0.2",
+		"istanbul": "^0.4.5"
 	},
 	"devDependencies": {
 		"pre-commit": "^1.1.3",
