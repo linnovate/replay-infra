@@ -1,33 +1,33 @@
 {
-	"name": "consumer",
-	"version": "1.0.0",
-	"description": "Consumers jobs for for the Replay project.",
-	"main": "index.js",
-	"scripts": {
-		"test": "mocha ./test --recursive",
-		"coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
-	},
-	"dependencies": {
-		"bluebird": "^3.4.0",
-		"xml2js": "^0.4.16",
-		"stanag": "^1.0.2",
-		"lodash": "^4.15.0",
-		"moment": "^2.14.1",
-		"turf-merge": "^1.0.2",
-		"mongoose": "^4.5.9",
-		"mongoose-geojson-schema": "^2.1.2",
-		"replay-schemas": "^1.0.21",
-		"replay-rabbitmq": "^1.0.3",
-		"replay-jobs-service": "^1.0.12",
-		"replay-kaltura-service": "^1.0.3"
-	},
-	"devDependencies": {
-		"mocha": "^2.5.3",
-		"chai": "^3.5.0",
-		"chai-datetime": "^1.4.1",
-		"sinon": "^1.17.5",
-		"mkdirp": "^0.5.1",
-		"rimraf": "^2.5.4",
-		"istanbul": "^0.4.5"
-	}
+  "name": "consumer",
+  "version": "1.0.0",
+  "description": "Consumers jobs for for the Replay project.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha ./test --recursive",
+    "coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.0",
+    "lodash": "^4.15.0",
+    "moment": "^2.14.1",
+    "mongoose": "^4.5.10",
+    "mongoose-geojson-schema": "^2.1.2",
+    "replay-jobs-service": "^1.0.14",
+    "replay-kaltura-service": "^1.0.3",
+    "replay-rabbitmq": "^1.0.3",
+    "replay-schemas": "^1.0.24",
+    "stanag": "^1.0.2",
+    "turf-merge": "^1.0.2",
+    "xml2js": "^0.4.16"
+  },
+  "devDependencies": {
+    "mocha": "^2.5.3",
+    "chai": "^3.5.0",
+    "chai-datetime": "^1.4.1",
+    "sinon": "^1.17.5",
+    "mkdirp": "^0.5.1",
+    "rimraf": "^2.5.4",
+    "istanbul": "^0.4.5"
+  }
 }
