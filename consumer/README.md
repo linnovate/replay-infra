@@ -1,9 +1,9 @@
 ## Installation
 Install RabbitMQ according to the instructions [in replay-rabbitmq repo](https://github.com/linnovate/replay-common/tree/develop/replay-rabbitmq).
 
-You can have have MongoDB and ElasticSearch installed locally, else you may configure them via the environment variables.
+You can have have MongoDB installed locally, else you may configure it via the environment variables.
 
-Initialize ElasticSearch according to the instructions [in replay-elastic repo](https://github.com/linnovate/replay-common/tree/develop/replay-elastic), or via the helper module [replay-db-initialization](https://github.com/linnovate/replay-common/tree/develop/replay-db-initialization).
+Initialize Mongo with the default required collections via the helper module [replay-db-initialization](https://github.com/linnovate/replay-common/tree/develop/replay-db-initialization).
 
 Set environment variables to config the app:
 
@@ -24,18 +24,8 @@ Set environment variables to config the app:
 | KALTURA_PARTNER_ID            | The partner ID in kaltura                    |                |
 | KALTURA_ADMIN_SECRET          | Kaltura's admin secret                       |                |
 | KALTURA_URL                   | Kaltura URI                                  |                |
-
-
-Format of script initilize enviroment variables:  
-export MONGO_HOST=localhost  
-export MONGO_PORT=27017  
-export MONGO_DATABASE=replay_dev  
-export ELASTIC_HOST=localhost  
-export ELASTIC_PORT=9200  
-export ELASTIC_VIDEO_METADATA_INDEX=videometadatas  
-export ELASTIC_VIDEO_METADATA_TYPE=videometadata  
-export RABBITMQ_HOST=localhost  
-export RABBITMQ_MAX_RESEND_ATTEMPS=3  
+| CAPTIONS_PATH                 | Path to pass captions through                |                |
+| DESTINATION_PATH              | Path to which captions will be thrown        |                |
 
 Run app:
 ```
@@ -48,3 +38,14 @@ Job types are found in [in replay-jobs-service repo](https://github.com/linnovat
 The consumer service is given a command line argument to decide which job it should handle.
 
 With this job type, it can find out the service which handles this job and also the queue to listen to even get those jobs.
+
+## Tests
+We use mocha as our tests framework, therefore install mocha globally:
+```
+sudo npm install mocha -g
+```
+
+Now simply run the tests with npm:
+```
+npm test
+```
