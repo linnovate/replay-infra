@@ -1,0 +1,7 @@
+<svg>
+    <defs>
+        <svg id="rectangle" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g><path d="M90,10v80H10V10H90 M100,0H90H10H0v10v80v10h10h80h10V90V10V0L100,0z"></path></g></svg>
+        <svg id="polygon" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g><path d="M36.019,18.573l16.673,34.111l31.327-14.111L69.812,87.709l-34.793,1.864l-23-41L36.019,18.573 M38.071,0L28.21,12.326   l-24,30L0,47.588l3.297,5.877l23,41l3.043,5.426l6.213-0.333l34.793-1.864l7.098-0.38l1.974-6.828l14.207-49.135l6.008-20.779   l-19.722,8.884L57.42,39.587L45.003,14.182L38.071,0L38.071,0z"></path></g></svg>
+        <svg id="circle" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.0" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve"><g><path d="M49.998,100C22.429,100,0,77.57,0,49.998C0,22.429,22.429,0,49.998,0C77.57,0,100,22.429,100,49.998   C100,77.57,77.57,100,49.998,100z M49.998,9.091c-22.556,0-40.907,18.351-40.907,40.907c0,22.558,18.351,40.912,40.907,40.912   c22.558,0,40.912-18.354,40.912-40.912C90.91,27.442,72.556,9.091,49.998,9.091z"></path></g></svg>
+    </defs>
+</svg>
