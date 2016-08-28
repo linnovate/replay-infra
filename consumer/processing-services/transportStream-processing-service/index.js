@@ -32,7 +32,7 @@ function paramsIsValid(params) {
 	}
 
 	// check the require file path for processing.
-	if (!params.videoRelativePath && !params.dataRelativePath) {
+	if (!params.fileRelativePath) {
 		return false;
 	}
 
@@ -46,8 +46,7 @@ function proccesTS(params) {
 	var paramsForMethod = {
 		filesStoragePath: params.storgaePath,
 		fileRelativePath: params.fileRelativePath,
-		fileType: params.sourceType,
-		fileName: params.fileName
+		fileType: params.sourceType
 	};
 	// check the reciving method standard
 	switch (params.receivingMethod.standard) {
