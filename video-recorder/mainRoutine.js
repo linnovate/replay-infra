@@ -102,7 +102,7 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// When the file didnt created by the ffmpeg
-	event.on('FileDontExist_FileWatcher', function(err) {
+	fileWatcher.on('FileDontExist_FileWatcher', function(err) {
 		console.log(err);
 		startStreamListener(streamingSource)
 			.then(function() {
@@ -232,7 +232,7 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// When the source stop stream data.
-	event.on('FileWatchStop', function() {
+	fileWatcher.on('FileWatchStop', function() {
 		// kill The FFmpeg Process.
 		console.log(PROCESS_NAME + ' The Source stop stream data, Killing the ffmpeg process');
 		stopFFmpegProcess(globals.command);
