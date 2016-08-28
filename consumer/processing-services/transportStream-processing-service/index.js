@@ -1,6 +1,10 @@
-var Promise = require('bluebird');
+var Promise = require('bluebird'),
+	JobsService = require('replay-jobs-service'),
+	rabbit = require('replay-rabbitmq');
+var path = require('path');
 
 const CONSUMER_NAME = '#transportStream-proccesing#';
+const STORAGE_PATH = process.env.STORAGE_PATH;
 
 module.exports.start = function(params, error, done) {
 	if (!paramsIsValid(params)) {
@@ -80,8 +84,25 @@ function proccesTS(params) {
 	return processTsMethod(paramsForMethod);
 }
 
+// produce to the next job.
 function produceJobs(params, paths) {
-	/*
-	need to know what the next job before writing the method.
-	*/
+	var message = {
+		sourceId: params.sourceId,
+		videoName: path.parse(params.fileRelativePath).name,
+		videoRelativePath: path.relative(STORAGE_PATH, paths.videoPath),
+		dataRelativePath: path.relative(STORAGE_PATH, paths.dataPath),
+		receivingMethod: {
+			standard: params.receivingMethod.standard,
+			version: params.receivingMethod.version
+		},
+		startTime: params.startTime,
+		endTime: params.endTime,
+		duration: params.duration,
+		transactionId: params.transactionId
+	};
+	var queueName = JobsService.getQueueName('NewVideosQueue');
+	if (queueName) {
+		return rabbit.produce(queueName, message);
+	}
+	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
 }
