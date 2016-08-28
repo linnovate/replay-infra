@@ -2,9 +2,6 @@ var Promise = require('bluebird');
 
 const CONSUMER_NAME = '#transportStream-proccesing#';
 
-/*******************************************************************************************************
-!!!!!!!!!!!!!!!now assumesing that the message come from video recorder!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-*******************************************************************************************************/
 module.exports.start = function(params, error, done) {
 	if (!paramsIsValid(params)) {
 		console.log(CONSUMER_NAME, 'params are not valid');
@@ -25,7 +22,7 @@ module.exports.start = function(params, error, done) {
 // validate the params.
 function paramsIsValid(params) {
 	// check the minimal requires for the message that send to the next job.
-	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId) {
+	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
 		return false;
 	}
 
@@ -45,12 +42,14 @@ function paramsIsValid(params) {
 // understand what ts file we deal (video/data/video and data) and manipulate it.
 function proccesTS(params) {
 	var processTsMethod;
-	// preaper the require params for the processing method.
+	// prepare the require params for the processing method.
 	var paramsForMethod = {
-		videoRelativePath: params.videoRelativePath,
-		dataRelativePath: params.dataRelativePath
+		filesStoragePath: params.storgaePath,
+		fileRelativePath: params.fileRelativePath,
+		fileType: params.sourceType,
+		fileName: params.fileName
 	};
-	// check the reciving method standart
+	// check the reciving method standard
 	switch (params.receivingMethod.standard) {
 		case 'VideoStandard':
 			// check the reciving method version
