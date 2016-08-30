@@ -3,7 +3,7 @@ var promise = require('bluebird'),
 	moment = require('moment'),
 	mongoose = require('mongoose'),
 	rabbit = require('replay-rabbitmq'),
-	ffmpegWrapper = require('replay-ffmpeg');
+	ffmpeg = require('replay-ffmpeg');
 
 var path = require('path');
 
@@ -13,8 +13,7 @@ var event = require('./services/EventEmitterSingleton'),
 	util = require('./utilitties'),
 	exitHendler = require('./utilitties/exitUtil');
 
-var viewStandardHandler = require('./services/ViewStandardHandler')(),
-	streamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
+var streamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
 
 const DURATION = process.env.DURATION || 10,
 	INTERVAL_TIME = process.env.INTERVAL_TIME || 5000,
@@ -37,6 +36,9 @@ module.exports = function() {
 	console.log(PROCESS_NAME + ' Mongo database:', MONGO_DATABASE);
 	console.log(PROCESS_NAME + ' Files storage path: ', STORAGE_PATH);
 	console.log(PROCESS_NAME + ' RabbitMQ host: ', RABBITMQ_HOST);
+	console.log(PROCESS_NAME + ' Interval time: ', INTERVAL_TIME);
+	console.log(PROCESS_NAME + ' Duration: ', DURATION);
+	console.log(PROCESS_NAME + ' Index: ', INDEX);
 
 	// index used to find my StreamingSource object in the DB collection
 	var StreamingSourceIndex = INDEX;
@@ -116,51 +118,11 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// When the streamListenerService found some streaming data in the address.
-	event.on('StreamingData', function() {
-		var dateOfCreating = util.getCurrentDate();
-		var pathForFFmpeg = STORAGE_PATH + '/' + streamingSource.sourceID + '/' + dateOfCreating;
-		var FileNameForFFmpeg = streamingSource.sourceID + '_' + dateOfCreating + '_' + util.getCurrentTime();
-		// Check if the path exist,if not create it.
-		util.checkPath(pathForFFmpeg);
-
-		/************************************************************/
-		/*    Adding Data Manualy (It will be deleted!!!)           */
-		/************************************************************/
-		util.addMetadataManualy(pathForFFmpeg + '/' + FileNameForFFmpeg + '.data');
-		/************************************************************/
-
-		// save the time that the video created.
-		globals.currentFileStartTime = moment();
-
-		var ffmpegParams = {
-			inputs: ['udp://' + streamingSource.sourceIP + ':' + streamingSource.sourcePort],
-			duration: DURATION,
-			dir: pathForFFmpeg,
-			file: FileNameForFFmpeg
-		};
-
-		// starting the ffmpeg process
-		console.log(PROCESS_NAME + ' Record new video at: ', pathForFFmpeg);
-		viewStandardHandler.realizeStandardCaptureMethod(streamingSource.sourceType, streamingSource.streamingMethod)
-			.then(function(captureCommand) {
-				return captureCommand(ffmpegParams);
-			})
-			.then(function(res) {
-				exitHendler.setFFmpegProcessCommand(res);
-				globals.command = res;
-			})
-			.catch(function(err) {
-				console.log(err);
-				throw err;
-			});
-		globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-			streamingSourceDAL.notifySourceCapturing(streamingSource.sourceID);
-		});
-	});
+	event.on('StreamingData', streamingDataHandle);
 
 	// When ffmpeg process begin.
 	// Expect to get path in object e.g {videoPath:'/path/to/video.mp4',telemetryPath:'/path/to/telemetry.data'}.
-	ffmpegWrapper.on('FFmpegBegin', function(paths) {
+	ffmpeg.on('FFmpegBegin', function(paths) {
 		// start to watch the file that the ffmpeg will create
 		var pathToWatch;
 		if (!paths) {
@@ -187,7 +149,7 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// when FFmpeg done his progress,
-	ffmpegWrapper.on('FFmpegDone', function(paths) {
+	ffmpeg.on('FFmpegDone', function(paths) {
 		promise.resolve()
 			.then(function() {
 				// Stop the file watcher.
@@ -217,7 +179,7 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// When Error eccured on FFmpeg service.
-	ffmpegWrapper.on('FFmpegError', function(err) {
+	ffmpeg.on('FFmpegError', function(err) {
 		console.log(err);
 		stopWatchFile(globals.fileWatcherTimer);
 		startStreamListener(streamingSource)
@@ -247,19 +209,19 @@ function handleVideoSavingProcess(streamingSource) {
 	});
 
 	// when error eccured on the converting.
-	ffmpegWrapper.on('FFmpegWrapper_errorOnConverting', function(err) {
+	ffmpeg.on('FFmpegWrapper_errorOnConverting', function(err) {
 		console.log('FFmpegWrapper_errorOnConverting emited:', err);
 	});
 
 	// when converting finished.
-	ffmpegWrapper.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath, startTime) {
+	ffmpeg.on('FFmpegWrapper_finishConverting', function(newFilePath, oldFilePath, startTime) {
 		var relativePath = path.relative(STORAGE_PATH, newFilePath);
 		var startDateTime, endDateTime;
 		// get the start time format.
 		startDateTime = startTime.format();
 
 		// get the duration of the video that was created.
-		ffmpegWrapper.duration({ filePath: oldFilePath })
+		ffmpeg.duration({ filePath: oldFilePath })
 			.then(function(duration) {
 				console.log('duration:', duration);
 				// add the duration time to the start time of the video to get the most exact time.
@@ -286,6 +248,37 @@ function handleVideoSavingProcess(streamingSource) {
 				console.log('couldnt get the duration, ignore and continue on,\n', err);
 			});
 	});
+
+	function streamingDataHandle() {
+		var dateOfCreating = util.getCurrentDate();
+		var newFileName = streamingSource.sourceID + '_' + dateOfCreating + '_' + util.getCurrentTime();
+		var newFilePath = path.join(STORAGE_PATH, streamingSource.sourceID, dateOfCreating, newFileName, newFileName);
+		console.log(PROCESS_NAME + ' Record new video at: ', newFilePath);
+		// Check if the path exist,if not create it.
+		util.checkPath(path.parse(newFilePath).dir);
+
+		// save the time that the video created.
+		globals.currentFileStartTime = moment();
+
+		var ffmpegParams = {
+			input: 'udp://' + streamingSource.sourceIP + ':' + streamingSource.sourcePort,
+			duration: DURATION,
+			output: newFilePath
+		};
+
+		// starting the ffmpeg process
+		ffmpeg.record(ffmpegParams)
+			.then(function(ffmpegCommand) {
+				exitHendler.setFFmpegProcessCommand(ffmpegCommand);
+				globals.command = ffmpegCommand;
+				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
+					streamingSourceDAL.notifySourceCapturing(streamingSource.sourceID);
+				});
+			})
+			.catch(function(err) {
+				throw err;
+			});
+	}
 }
 
 /********************************************************************************************************************************************/
@@ -340,7 +333,7 @@ function stopFFmpegProcess(command, callBack) {
 
 // Convert the finished video to mp4 format
 function convertMpegtsToMp4(path, startTime) {
-	return ffmpegWrapper.convertMpegTsFormatToMp4({ filePath: path, startTime: startTime });
+	return ffmpeg.convertMpegTsFormatToMp4({ filePath: path, startTime: startTime });
 }
 
 // Send message to the next service.
