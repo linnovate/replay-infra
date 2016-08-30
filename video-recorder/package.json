@@ -24,7 +24,7 @@
     "mkdirp": "^0.5.1",
     "moment": "^2.13.0",
     "mongoose": "^4.4.19",
-    "replay-ffmpeg": "1.0.4",
+    "replay-ffmpeg": "1.1.0",
     "replay-rabbitmq": "*",
     "replay-schemas": "^1.0.15"
   }
