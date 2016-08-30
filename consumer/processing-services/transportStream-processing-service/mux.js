@@ -18,8 +18,8 @@ function processTS(params) {
 	return new Promise(function(resolve, reject) {
 		// converting and extracting the data, wait until finishing the work and return promise.
 		ffmpeg.convertAndExtract({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
-		ffmpeg.on('finishConvertAndExtract', resolve);
-		ffmpeg.on('errorOnConvertAndExtract', reject);
+		ffmpeg.on('FFmpeg_finishConvertAndExtract', resolve);
+		ffmpeg.on('FFmpeg_errorOnConvertAndExtract', reject);
 	});
 }
 

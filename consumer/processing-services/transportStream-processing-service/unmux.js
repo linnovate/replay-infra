@@ -22,15 +22,15 @@ function processTS(params) {
 			case ('Video'):
 				{
 					ffmpeg.convertToMp4({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
-					ffmpeg.on('finishConvertToMp4', resolve);
-					ffmpeg.on('errorOnConvertToMp4', reject);
+					ffmpeg.on('FFmpeg_finishConvertToMp4', resolve);
+					ffmpeg.on('FFmpeg_errorOnConvertToMp4', reject);
 					break;
 				}
 			case ('Telemetry'):
 				{
 					ffmpeg.extractData({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
-					ffmpeg.on('finishExtractData', resolve);
-					ffmpeg.on('errorOnExtractData', reject);
+					ffmpeg.on('FFmpeg_finishExtractData', resolve);
+					ffmpeg.on('FFmpeg_errorOnExtractData', reject);
 					break;
 				}
 			default:
