@@ -1,7 +1,10 @@
 var Promise = require('bluebird'),
-	JobsService = require('replay-jobs-service'),
+	JobService = require('replay-jobs-service'),
 	rabbit = require('replay-rabbitmq');
 var path = require('path');
+
+var _transactionId;
+var _jobStatusTag = 'transportStream-processing-done';
 
 const CONSUMER_NAME = '#transportStream-proccesing#';
 const STORAGE_PATH = process.env.STORAGE_PATH;
@@ -12,11 +15,24 @@ module.exports.start = function(params, error, done) {
 		return error();
 	}
 
-	proccesTS(params)
-		.then(function(paths) {
-			return produceJobs(params, paths);
+	_transactionId = params.transactionId;
+
+	JobService.findOrCreateJobStatus(_transactionId)
+		.then(function(jobStatus) {
+			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
+				done();
+			} else {
+				proccesTS(params)
+					.then(function(paths) {
+						return produceJobs(params, paths);
+					})
+					.then(done)
+					.catch(function(err) {
+						console.log('error on:', CONSUMER_NAME, err);
+						error();
+					});
+			}
 		})
-		.then(done)
 		.catch(function(err) {
 			console.log('error on:', CONSUMER_NAME, err);
 			error();
@@ -100,7 +116,7 @@ function produceJobs(params, paths) {
 		duration: params.duration,
 		transactionId: params.transactionId
 	};
-	var queueName = JobsService.getQueueName('NewVideosQueue');
+	var queueName = JobService.getQueueName('NewVideosQueue');
 	if (queueName) {
 		return rabbit.produce(queueName, message);
 	}
