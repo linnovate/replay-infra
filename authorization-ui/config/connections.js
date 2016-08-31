@@ -28,9 +28,12 @@ module.exports.connections = {
   * Installed by default.                                                    *
   *                                                                          *
   ***************************************************************************/
-  localDiskDb: {
-    adapter: 'sails-disk'
-  },
+  sailsMongoDBServer: {
+  	adapter: 'sails-mongo',
+  	host: 'localhost',
+  	port: 27017,
+  	database: 'replay_dev'
+	}
 
   /***************************************************************************
   *                                                                          *

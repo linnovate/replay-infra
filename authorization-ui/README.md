@@ -1,3 +1,3 @@
-# authorization-ui
+# MidurVideo
 
 a [Sails](http://sailsjs.org) application

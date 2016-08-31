@@ -19,9 +19,11 @@
     "grunt-sails-linker": "~0.10.1",
     "grunt-sync": "0.5.2",
     "include-all": "~0.1.6",
+    "moment": "^2.14.1",
     "rc": "1.0.1",
     "sails": "~0.12.4",
-    "sails-disk": "~0.10.9"
+    "sails-disk": "~0.10.9",
+    "sails-mongo": "^0.12.1"
   },
   "scripts": {
     "debug": "node debug app.js",
@@ -30,7 +32,7 @@
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/linnovate8/authorization-ui.git"
+    "url": ""
   },
   "author": "linnovate8",
   "license": ""
