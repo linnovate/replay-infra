@@ -61,7 +61,7 @@ var FileWatcher = function() {
 				// Callback called when the file stopped grow.
 				console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
 				_stopTimer(_fileTimer);
-				self.emit('FileWatchStop');
+				self.emit('FileWatchStop', path);
 			}
 			// console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
 		});
