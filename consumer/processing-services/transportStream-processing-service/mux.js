@@ -47,7 +47,7 @@ function preparePath(params) {
 	// create new path if dont exist.
 	checkPathAndCreate(outputPath);
 	// add the name of the file (without the extention).
-	outputPath = path.join(outputPath, outputPath.name);
+	outputPath = path.join(outputPath, path.parse(outputPath).name);
 	// set the storage path from the params or default.
 	var storagePath = params.filesStoragePath || STORAGE_PATH;
 	// set the path to the file.

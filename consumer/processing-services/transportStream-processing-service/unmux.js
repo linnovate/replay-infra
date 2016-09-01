@@ -22,8 +22,8 @@ function processTS(params) {
 			case ('Video'):
 				{
 					ffmpeg.convertToMp4({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
-					ffmpeg.on('FFmpeg_finishConvertToMp4', resolve);
-					ffmpeg.on('FFmpeg_errorOnConvertToMp4', reject);
+					ffmpeg.on('FFmpeg_finishConverting', resolve);
+					ffmpeg.on('FFmpeg_errorOnConverting', reject);
 					break;
 				}
 			case ('Telemetry'):
@@ -63,7 +63,7 @@ function preparePath(params) {
 	// create new path if dont exist.
 	checkPathAndCreate(outputPath);
 	// add the name of the file (without the extention).
-	outputPath = path.join(outputPath, outputPath.name);
+	outputPath = path.join(outputPath, path.parse(outputPath).name);
 	// set the storage path from the params or default.
 	var storagePath = params.filesStoragePath || STORAGE_PATH;
 	// set the path to the file.
