@@ -338,6 +338,7 @@ function sendToJobQueue(params) {
 		startTime: params.startTime,
 		endTime: params.endTime,
 		duration: params.duration,
+		sourceType: params.streamingSource.sourceType,
 		transactionId: new mongoose.Types.ObjectId()
 	};
 	rabbit.produce('TransportStreamProcessingQueue', message);
