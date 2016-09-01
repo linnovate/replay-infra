@@ -17,6 +17,7 @@
     "replay-kaltura-service": "^1.0.3",
     "replay-rabbitmq": "^1.0.3",
     "replay-schemas": "^1.0.24",
+    "replay-ffmpeg": "^1.0.4",
     "stanag": "^1.0.2",
     "turf-merge": "^1.0.2",
     "xml2js": "^0.4.16"
