@@ -42,7 +42,7 @@ module.exports.start = function(params, error, done) {
 // validate the params.
 function paramsIsValid(params) {
 	// check the minimal requires for the message that send to the next job.
-	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
+	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType || !params.storagePath) {
 		return false;
 	}
 
@@ -64,10 +64,11 @@ function proccesTS(params) {
 	var processTsMethod;
 	// prepare the require params for the processing method.
 	var paramsForMethod = {
-		filesStoragePath: params.storgaePath,
+		filesStoragePath: params.storagePath,
 		fileRelativePath: params.fileRelativePath,
 		fileType: params.sourceType
 	};
+	console.log(JSON.stringify(paramsForMethod));
 	// check the reciving method standard
 	switch (params.receivingMethod.standard) {
 		case 'VideoStandard':
@@ -105,8 +106,6 @@ function produceJobs(params, paths) {
 	var message = {
 		sourceId: params.sourceId,
 		videoName: path.parse(params.fileRelativePath).name,
-		videoRelativePath: path.relative(STORAGE_PATH, paths.videoPath),
-		dataRelativePath: path.relative(STORAGE_PATH, paths.dataPath),
 		receivingMethod: {
 			standard: params.receivingMethod.standard,
 			version: params.receivingMethod.version
@@ -116,7 +115,15 @@ function produceJobs(params, paths) {
 		duration: params.duration,
 		transactionId: params.transactionId
 	};
-	var queueName = JobService.getQueueName('NewVideosQueue');
+	// check if we recieved video path.
+	if (paths.videoPath) {
+		message.videoRelativePath = path.relative(STORAGE_PATH, paths.videoPath);
+	}
+	// check if we recieved data path.
+	if (paths.dataPath) {
+		message.dataRelativePath = path.relative(STORAGE_PATH, paths.dataPath);
+	}
+	var queueName = JobService.getQueueName('SaveVideo');
 	if (queueName) {
 		return rabbit.produce(queueName, message);
 	}
