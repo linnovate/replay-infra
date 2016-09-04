@@ -49,3 +49,11 @@ Now simply run the tests with npm:
 ```
 npm test
 ```
+
+## Docker
+```
+docker build --no-cache -t replay-consumer .
+```
+```
+docker run -d --restart=always --link mongodb-prod:mongodb-prod --link rabbit-prod:rabbit-prod --volumes-from dropfolder --name metadataparser consumer node index.js MetadataParser
+```
