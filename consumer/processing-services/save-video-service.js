@@ -97,7 +97,8 @@ function saveVideoToMongo(params) {
 			receivingMethod: params.receivingMethod,
 			jobStatusId: _transactionId,
 			startTime: params.startTime,
-			endTime: params.endTime
+			endTime: params.endTime,
+			status: 'ready'
 		})
 		.then(function(video) {
 			console.log('Video successfully saved to mongo:', video);
@@ -118,7 +119,6 @@ function getVideo() {
 function produceJobs(params) {
 	return [
 		produceMetadataParserJob(params),
-		produceUploadToProviderJob(params),
 		produceAttachVideoToMetadataJob(params)
 	];
 	// etc...
@@ -139,27 +139,6 @@ function produceMetadataParserJob(params) {
 		return rabbit.produce(queueName, message);
 	}
 	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
-}
-
-function produceUploadToProviderJob(params) {
-	console.log('Producing UploadToProvider job...');
-
-	// upload to provider if video exists
-	if (params.videoRelativePath && params.video) {
-		var message = {
-			videoName: params.videoName,
-			videoRelativePath: params.videoRelativePath,
-			transactionId: params.transactionId
-		};
-
-		var queueName = JobsService.getQueueName('UploadVideoToProvider');
-		if (queueName) {
-			return rabbit.produce(queueName, message);
-		}
-		return Promise.reject(new Error('Could not find queue name of the inserted job type'));
-	}
-
-	return Promise.resolve();
 }
 
 function produceAttachVideoToMetadataJob(params) {
