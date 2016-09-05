@@ -42,9 +42,14 @@ module.exports = function() {
 
 	rabbit.connect(RABBITMQ_HOST)
 		.then(function() {
-			return streamingSourceDAL.getStreamingSource(StreamingSourceIndex);
+			streamingSourceDAL.getStreamingSource(StreamingSourceIndex)
+				.then(function(source) {
+					handleVideoSavingProcess(source);
+				})
+				.catch(function(err) {
+					throw err;
+				});
 		})
-		.then(handleVideoSavingProcess)
 		.catch(function(err) {
 			if (err) {
 				throw err;
