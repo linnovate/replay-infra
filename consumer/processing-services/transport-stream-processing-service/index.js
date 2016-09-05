@@ -8,6 +8,7 @@ var _jobStatusTag = 'transportStream-processing-done';
 
 const CONSUMER_NAME = '#transportStream-proccesing#';
 const STORAGE_PATH = process.env.STORAGE_PATH;
+const CAPTURE_STORAGE_PATH = process.env.CAPTURE_STORAGE_PATH;
 
 module.exports.start = function(params, error, done) {
 	if (!paramsIsValid(params)) {
@@ -42,7 +43,7 @@ module.exports.start = function(params, error, done) {
 // validate the params.
 function paramsIsValid(params) {
 	// check the minimal requires for the message that send to the next job.
-	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType || !params.storagePath) {
+	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
 		return false;
 	}
 
@@ -64,7 +65,7 @@ function proccesTS(params) {
 	var processTsMethod;
 	// prepare the require params for the processing method.
 	var paramsForMethod = {
-		filesStoragePath: params.storagePath,
+		filesStoragePath: CAPTURE_STORAGE_PATH,
 		fileRelativePath: params.fileRelativePath,
 		fileType: params.sourceType
 	};
