@@ -114,7 +114,8 @@ function produceJobs(params, paths) {
 		startTime: params.startTime,
 		endTime: params.endTime,
 		duration: params.duration,
-		transactionId: params.transactionId
+		transactionId: params.transactionId,
+		flavors: []
 	};
 	// check if we recieved video path.
 	if (paths.videoPath) {
@@ -123,6 +124,11 @@ function produceJobs(params, paths) {
 	// check if we recieved data path.
 	if (paths.dataPath) {
 		message.dataRelativePath = path.relative(STORAGE_PATH, paths.dataPath);
+	}
+	if (paths.additionalPaths && paths.additionalPaths.length > 1) {
+		message.flavors = paths.additionalPaths.map(function(paths) {
+			return path.relative(STORAGE_PATH, paths);
+		});
 	}
 	var queueName = JobService.getQueueName('SaveVideo');
 	if (queueName) {
