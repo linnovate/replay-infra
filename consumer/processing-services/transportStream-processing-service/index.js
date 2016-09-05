@@ -113,7 +113,8 @@ function produceJobs(params, paths) {
 		startTime: params.startTime,
 		endTime: params.endTime,
 		duration: params.duration,
-		transactionId: params.transactionId
+		transactionId: params.transactionId,
+		flavors: []
 	};
 	// check if we recieved video path.
 	if (paths.videoPath) {
