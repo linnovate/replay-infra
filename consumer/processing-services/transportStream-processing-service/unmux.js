@@ -21,7 +21,12 @@ function processTS(params) {
 		switch (params.fileType) {
 			case ('Video'):
 				{
-					ffmpeg.convertToMp4({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
+					ffmpeg
+					.convertToMp4({
+						inputPath: pathsForFFmpeg.inputPath,
+						outputPath: pathsForFFmpeg.outputPath,
+						divideToResolutions: true
+					});
 					ffmpeg.on('FFmpeg_finishConverting', resolve);
 					ffmpeg.on('FFmpeg_errorOnConverting', reject);
 					break;

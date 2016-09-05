@@ -123,6 +123,11 @@ function produceJobs(params, paths) {
 	if (paths.dataPath) {
 		message.dataRelativePath = path.relative(STORAGE_PATH, paths.dataPath);
 	}
+	if (paths.additionalPaths && paths.additionalPaths.length > 1) {
+		message.flavors = paths.additionalPaths.map(function(paths) {
+			return path.relative(STORAGE_PATH, paths);
+		});
+	}
 	var queueName = JobService.getQueueName('SaveVideo');
 	if (queueName) {
 		return rabbit.produce(queueName, message);
