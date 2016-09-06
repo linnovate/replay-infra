@@ -105,7 +105,7 @@ function proccesTS(params) {
 function produceJobs(params, paths) {
 	var message = {
 		sourceId: params.sourceId,
-		contentDiractoryPath: path.parse(params.fileRelativePath).dir,
+		contentDirectoryPath: path.parse(params.fileRelativePath).dir,
 		baseName: path.parse(params.fileRelativePath).name,
 		receivingMethod: {
 			standard: params.receivingMethod.standard,
