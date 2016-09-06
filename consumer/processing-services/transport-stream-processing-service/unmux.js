@@ -18,28 +18,44 @@ function processTS(params) {
 	var pathsForFFmpeg = preparePath(params);
 	return new Promise(function(resolve, reject) {
 		// check the file type.
-		switch (params.fileType) {
-			case ('Video'):
-				{
-					ffmpeg
+		if (params.hardCoded) {
+			demoXML(pathsForFFmpeg.outputPath, function() {
+				ffmpeg
 					.convertToMp4({
 						inputPath: pathsForFFmpeg.inputPath,
 						outputPath: pathsForFFmpeg.outputPath,
 						divideToResolutions: true
 					});
-					ffmpeg.on('FFmpeg_finishConverting', resolve);
-					ffmpeg.on('FFmpeg_errorOnConverting', reject);
-					break;
-				}
-			case ('Telemetry'):
-				{
-					ffmpeg.extractData({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
-					ffmpeg.on('FFmpeg_finishExtractData', resolve);
-					ffmpeg.on('FFmpeg_errorOnExtractData', reject);
-					break;
-				}
-			default:
-				return reject(new Error('could not recognize the file type'));
+				ffmpeg.on('FFmpeg_finishConverting', function(paths) {
+					paths.dataPath = pathsForFFmpeg.outputPath + '.data';
+					resolve(paths);
+				});
+				ffmpeg.on('FFmpeg_errorOnConverting', reject);
+			});
+		} else {
+			switch (params.fileType) {
+				case ('Video'):
+					{
+						ffmpeg
+						.convertToMp4({
+							inputPath: pathsForFFmpeg.inputPath,
+							outputPath: pathsForFFmpeg.outputPath,
+							divideToResolutions: true
+						});
+						ffmpeg.on('FFmpeg_finishConverting', resolve);
+						ffmpeg.on('FFmpeg_errorOnConverting', reject);
+						break;
+					}
+				case ('Telemetry'):
+					{
+						ffmpeg.extractData({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
+						ffmpeg.on('FFmpeg_finishExtractData', resolve);
+						ffmpeg.on('FFmpeg_errorOnExtractData', reject);
+						break;
+					}
+				default:
+					return reject(new Error('could not recognize the file type'));
+			}
 		}
 	});
 }
@@ -75,4 +91,9 @@ function preparePath(params) {
 	tsFilePath = path.join(storagePath, tsFilePath);
 
 	return { inputPath: tsFilePath, outputPath: outputPath };
+}
+
+function demoXML(datapath, cb) {
+	fs.createReadStream(path.join(__dirname, '/demo-data.xml')).pipe(fs.createWriteStream(datapath + '.data'));
+	cb();
 }
