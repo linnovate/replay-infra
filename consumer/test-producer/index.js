@@ -9,9 +9,11 @@ rabbit.connect(rabbitHost)
 	.then(function() {
 		var message = {
 			sourceId: '123',
-			videoName: 'sample.ts',
-			videoRelativePath: 'sample.ts',
-			dataRelativePath: 'sample.data',
+			videoFileName: 'sample.ts',
+			dataFilePath: 'sample.data',
+			contentDirectoryPath: '/',
+			baseName: 'sample',
+			requestFormat: 'mp4',
 			receivingMethod: {
 				standard: 'VideoStandard',
 				version: '1.0'
