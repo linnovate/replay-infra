@@ -67,7 +67,8 @@ function proccesTS(params) {
 	var paramsForMethod = {
 		filesStoragePath: CAPTURE_STORAGE_PATH,
 		fileRelativePath: params.fileRelativePath,
-		fileType: params.sourceType
+		fileType: params.sourceType,
+		hardCoded: true
 	};
 	console.log(JSON.stringify(paramsForMethod));
 	// check the reciving method standard
@@ -79,7 +80,13 @@ function proccesTS(params) {
 					processTsMethod = require('./unmux');
 					break;
 				case '1.0':
-					processTsMethod = require('./mux');
+					// original
+					// processTsMethod = require('./mux');
+
+					/*************************************************************/
+					// hardCoded for demoXML
+					processTsMethod = require('./unmux');
+					/*************************************************************/
 					break;
 				default:
 					return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported version for video-standard'));

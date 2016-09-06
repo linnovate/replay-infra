@@ -332,7 +332,7 @@ function sendToJobQueue(params) {
 		storagePath: params.storagePath,
 		receivingMethod: {
 			standard: params.streamingSource.streamingMethod.standard,
-			version: '1.0'
+			version: params.streamingSource.streamingMethod.version
 		},
 		startTime: params.startTime,
 		endTime: params.endTime,
