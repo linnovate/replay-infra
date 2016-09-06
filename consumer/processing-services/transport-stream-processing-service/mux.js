@@ -11,37 +11,26 @@ var STORAGE_PATH = process.env.STORAGE_PATH;
 
 function processTS(params) {
 	if (!paramsIsValid(params)) {
-		return Promise.reject(new Error('there is missing parameters for the proccesing'));
+		return Promise.reject(new Error('video-standard work with video/data, and there was none'));
 	}
-
 	// prepare the paths to the ffmpeg job.
 	var pathsForFFmpeg = preparePath(params);
 	return new Promise(function(resolve, reject) {
-		// check the file type.
-		switch (params.fileType) {
-			case ('Video'):
-				{
-					ffmpeg.convertToMp4({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
-					ffmpeg.on('FFmpeg_finishConverting', resolve);
-					ffmpeg.on('FFmpeg_errorOnConverting', reject);
-					break;
-				}
-			case ('Telemetry'):
-				{
-					ffmpeg.extractData({ inputPath: pathsForFFmpeg.inputPath, outputPath: pathsForFFmpeg.outputPath });
-					ffmpeg.on('FFmpeg_finishExtractData', resolve);
-					ffmpeg.on('FFmpeg_errorOnExtractData', reject);
-					break;
-				}
-			default:
-				return reject(new Error('could not recognize the file type'));
-		}
+		// converting and extracting the data, wait until finishing the work and return promise.
+		ffmpeg
+			.convertAndExtract({
+				inputPath: pathsForFFmpeg.inputPath,
+				outputPath: pathsForFFmpeg.outputPath,
+				divideToResolutions: true
+			});
+		ffmpeg.on('FFmpeg_finishConvertAndExtract', resolve);
+		ffmpeg.on('FFmpeg_errorOnConvertAndExtract', reject);
 	});
 }
 
-// validate the params, check if there is at least on of the paths.
+// validate the params, check if there is both video and data path.
 function paramsIsValid(params) {
-	return (params && params.fileRelativePath && params.fileType);
+	return (params && params.fileRelativePath);
 }
 
 // helper method that check if the path exist, if not create it.

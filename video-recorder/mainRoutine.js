@@ -6,8 +6,7 @@ var moment = require('moment'),
 
 var path = require('path');
 
-var event = require('./services/EventEmitterSingleton'),
-	streamListener = require('./services/StreamListener'),
+var streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
 	util = require('./utilitties'),
 	exitHendler = require('./utilitties/exitUtil');
@@ -43,9 +42,14 @@ module.exports = function() {
 
 	rabbit.connect(RABBITMQ_HOST)
 		.then(function() {
-			return streamingSourceDAL.getStreamingSource(StreamingSourceIndex);
+			streamingSourceDAL.getStreamingSource(StreamingSourceIndex)
+				.then(function(source) {
+					handleVideoSavingProcess(source);
+				})
+				.catch(function(err) {
+					throw err;
+				});
 		})
-		.then(handleVideoSavingProcess)
 		.catch(function(err) {
 			if (err) {
 				throw err;
@@ -92,21 +96,16 @@ function handleVideoSavingProcess(streamingSource) {
 	/*                                        */
 	/******************************************/
 
-	// When Error eccured in one of the services.
-	event.on('error', function(err) {
+	// When Error eccured in StreamListener
+	streamListener.on('unexceptedError_StreamListener', function(err) {
 		throw err;
 	});
 
-	// When Error eccured in StreamListener
-	event.on('unexceptedError_StreamListener', function(err) {
-		throw err;
-	});
+	// When the streamListenerService found some streaming data in the address.
+	streamListener.on('StreamingData', streamingDataHandle);
 
 	// When the file didnt created by the ffmpeg
 	fileWatcher.on('FileDontExist_FileWatcher', fileDontExistHandler);
-
-	// When the streamListenerService found some streaming data in the address.
-	event.on('StreamingData', streamingDataHandle);
 
 	// When finish the recording.
 	ffmpeg.on('ffmpegWrapper_finish_recording', finishRecordHandle);

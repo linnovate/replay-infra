@@ -10,11 +10,11 @@ module.exports = StreamingSourceDAL;
 
 function StreamingSourceDAL(host, port, db) {
 	if (!host || !port || !db) {
-		return Promise.reject(SERVICE_NAME + ' bad conection params provided');
+		throw new Error(SERVICE_NAME + ' bad conection params provided');
 	}
 	connectMongo(host, port, db)
 		.catch(function(err) {
-			return Promise.reject('error connection mongo' + err);
+			throw new Error('error connection mongo' + err);
 		});
 
 	// Retrives a stream source from the database by ID
@@ -22,12 +22,12 @@ function StreamingSourceDAL(host, port, db) {
 		return StreamingSource.findOne({ sourceID: sourceId }, function(err, StreamingSource) {
 			// make sure StreamingSource exist and also our object at the specified sourceId
 			if (err) {
-				return Promise.reject('StreamingSource has no object at sourceId ' + sourceId);
+				throw new Error('StreamingSource has no object at sourceId ' + sourceId);
 			}
 
 			if (!StreamingSource) {
 				console.log(SERVICE_NAME, 'no Streaming Source found');
-				return Promise.reject('no stream source found');
+				throw new Error('no stream source found');
 			}
 
 			return Promise.resolve(StreamingSource);

@@ -8,6 +8,7 @@ var _jobStatusTag = 'transportStream-processing-done';
 
 const CONSUMER_NAME = '#transportStream-proccesing#';
 const STORAGE_PATH = process.env.STORAGE_PATH;
+const CAPTURE_STORAGE_PATH = process.env.CAPTURE_STORAGE_PATH;
 
 module.exports.start = function(params, error, done) {
 	if (!paramsIsValid(params)) {
@@ -42,7 +43,7 @@ module.exports.start = function(params, error, done) {
 // validate the params.
 function paramsIsValid(params) {
 	// check the minimal requires for the message that send to the next job.
-	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType || !params.storagePath) {
+	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
 		return false;
 	}
 
@@ -64,7 +65,7 @@ function proccesTS(params) {
 	var processTsMethod;
 	// prepare the require params for the processing method.
 	var paramsForMethod = {
-		filesStoragePath: params.storagePath,
+		filesStoragePath: CAPTURE_STORAGE_PATH,
 		fileRelativePath: params.fileRelativePath,
 		fileType: params.sourceType
 	};
@@ -113,7 +114,8 @@ function produceJobs(params, paths) {
 		startTime: params.startTime,
 		endTime: params.endTime,
 		duration: params.duration,
-		transactionId: params.transactionId
+		transactionId: params.transactionId,
+		flavors: []
 	};
 	// check if we recieved video path.
 	if (paths.videoPath) {
@@ -122,6 +124,11 @@ function produceJobs(params, paths) {
 	// check if we recieved data path.
 	if (paths.dataPath) {
 		message.dataRelativePath = path.relative(STORAGE_PATH, paths.dataPath);
+	}
+	if (paths.additionalPaths && paths.additionalPaths.length > 1) {
+		message.flavors = paths.additionalPaths.map(function(paths) {
+			return path.relative(STORAGE_PATH, paths);
+		});
 	}
 	var queueName = JobService.getQueueName('SaveVideo');
 	if (queueName) {
