@@ -7,7 +7,6 @@ var _transactionId;
 var _jobStatusTag = 'transportStream-processing-done';
 
 const CONSUMER_NAME = '#transportStream-proccesing#';
-const STORAGE_PATH = process.env.STORAGE_PATH;
 const CAPTURE_STORAGE_PATH = process.env.CAPTURE_STORAGE_PATH;
 
 module.exports.start = function(params, error, done) {
@@ -106,7 +105,8 @@ function proccesTS(params) {
 function produceJobs(params, paths) {
 	var message = {
 		sourceId: params.sourceId,
-		videoName: path.parse(params.fileRelativePath).name,
+		contentDiractoryPath: path.parse(params.fileRelativePath).dir,
+		baseName: path.parse(params.fileRelativePath).name,
 		receivingMethod: {
 			standard: params.receivingMethod.standard,
 			version: params.receivingMethod.version
@@ -119,16 +119,18 @@ function produceJobs(params, paths) {
 	};
 	// check if we recieved video path.
 	if (paths.videoPath) {
-		message.videoRelativePath = path.relative(STORAGE_PATH, paths.videoPath);
+		message.videoFileName = path.parse(paths.videoPath).base;
+		paths.additionalPaths.push(paths.videoPath);
+		if (paths.additionalPaths && paths.additionalPaths.length > 1) {
+			message.flavors = paths.additionalPaths.map(function(currentPath) {
+				return path.parse(currentPath).base;
+			});
+		}
+		message.requestFormat = 'mp4';
 	}
 	// check if we recieved data path.
 	if (paths.dataPath) {
-		message.dataRelativePath = path.relative(STORAGE_PATH, paths.dataPath);
-	}
-	if (paths.additionalPaths && paths.additionalPaths.length > 1) {
-		message.flavors = paths.additionalPaths.map(function(paths) {
-			return path.relative(STORAGE_PATH, paths);
-		});
+		message.dataFileName = path.parse(paths.dataPath).base;
 	}
 	var queueName = JobService.getQueueName('SaveVideo');
 	if (queueName) {
