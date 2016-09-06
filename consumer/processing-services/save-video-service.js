@@ -3,7 +3,6 @@ var rabbit = require('replay-rabbitmq'),
 	Video = require('replay-schemas/Video'),
 	Promise = require('bluebird'),
 	JobService = require('replay-jobs-service');
-var path = require('path');
 
 var _transactionId;
 var _jobStatusTag = 'video-object-saved';
@@ -136,7 +135,8 @@ function produceMetadataParserJob(params) {
 	var message = {
 		sourceId: params.sourceId,
 		videoId: params.video ? params.video.id : undefined, // could be undefined
-		dataRelativePath: path.join(params.contentDirectoryPath, params.dataFileName),
+		dataFileName: params.dataFileName,
+		contentDirectoryPath: params.contentDirectoryPath,
 		receivingMethod: params.receivingMethod,
 		transactionId: params.transactionId
 	};
