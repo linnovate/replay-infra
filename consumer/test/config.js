@@ -67,7 +67,7 @@ module.exports.generateValidMessage = function () {
 	return {
 		sourceId: '123',
 		videoFileName: 'sample.ts',
-		dataFilePath: 'sample.data',
+		dataFileName: 'sample.data',
 		contentDirectoryPath: '/',
 		baseName: 'sample',
 		requestFormat: 'mp4',

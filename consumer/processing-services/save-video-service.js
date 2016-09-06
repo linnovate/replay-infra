@@ -3,6 +3,7 @@ var rabbit = require('replay-rabbitmq'),
 	Video = require('replay-schemas/Video'),
 	Promise = require('bluebird'),
 	JobService = require('replay-jobs-service');
+var path = require('path');
 
 var _transactionId;
 var _jobStatusTag = 'video-object-saved';
@@ -123,7 +124,6 @@ function getVideo() {
 function produceJobs(params) {
 	return [
 		produceMetadataParserJob(params),
-		produceUploadToProviderJob(params),
 		produceAttachVideoToMetadataJob(params)
 	];
 	// etc...
@@ -135,7 +135,7 @@ function produceMetadataParserJob(params) {
 	var message = {
 		sourceId: params.sourceId,
 		videoId: params.video ? params.video.id : undefined, // could be undefined
-		dataRelativePath: params.dataRelativePath,
+		dataRelativePath: path.join(params.contentDirectoryPath, params.dataFileName),
 		receivingMethod: params.receivingMethod,
 		transactionId: params.transactionId
 	};
@@ -144,27 +144,6 @@ function produceMetadataParserJob(params) {
 		return rabbit.produce(queueName, message);
 	}
 	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
-}
-
-function produceUploadToProviderJob(params) {
-	console.log('Producing UploadToProvider job...');
-
-	// upload to provider if video exists
-	if (params.videoRelativePath && params.video) {
-		var message = {
-			videoName: params.videoName,
-			videoRelativePath: params.videoRelativePath,
-			transactionId: params.transactionId
-		};
-
-		var queueName = JobsService.getQueueName('UploadVideoToProvider');
-		if (queueName) {
-			return rabbit.produce(queueName, message);
-		}
-		return Promise.reject(new Error('Could not find queue name of the inserted job type'));
-	}
-
-	return Promise.resolve();
 }
 
 function produceAttachVideoToMetadataJob(params) {
