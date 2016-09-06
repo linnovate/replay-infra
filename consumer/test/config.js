@@ -25,7 +25,8 @@ global.assert = chai.assert;
 
 var _validMetadataObjectsPath = 'expected_parsed_data.json';
 
-module.exports.resetEnvironment = function () {
+resetEnvironment();
+function resetEnvironment() {
 	// set env variables
 	process.env.MONGO_HOST = 'localhost';
 	process.env.MONGO_DATABASE = 'replay_test';
@@ -36,7 +37,8 @@ module.exports.resetEnvironment = function () {
 	process.env.KALTURA_URL = 'http://vod.linnovate.net';
 	process.env.KALTURA_ADMIN_SECRET = '96f2df9a0071cd8024463509439fedb9';
 	process.env.RABBITMQ_MAX_RESEND_ATTEMPS = 1;
-};
+}
+module.exports.resetEnvironment = resetEnvironment;
 
 // connect services
 module.exports.connectServices = function () {

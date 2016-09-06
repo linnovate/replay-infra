@@ -103,7 +103,8 @@ function saveVideoToMongo(params) {
 			receivingMethod: params.receivingMethod,
 			jobStatusId: _transactionId,
 			startTime: params.startTime,
-			endTime: params.endTime
+			endTime: params.endTime,
+			status: 'ready'
 		})
 		.then(function (video) {
 			console.log('Video successfully saved to mongo:', video);

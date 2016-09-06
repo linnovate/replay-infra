@@ -8,14 +8,13 @@
     "coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
   },
   "dependencies": {
-    "bluebird": "^3.4.0",
+    "bluebird": "^3.4.6",
     "lodash": "^4.15.0",
     "moment": "^2.14.1",
-    "mongoose": "^4.5.10",
+    "mongoose": "^4.6.0",
     "mongoose-geojson-schema": "^2.1.2",
-    "replay-ffmpeg": "^1.0.4",
+    "replay-ffmpeg": "^1.2.1",
     "replay-jobs-service": "^1.0.17",
-    "replay-kaltura-service": "^1.0.3",
     "replay-rabbitmq": "^1.0.5",
     "replay-schemas": "^1.0.30",
     "stanag": "^1.0.2",
