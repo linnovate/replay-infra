@@ -1,26 +1,26 @@
 {
-	"name": "video-recorder",
-	"version": "1.0.0",
-	"description": "Video-recorder is the 'Capture' component for the Replay project.",
-	"main": "index.js",
-	"scripts": {
-		"test": "mocha ./test --recursive",
-		"coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
-	},
-	"dependencies": {
-		"bluebird": "^3.4.0",
-		"mkdirp": "^0.5.1",
-		"moment": "^2.13.0",
-		"mongoose": "^4.5.9",
-		"replay-ffmpeg": "^1.0.4",
-		"replay-schemas": "^1.0.21",
-		"replay-rabbitmq": "^1.0.3"
-	},
-	"devDependencies": {
-		"mocha": "^2.5.3",
-		"chai": "^3.5.0",
-		"sinon": "^1.17.5",
-		"rewire": "^2.5.2",
-		"istanbul": "^0.4.5"
-	}
+  "name": "video-recorder",
+  "version": "1.0.0",
+  "description": "Video-recorder is the 'Capture' component for the Replay project.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha ./test --recursive",
+    "coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "mkdirp": "^0.5.1",
+    "moment": "^2.13.0",
+    "mongoose": "^4.6.0",
+    "replay-ffmpeg": "^1.2.1",
+    "replay-rabbitmq": "^1.0.5",
+    "replay-schemas": "^1.0.30"
+  },
+  "devDependencies": {
+    "mocha": "^2.5.3",
+    "chai": "^3.5.0",
+    "sinon": "^1.17.5",
+    "rewire": "^2.5.2",
+    "istanbul": "^0.4.5"
+  }
 }

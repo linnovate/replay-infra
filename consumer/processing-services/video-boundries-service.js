@@ -112,8 +112,8 @@ function saveToMongo(polygon, videoId) {
 	if (polygon !== undefined && videoId !== undefined) {
 		// update video object in mongo by id
 		return Video.update({ _id: videoId }, { boundingPolygon: polygon })
-			.then(function(affected) {
-				console.log(affected + 'documents affected');
+			.then(function(video) {
+				console.log('Video updated successfuly.');
 				return Promise.resolve();
 			})
 			.catch(function(err) {

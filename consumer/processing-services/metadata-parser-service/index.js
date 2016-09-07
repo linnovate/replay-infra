@@ -8,7 +8,7 @@ var fs = Promise.promisifyAll(require('fs')),
 	_transactionId,
 	_jobStatusTag = 'parsed-metadata';
 
-module.exports.start = function(params, error, done) {
+module.exports.start = function (params, error, done) {
 	console.log('MetadataParserService started.');
 
 	if (!validateInput(params)) {
@@ -19,19 +19,19 @@ module.exports.start = function(params, error, done) {
 	_transactionId = params.transactionId;
 
 	JobsService.findJobStatus(_transactionId)
-		.then(function(jobStatus) {
+		.then(function (jobStatus) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}
 			return performParseChain(params);
 		})
-		.then(function() {
+		.then(function () {
 			done();
 			return Promise.resolve();
 		})
 		.then(updateJobStatus)
-		.catch(function(err) {
+		.catch(function (err) {
 			if (err) {
 				console.log(err);
 				error();
@@ -40,12 +40,13 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
-	var relativePathToData = params.dataRelativePath;
+	var dataFileName = params.dataFileName;
+	var contentDirectoryPath = params.contentDirectoryPath;
 	var method = params.receivingMethod;
 	var transactionId = params.transactionId;
 
 	// validate params
-	if (!relativePathToData || !process.env.STORAGE_PATH ||
+	if (!dataFileName || !contentDirectoryPath || !process.env.STORAGE_PATH ||
 		!method || !method.standard || !method.version || !transactionId) {
 		return false;
 	}
@@ -56,17 +57,18 @@ function validateInput(params) {
 // Read data from file, convert it to objects then produce insert-to-databases jobs.
 function performParseChain(params) {
 	// extract params and handle metadata
-	var relativePathToData = params.dataRelativePath;
+	var dataFileName = params.dataFileName;
+	var contentDirectoryPath = params.contentDirectoryPath;
 	var method = params.receivingMethod;
 
 	// concat full path
-	var pathToData = path.join(process.env.STORAGE_PATH, relativePathToData);
+	var pathToData = path.join(process.env.STORAGE_PATH, contentDirectoryPath, dataFileName);
 
 	return readDataAsString(pathToData)
-		.then(function(data) {
+		.then(function (data) {
 			return dataToObjects(method, data, params);
 		})
-		.then(function(videoMetadatas) {
+		.then(function (videoMetadatas) {
 			return produceJobs(params, videoMetadatas);
 		})
 		.all();
@@ -78,7 +80,7 @@ function readDataAsString(path) {
 
 // apply specific logic to parse the different standards of metadatas
 function dataToObjects(method, data, params) {
-	return new Promise(function(resolve, reject) {
+	return new Promise(function (resolve, reject) {
 		var standardHandler;
 		switch (method.standard) {
 			case 'VideoStandard':
@@ -157,7 +159,7 @@ function produceAttachVideoToMetadataJob(videoMetadatas, params) {
 // update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
 	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
-		.catch(function(err) {
+		.catch(function (err) {
 			if (err) {
 				console.log(err);
 			}
