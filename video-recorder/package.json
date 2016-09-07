@@ -17,7 +17,7 @@
     "replay-schemas": "^1.0.30"
   },
   "devDependencies": {
-    "mocha": "^2.5.3",
+    "mocha": "^3.0.2",
     "chai": "^3.5.0",
     "sinon": "^1.17.5",
     "rewire": "^2.5.2",
