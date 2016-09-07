@@ -7,25 +7,21 @@ Initialize Mongo with the default required collections via the helper module [re
 
 Set environment variables to config the app:
 
-| Name                          | Description                                  | Default        |
-|-------------------------------|----------------------------------------------|----------------|
-| MONGO_HOST                    | Mongo host URI                               | localhost      |
-| MONGO_PORT                    | Mongo port                                   | 27017          |
-| MONGO_DATABASE                | Mongo database name                          | replay_dev     |
-| ELASTIC_HOST                  | Elastic host URI                             | localhost      |
-| ELASTIC_PORT                  | Elastic port                                 | 9200           |
-| ELASTIC_VIDEO_METADATA_INDEX  | The index of the VideoMetadata in Elastic    | videometadatas |
-| ELASTIC_VIDEO_METADATA_TYPE   | The type of the VideoMetadata in Elastic     | videometadata  |
-| RABBITMQ_HOST                 | RabbitMQ host URI                            | localhost      |
-| RABBITMQ_MAX_RESEND_ATTEMPS   | Max attempts to resend messages              | 3              |
-| RABBITMQ_MAX_UNACKED_MESSAGES | Max parallel messages to process without ACK |                |
-| PROVIDER                      | Video CMS provider                           |                |
-| DROP_FOLDER_PATH              | Kaltura's drop folder relative path          |                |
-| KALTURA_PARTNER_ID            | The partner ID in kaltura                    |                |
-| KALTURA_ADMIN_SECRET          | Kaltura's admin secret                       |                |
-| KALTURA_URL                   | Kaltura URI                                  |                |
-| CAPTIONS_PATH                 | Path to pass captions through                |                |
-| DESTINATION_PATH              | Path to which captions will be thrown        |                |
+| Name                            | Description                                  | Default           |
+|---------------------------------|----------------------------------------------|-------------------|
+| MONGO_HOST                      | Mongo host URI                               | localhost         |
+| MONGO_PORT                      | Mongo port                                   | 27017             |
+| MONGO_DATABASE                  | Mongo database name                          | replay_dev        |
+| ELASTIC_HOST                    | Elastic host URI                             | localhost         |
+| ELASTIC_PORT                    | Elastic port                                 | 9200              |
+| ELASTIC_VIDEO_METADATA_INDEX    | The index of the VideoMetadata in Elastic    | videometadatas    |
+| ELASTIC_VIDEO_METADATA_TYPE     | The type of the VideoMetadata in Elastic     | videometadata     |
+| RABBITMQ_HOST                   | RabbitMQ host URI                            | localhost         |
+| RABBITMQ_MAX_RESEND_ATTEMPS     | Max attempts to resend messages              | 3                 |
+| RABBITMQ_MAX_UNACKED_MESSAGES   | Max parallel messages to process without ACK |                   |
+| RABBITMQ_FAILED_JOBS_QUEUE_NAME | Name of the queue for failed jobs            | FAILED_JOBS_QUEUE |
+| CAPTIONS_PATH                   | Path to pass captions through                |                   |
+| DESTINATION_PATH                | Path to which captions will be thrown        |                   |
 
 Run app:
 ```
