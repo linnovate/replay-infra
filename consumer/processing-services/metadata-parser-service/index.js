@@ -26,11 +26,11 @@ module.exports.start = function (params, error, done) {
 			}
 			return performParseChain(params);
 		})
+		.then(updateJobStatus)
 		.then(function () {
 			done();
 			return Promise.resolve();
 		})
-		.then(updateJobStatus)
 		.catch(function (err) {
 			if (err) {
 				console.log(err);
