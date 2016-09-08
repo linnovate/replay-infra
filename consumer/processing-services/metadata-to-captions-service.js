@@ -12,6 +12,9 @@ const LAST_CAPTIONS_TIME = 1; // in seconds
 var _transactionId;
 var _jobStatusTag = 'created-captions-from-metadata';
 
+// wrap the fs.writeFile nodeFunction to return a promise instead of taking a callback
+var fsWriteFile = Promise.promisify(fs.writeFile);
+
 module.exports.start = function(params, error, done) {
 	console.log('MetadataToCaptions service started.');
 
@@ -138,15 +141,15 @@ function createCaptions(metadatas) {
 }
 
 function writeCaptionsToDestination(captionsStreamBuffer, captionsPath) {
-	return fs.writeFile(captionsPath, captionsStreamBuffer.getContents(), 'utf8', function(err) {
-		if (err) {
+	return fsWriteFile(captionsPath, captionsStreamBuffer.getContents())
+		.then(function() {
+			console.log('Captions file successfuly created in destination.');
+			return Promise.resolve();
+		})
+		.catch(function(err) {
 			err.message = 'Failed to write captions to destination! ' + err.message;
 			return Promise.reject(err);
-		}
-		// else:
-		console.log('Captions file successfuly created in destination.');
-		return Promise.resolve();
-	});
+		});
 }
 
 function getFormatedTime(time) {
