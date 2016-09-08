@@ -14,7 +14,7 @@
 		"mongoose": "^4.6.0",
 		"mongoose-geojson-schema": "^2.1.2",
 		"replay-ffmpeg": "^1.2.1",
-		"replay-jobs-service": "^1.0.17",
+		"replay-jobs-service": "^1.0.18",
 		"replay-rabbitmq": "^1.0.5",
 		"replay-schemas": "^1.0.30",
 		"stanag": "^1.0.2",
