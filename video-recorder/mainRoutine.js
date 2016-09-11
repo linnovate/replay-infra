@@ -64,6 +64,7 @@ module.exports = function() {
 /*    when the ffmpeg finish or the file watcher detect that the file is not getting bigger ,restarting the proccess all over again.        */
 /*                                                                                                                                          */
 /********************************************************************************************************************************************/
+
 function handleVideoSavingProcess(streamingSource) {
 	// const METHOD_NAME = 'handleVideoSavingProcess';
 
@@ -78,23 +79,11 @@ function handleVideoSavingProcess(streamingSource) {
 		endRecordTime: null
 	};
 
-	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.sourcePort);
-	// Starting Listen to the address.
-	startStreamListener(streamingSource)
-		.then(function() {
-			globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-				streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
-			});
-		})
-		.catch(function(err) {
-			throw err;
-		});
-
-	/******************************************/
-	/*                                        */
-	/*         events Section:                */
-	/*                                        */
-	/******************************************/
+	/****************************************************************************************************/
+	/*                                                                                                  */
+	/*                              Events Section:                                                     */
+	/*                                                                                                  */
+	/****************************************************************************************************/
 
 	// When Error eccured in StreamListener
 	streamListener.on('unexceptedError_StreamListener', function(err) {
@@ -113,19 +102,14 @@ function handleVideoSavingProcess(streamingSource) {
 	// When error eccured while recording.
 	ffmpeg.on('ffmpegWrapper_error_while_recording', errorOnRecordHandle);
 
-	// When Error eccured on FFmpeg module.
-	ffmpeg.on('FFmpegError', ffmpegErrorHandle);
-
 	// When the source stop stream data.
 	fileWatcher.on('FileWatchStop', fileWatcherStopHandler);
 
-	/********************************************************************************************************************************************/
-
-	/********************************************************************************************/
-	/*                                                                                          */
-	/*                                 events handlers                                          */
-	/*                                                                                          */
-	/********************************************************************************************/
+	/****************************************************************************************************/
+	/*                                                                                                  */
+	/*                              Events handlers                                                     */
+	/*                                                                                                  */
+	/****************************************************************************************************/
 
 	function streamingDataHandle() {
 		var dateOfCreating = util.getCurrentDate();
@@ -173,48 +157,17 @@ function handleVideoSavingProcess(streamingSource) {
 		// stop the fileWatcher
 		stopWatchFile(globals.fileWatcherTimer);
 		// Starting Listen to the address again.
-		startStreamListener(streamingSource)
-			.then(function() {
-				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
-				});
-			})
-			.catch(function(err) {
-				throw err;
-			});
+		startStreamListener(streamingSource, globals.streamStatusTimer);
 	}
 
 	function errorOnRecordHandle(err) {
-		console.log('error eccured while recording');
+		console.log('error eccured while recording:');
 		console.log(err);
 
 		// Stop the timer
 		stopWatchFile(globals.fileWatcherTimer);
-
 		// Starting Listen to the address again.
-		startStreamListener(streamingSource)
-			.then(function() {
-				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
-				});
-			})
-			.catch(function(err) {
-				throw err;
-			});
-	}
-
-	function ffmpegErrorHandle(err) {
-		console.log(err);
-		stopWatchFile(globals.fileWatcherTimer);
-		startStreamListener(streamingSource)
-			.then(function() {
-				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
-				});
-			})
-			.catch(function(err) {
-				throw err;
-			});
+		startStreamListener(streamingSource, globals.streamStatusTimer);
 	}
 
 	function fileWatcherStopHandler(tsPath) {
@@ -222,31 +175,14 @@ function handleVideoSavingProcess(streamingSource) {
 		console.log(PROCESS_NAME + ' The Source stop stream data, Killing the ffmpeg process');
 		stopFFmpegProcess(globals.command);
 		getDurationAndSendMessage(tsPath);
-		startStreamListener(streamingSource)
-			.then(function() {
-				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
-				});
-			})
-			.catch(function(err) {
-				throw err;
-			});
+		startStreamListener(streamingSource, globals.streamStatusTimer);
 	}
 
 	function fileDontExistHandler(err) {
 		console.log(err);
-		startStreamListener(streamingSource)
-			.then(function() {
-				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
-				});
-			})
-			.catch(function(err) {
-				throw err;
-			});
+		startStreamListener(streamingSource, globals.streamStatusTimer);
 	}
 
-	/********************************************************************************************************************************************/
 	function getDurationAndSendMessage(tsPath) {
 		globals.endRecordTime = moment().format();
 		// prepare the message for sending.
@@ -271,15 +207,17 @@ function handleVideoSavingProcess(streamingSource) {
 				sendToJobQueue(newMessage);
 			});
 	}
+
+	// Starting Listen to the address.
+	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.sourcePort);
+	startStreamListener(streamingSource, globals.streamStatusTimer);
 }
 
-/********************************************************************************************************************************************/
-
-/********************************************************************************************/
-/*                                                                                          */
-/*                                 Helper Methods                                           */
-/*                                                                                          */
-/********************************************************************************************/
+/****************************************************************************************************/
+/*                                                                                                  */
+/*                              Helper Methods                                                      */
+/*                                                                                                  */
+/****************************************************************************************************/
 
 // Sets a keep alive status notifier
 function setStatusTimer(timer, callBack) {
@@ -293,12 +231,20 @@ function setStatusTimer(timer, callBack) {
 }
 
 // starting Listen to the stream
-function startStreamListener(streamingSource) {
+function startStreamListener(streamingSource, streamStatusTimer) {
 	var streamListenerParams = {
 		ip: streamingSource.sourceIP,
 		port: streamingSource.sourcePort
 	};
-	return streamListener.startListen(streamListenerParams);
+	return streamListener.startListen(streamListenerParams)
+		.then(function() {
+			streamStatusTimer = setStatusTimer(streamStatusTimer, function() {
+				streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
+			});
+		})
+		.catch(function(err) {
+			throw err;
+		});
 }
 
 // Start timer that watch over file
@@ -342,5 +288,3 @@ function sendToJobQueue(params) {
 	};
 	rabbit.produce('TransportStreamProcessingQueue', message);
 }
-
-/********************************************************************************************/
