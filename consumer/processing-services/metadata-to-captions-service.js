@@ -88,7 +88,7 @@ function getVideoMetadatas(videoId) {
 	// retrieve all video's metadatas from db
 	console.log('find metadatas in mongo by videoId: ', videoId);
 	// return the metadatas sorted by descendant timestamp
-	return VideoMetadata.find({ videoId: videoId }).sort({ timestamp: -1 });
+	return VideoMetadata.find({ videoId: videoId }).sort('timestamp');
 }
 
 function getCaptionsFullPath(videoId) {
