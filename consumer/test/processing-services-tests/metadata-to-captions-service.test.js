@@ -6,8 +6,8 @@ var Promise = require('bluebird');
 var mkdirp = Promise.promisify(require('mkdirp')),
 	rimraf = Promise.promisify(require('rimraf'));
 
-var config = require('../../config');
-var MetadataToCaptionsService = require('../../../processing-services/captions-services/metadata-to-captions-service.js');
+var config = require('../config.js');
+var MetadataToCaptionsService = require('../../processing-services/metadata-to-captions-service.js');
 
 var _transactionId;
 
@@ -49,9 +49,9 @@ function invalidInputTests() {
 			});
 	});
 
-	it('should call error function when no process.env.CAPTIONS_PATH are given', function(done) {
+	it('should call error function when message.transactionId = undefined', function(done) {
 		var message = generateMessage();
-		delete process.env.CAPTIONS_PATH;
+		message.transactionId = undefined;
 		MetadataToCaptionsService.start(message,
 			function _error() {
 				done();
@@ -61,9 +61,9 @@ function invalidInputTests() {
 			});
 	});
 
-	it('should call error function when message.transactionId = undefined', function(done) {
+	it('should call error function when message.videoId = undefined', function(done) {
 		var message = generateMessage();
-		message.transactionId = undefined;
+		message.videoId = undefined;
 		MetadataToCaptionsService.start(message,
 			function _error() {
 				done();
@@ -120,9 +120,8 @@ function afterEachTestWipeMongoCollections(done) {
 
 function generateMessage() {
 	return {
-		videoId: 'testVideoId',
-		captionsRelativePath: 'captions.vtt',
-		transactionId: _transactionId
+		transactionId: _transactionId,
+		videoId: 'testVideoId'
 	};
 }
 
