@@ -1,6 +1,7 @@
 var Promise = require('bluebird'),
 	JobService = require('replay-jobs-service'),
-	rabbit = require('replay-rabbitmq');
+	rabbit = require('replay-rabbitmq'),
+	SmilGeneretor = require('replay-smil-generator');
 var path = require('path');
 
 var _transactionId;
@@ -8,6 +9,7 @@ var _jobStatusTag = 'transportStream-processing-done';
 
 const CONSUMER_NAME = '#transportStream-proccesing#';
 const CAPTURE_STORAGE_PATH = process.env.CAPTURE_STORAGE_PATH;
+const SMIL_POSFIX = '.smil';
 
 module.exports.start = function(params, error, done) {
 	if (!paramsIsValid(params)) {
@@ -24,6 +26,19 @@ module.exports.start = function(params, error, done) {
 			} else {
 				proccesTS(params)
 					.then(function(paths) {
+						if (paths.videoPath) {
+							return generateSmil(params, paths)
+								.then(function() {
+									// add to the paths object the smil path.
+									paths.smilPath = changePathExtention(paths.videoPath, SMIL_POSFIX);
+								})
+								.catch(function(err) {
+									console.log(err);
+								})
+								.finally(function() {
+									return produceJobs(params, paths);
+								});
+						}
 						return produceJobs(params, paths);
 					})
 					.then(done)
@@ -133,7 +148,11 @@ function produceJobs(params, paths) {
 				return path.parse(currentPath).base;
 			});
 		}
-		message.requestFormat = 'mp4';
+		if (paths.smilPath) {
+			message.requestFormat = 'smil';
+		} else {
+			message.requestFormat = 'mp4';
+		}
 	}
 	// check if we recieved data path.
 	if (paths.dataPath) {
@@ -144,4 +163,26 @@ function produceJobs(params, paths) {
 		return rabbit.produce(queueName, message);
 	}
 	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
+}
+
+function generateSmil(params, paths) {
+	var newSmil = new SmilGeneretor();
+	var videosArray = [];
+	videosArray.push(path.parse(paths.videoPath).base);
+	paths.additionalPaths.forEach(function(flavor) {
+		videosArray.push(path.parse(flavor).base);
+	});
+	var paramsForGenerator = {
+		folderPath: path.parse(paths.videoPath).dir,
+		smilFileName: path.parse(changePathExtention(paths.videoPath, SMIL_POSFIX)).base,
+		title: path.parse(paths.videoPath).name + ' adaptive stream',
+		video: videosArray
+	};
+	return newSmil.generateSmil(paramsForGenerator);
+}
+
+function changePathExtention(wantedpath, ext) {
+	var dirPath = path.parse(wantedpath).dir;
+	var namePath = path.parse(wantedpath).name;
+	return path.join(dirPath, namePath + ext);
 }
