@@ -4,17 +4,17 @@
 
 // all requires
 var fs = require('fs');
-var event = require('./EventEmitterSingleton');
+var event = require('events').EventEmitter,
+	util = require('util');
 
 // const
 const SERVICE_NAME = '#FileWatcher#',
 	MAX_CHECK_TRIES = 3;
 
-// export out service.
-module.exports = new FileWatcher();
-
 // Init the FileWathcer Service.
-function FileWatcher() {
+var FileWatcher = function() {
+	var self = this;
+
 	var _currentFileSize = -1,
 		_fileTimer,
 		_timeToWait = 5000,
@@ -40,7 +40,7 @@ function FileWatcher() {
 			if (err) {
 				if (_checkingAttempts === MAX_CHECK_TRIES) {
 					// Emit event of error and stop the timer.
-					event.emit('FileDontExist_FileWatcher', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' +
+					self.emit('FileDontExist_FileWatcher', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' +
 						'could not found any file, ignore it and continue on');
 					console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
 					_stopTimer(_fileTimer);
@@ -61,7 +61,7 @@ function FileWatcher() {
 				// Callback called when the file stopped grow.
 				console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
 				_stopTimer(_fileTimer);
-				event.emit('FileWatchStop');
+				self.emit('FileWatchStop', path);
 			}
 			// console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
 		});
@@ -73,7 +73,7 @@ function FileWatcher() {
 
 	    Params should contain at least Path To the file we want to watch.
 	*/
-	var startWatchFile = function(params) {
+	self.startWatchFile = function(params) {
 		var promise = new Promise(function(resolve, reject) {
 			const METHOD_NAME = 'StartWatchFile';
 			// Check if there is path.
@@ -101,12 +101,13 @@ function FileWatcher() {
 	/*
 	    This func stop the follow of the file when it needed.
 	*/
-	var stopWatchFile = function(timer) {
+	self.stopWatchFile = function(timer) {
 		_stopTimer(timer);
 	};
+};
 
-	return {
-		startWatchFile: startWatchFile,
-		stopWatchFile: stopWatchFile
-	};
-}
+// Inhertis from the eventEmitter object
+util.inherits(FileWatcher, event);
+
+// export out service.
+module.exports = new FileWatcher();

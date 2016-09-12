@@ -59,8 +59,7 @@ describe('save-video-service tests', function() {
 
 		it('should not insert video object to mongo due to lack of video', function(done) {
 			var message = config.generateValidMessage();
-			message.videoName = undefined;
-			message.videoRelativePath = undefined;
+			message.videoFileName = undefined;
 
 			SaveVideoService.start(message,
 				function _error() {
@@ -80,30 +79,23 @@ describe('save-video-service tests', function() {
 			errornousInputTest(message, done);
 		});
 
-		it('has videoName but lacks videoRelativePath', function(done) {
-			var message = config.generateValidMessage();
-			message.videoRelativePath = undefined;
-
-			errornousInputTest(message, done);
-		});
-
-		it('has videoRelativePath but lacks videoName', function(done) {
-			var message = config.generateValidMessage();
-			message.videoName = undefined;
-
-			errornousInputTest(message, done);
-		});
-
-		it('has videoRelativePath but lacks startTime', function(done) {
+		it('has videoFileName but lacks startTime', function(done) {
 			var message = config.generateValidMessage();
 			message.startTime = undefined;
 
 			errornousInputTest(message, done);
 		});
 
-		it('has videoRelativePath but lacks endTime', function(done) {
+		it('has videoFileName but lacks endTime', function(done) {
 			var message = config.generateValidMessage();
 			message.endTime = undefined;
+
+			errornousInputTest(message, done);
+		});
+
+		it('has videoFileName but lacks sourceId', function(done) {
+			var message = config.generateValidMessage();
+			message.sourceId = undefined;
 
 			errornousInputTest(message, done);
 		});
@@ -125,6 +117,27 @@ describe('save-video-service tests', function() {
 		it('lacks method standard field', function(done) {
 			var message = config.generateValidMessage();
 			message.receivingMethod.standard = undefined;
+
+			errornousInputTest(message, done);
+		});
+
+		it('lacks baseName', function(done) {
+			var message = config.generateValidMessage();
+			message.baseName = undefined;
+
+			errornousInputTest(message, done);
+		});
+
+		it('lacks contentDirectoryPath', function(done) {
+			var message = config.generateValidMessage();
+			message.contentDirectoryPath = undefined;
+
+			errornousInputTest(message, done);
+		});
+
+		it('lacks requestFormat', function(done) {
+			var message = config.generateValidMessage();
+			message.requestFormat = undefined;
 
 			errornousInputTest(message, done);
 		});

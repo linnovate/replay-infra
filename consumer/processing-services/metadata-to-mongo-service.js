@@ -27,8 +27,9 @@ module.exports.start = function(params, error, done) {
 		})
 		.then(updateJobStatus)
 		.then(function() {
-			return produceBoundingPolygonJob(params);
+			return produceJobs(params.metadatas);
 		})
+		.all()
 		.then(function() {
 			done();
 			return Promise.resolve();
@@ -40,24 +41,6 @@ module.exports.start = function(params, error, done) {
 			}
 		});
 };
-
-function produceBoundingPolygonJob(params) {
-	var jobName = 'VideoBoundingPolygon';
-
-	var videoIds = _(params.metadatas).map('videoId').value();
-	console.log('Video ids length:', videoIds.length);
-
-	console.log('Producing %s job...', jobName);
-	var message = {
-		videoId: videoIds[0], // might change if metadata would handle several videos at one job
-		transactionId: params.transactionId
-	};
-	var queueName = JobsService.getQueueName(jobName);
-	if (queueName) {
-		return rabbit.produce(queueName, message);
-	}
-	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
-}
 
 function validateInput(params) {
 	if (!params.transactionId) {
@@ -89,4 +72,27 @@ function updateJobStatus() {
 				console.log(err);
 			}
 		});
+}
+
+function produceJobs(metadatas) {
+	var videoIds = _(metadatas).map('videoId').value();
+	console.log('Video ids length:', videoIds.length);
+	var videoId = videoIds[0]; // might change if 'metadata-to-mongo' would handle several videos at one job
+	return [
+		produceVideoIdJobs('VideoBoundingPolygon', videoId),
+		produceVideoIdJobs('MetadataToCaptions', videoId)
+	];
+}
+
+function produceVideoIdJobs(jobName, videoId) {
+	console.log('Producing %s job...', jobName);
+	var message = {
+		transactionId: _transactionId,
+		videoId: videoId
+	};
+	var queueName = JobsService.getQueueName(jobName);
+	if (queueName) {
+		return rabbit.produce(queueName, message);
+	}
+	return Promise.reject(Error('Could not find queue name of the inserted job type'));
 }

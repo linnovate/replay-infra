@@ -1,6 +1,5 @@
 var chai = require('chai');
 var assert = chai.assert;
-var event = require('../../services/EventEmitterSingleton');
 var rewire = require('rewire');
 var fileWatcher = rewire('../../services/FileWatcher');
 var sinon = require('sinon');
@@ -72,7 +71,7 @@ function startWatchFileBehaviorTests() {
 	it('should change the waiting time to the time that given', function(done) {
 		this.timeout(3000);
 		var spy = sinon.spy();
-		event.on('FileWatchStop', spy);
+		fileWatcher.on('FileWatchStop', spy);
 		fileWatcher.startWatchFile({ timeToWait: 500, path: './test/src/Sample_Ts_File_For_Testing.ts' })
 			.then(function(timeThatWaited) {
 				setTimeout(function() {
@@ -88,7 +87,7 @@ function startWatchFileBehaviorTests() {
 	it('should stop the watcher and return the time he wait every time', function(done) {
 		this.timeout(3000);
 		var spy = sinon.spy();
-		event.on('FileDontExist_FileWatcher', spy);
+		fileWatcher.on('FileDontExist_FileWatcher', spy);
 		fileWatcher.startWatchFile({ timeToWait: 500, path: './bla.js' })
 			.then(function() {
 				setTimeout(function() {

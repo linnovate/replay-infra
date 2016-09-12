@@ -13,7 +13,7 @@ describe('video standard 1.0 parser tests', function() {
 	before(function() {
 		config.resetEnvironment();
 		var message = config.generateValidMessage();
-		var fullpathToData = path.join(process.env.STORAGE_PATH, message.dataRelativePath);
+		var fullpathToData = path.join(process.env.STORAGE_PATH, message.contentDirectoryPath, message.dataFileName);
 		return fs.readFileAsync(fullpathToData, 'utf8')
 			.then(function(dataAsString) {
 				_dataAsString = dataAsString;
