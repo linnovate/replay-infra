@@ -32,17 +32,12 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/': {
-    view: 'midur/index'
-  },
-  '/new': {
-    view: 'midur/new'
-  },
+  'get /': 'PageController.index',
   'post /sources': 'SourceController.getAllSources',
-  'post /midur/destroy': 'MidurController.destroy',
-  'post /midur/update': 'MidurController.update',
-  'post /midur/create': 'MidurController.create',
-  'post /midur/findone': 'MidurController.findone'
+  'post /classification/destroy': 'ClassificationController.destroy',
+  'post /classification/update': 'ClassificationController.update',
+  'post /classification/create': 'ClassificationController.create',
+  'post /classification/findone': 'ClassificationController.findone'
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *

@@ -4,13 +4,12 @@ function updateSources() {
 		type: 'POST',
 		data: '',
 		contentType: 'application/json',
-        url: '/sources',
-        success: function(data) {
-	        sources = jQuery.parseJSON(data);
-	        for(var i in sources)
-			{
+		url: '/sources',
+		success: function(data) {
+			var sources = jQuery.parseJSON(data);
+			for (var i in sources) {
 				console.log(sources[i].name);
-	     		$('#sources-list').append($('<option value="'+ sources[i].name+'"></option>'));
+	     		$('#sources-list').append($('<option value="' + sources[i].name + '"></option>'));
 			}
 		}
 	});
@@ -25,7 +24,7 @@ $('#myModal').on('show', function() {
 })
 
 $('#myAddModal').on('show', function() {
-	if($('#sources-list').length<2)
+	if(document.getElementById("sources-list").options.length < 2)
 	{
 		updateSources();
 	}
@@ -35,7 +34,7 @@ $('#myAddModal').on('show', function() {
 
 
 $('#myEditModal').on('show', function() {
-	if($('#sources-list').length<2)
+	if(document.getElementById("sources-list").options.length < 2)
 	{
 		updateSources();
 	}
@@ -45,18 +44,17 @@ $('#myEditModal').on('show', function() {
     var id = $(this).data('id');
     var  formData = "id=" + id;
     $.ajax({
-    url : "/midur/findone",
+    url : "/classification/findone",
     type: "POST",
     data : formData,
-    async: false,
-    success: function(midurJson)
+    success: function(midur)
     {
-    	var midur = JSON.parse(midurJson);
     	removeBtn = $(this).find('.danger');
-    	$('#edit-name').val(midur['name']);
+    	$('#edit-mission').val(midur['missionName']);
+    	$('#edit-karon').val(midur['karonName']);
     	$('#edit-source').val(midur['source']);
-    	$('#edit-start').val(midur['start_time'].substring(0,19));
-    	$('#edit-end').val(midur['end_time'].substring(0,19));
+    	$('#edit-start').val(midur['startTime'].substring(0,19));
+    	$('#edit-end').val(midur['endTime'].substring(0,19));
     	$('#edit-dest').val(midur['destination']);
     },
     error: function(){
@@ -91,14 +89,13 @@ $('#btnYes').click(function() {
     var id = $('#myModal').data('id');
     var  formData = "id=" + id;
     $.ajax({
-    url : "/midur/destroy",
+    url : "/classification/destroy",
     type: "POST",
     data : formData,
-    async: false,
     success: function(data)
     {
     	console.log('work')
-        if(data == "success")
+        if(data == "")
         {
         	$('[data-id='+id+']').parents('tr').remove();
     		$('#myModal').modal('hide');
@@ -118,20 +115,20 @@ $('#btnYesEdit').click(function() {
     // handle deletion here
     var id = $('#myEditModal').data('id');
     var  formData = "id=" + id +
-    	'&name=' + $('#edit-name').val() +
+    	'&missionName=' + $('#edit-mission').val() +
+    	'&karonName=' + $('#edit-karon').val() +
     	'&source=' + $('#edit-source').val() +
     	'&start_time=' + $('#edit-start').val() +
     	'&end_time=' + $('#edit-end').val() +
     	'&destination=' + $('#edit-dest').val();
     $.ajax({
-    url : "/midur/update",
+    url : "/classification/update",
     type: "POST",
     data : formData,
-    async: false,
     success: function(data)
     {
     	console.log('work')
-        if(data == "success")
+        if(data == "")
         {
     		//$('#myModal').modal('hide');
     		window.location.reload(true);
@@ -153,20 +150,21 @@ $('#btnYesAdd').click(function() {
     // handle deletion here
     var id = $('#myEditModal').data('id');
     var  formData =
-    	'name=' + $('#add-name').val() +
+    	'missionName=' + $('#add-mission').val() +
+    	'&karonName=' + $('#add-karon').val() +
     	'&source=' + $('#add-source').val() +
     	'&start_time=' + $('#add-start').val() +
     	'&end_time=' + $('#add-end').val() +
     	'&destination=' + $('#add-dest').val();
     $.ajax({
-    url : "/midur/create",
+    url : "/classification/create",
     type: "POST",
     data : formData,
     async: false,
     success: function(data)
     {
     	console.log('work')
-        if(data == "success")
+        if(data == "")
         {
     		//$('#myModal').modal('hide');
     		window.location.reload(true);

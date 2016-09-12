@@ -1,12 +1,14 @@
+var source = require('./replay-schemas/Source');
+
 module.exports = {
 
-getAllSources : function(req,res){
-	Source.find(function foundMidurs(err, sources) {
-      if (err) return next(err);
-
-      // pass the array down to the /views/index.ejs page
-      res.send(JSON.stringify(sources));
-    });
-}
-
+	getAllSources: function(req, res) {
+		source.find(function foundSources(err, sources) {
+			if (err) {
+				console.log(err);
+				return err;
+			}
+			return res.send(JSON.stringify(sources));
+		});
+	}
 };
