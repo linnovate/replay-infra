@@ -55,5 +55,11 @@ npm test
 docker build --no-cache -t replay-consumer .
 ```
 ```
-docker run -d --restart=always --link mongodb-prod:mongodb-prod --link rabbit-prod:rabbit-prod --volumes-from dropfolder --name metadataparser consumer node index.js MetadataParser
+docker create -v /drop --name dropfolder replay-consumer
+```
+```
+docker create -v /storage --name storagefolder replay-consumer
+```
+```
+docker run -d --restart=always --link mongodb-prod:mongodb-prod --link rabbit-prod:rabbit-prod --volumes-from storagefolder--volumes-from dropfolder --name metadataparser replay-consumer node index.js MetadataParser
 ```
