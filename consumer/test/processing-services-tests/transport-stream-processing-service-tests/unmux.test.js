@@ -14,14 +14,14 @@ function startTests() {
 		});
 		describe('\nerror Tests:', function() {
 			beforeEach(function(done) {
-				process.env.STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'ts-output');
+				process.env.STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'ts-output-unmux');
 				done();
 			});
 			errorTests();
 		});
 		describe('\nsuccess Tests:', function() {
 			beforeEach(function(done) {
-				process.env.STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'ts-output');
+				process.env.STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'ts-output-unmux');
 				done();
 			});
 			successTests();
@@ -150,7 +150,7 @@ function errorTests() {
 
 function successTests() {
 	it('should make mp4 format video with flavors', function(done) {
-		this.timeout(25000);
+		this.timeout(30000);
 		unmux({ fileRelativePath: '/sample.ts', fileType: 'Video' })
 			.then(function(paths) {
 				console.log('the paths that given:', paths);
