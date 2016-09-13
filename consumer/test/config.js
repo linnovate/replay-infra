@@ -31,6 +31,7 @@ function resetEnvironment() {
 	process.env.MONGO_HOST = 'localhost';
 	process.env.MONGO_DATABASE = 'replay_test';
 	process.env.STORAGE_PATH = path.join(__dirname, 'data');
+	process.env.CAPTURE_STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'capture');
 	process.env.RABBITMQ_HOST = 'localhost';
 	process.env.KALTURA_PARTNER_ID = 101;
 	process.env.PROVIDER = 'kaltura';
