@@ -7,8 +7,7 @@ var path = require('path');
 var _transactionId;
 var _jobStatusTag = 'transportStream-processing-done';
 
-const CONSUMER_NAME = '#transportStream-proccesing#';
-const CAPTURE_STORAGE_PATH = process.env.CAPTURE_STORAGE_PATH;
+const CONSUMER_NAME = '#transportStream-processing#';
 const SMIL_POSFIX = '.smil';
 
 module.exports.start = function(params, error, done) {
@@ -56,12 +55,17 @@ module.exports.start = function(params, error, done) {
 
 // validate the params.
 function paramsIsValid(params) {
+	// check required process environment.
+	if (!process.env.CAPTURE_STORAGE_PATH || !process.env.STORAGE_PATH) {
+		return false;
+	}
+
 	// check the minimal requires for the message that send to the next job.
 	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
 		return false;
 	}
 
-	// check the require for the reciving method.
+	// check the require for the receiving method.
 	if (!params.receivingMethod || !params.receivingMethod.standard || !params.receivingMethod.version) {
 		return false;
 	}
@@ -79,16 +83,16 @@ function proccesTS(params) {
 	var processTsMethod;
 	// prepare the require params for the processing method.
 	var paramsForMethod = {
-		filesStoragePath: CAPTURE_STORAGE_PATH,
+		filesStoragePath: process.env.CAPTURE_STORAGE_PATH,
 		fileRelativePath: params.fileRelativePath,
 		fileType: params.sourceType,
 		hardCoded: true
 	};
 	console.log(JSON.stringify(paramsForMethod));
-	// check the reciving method standard
+	// check the receiving method standard
 	switch (params.receivingMethod.standard) {
 		case 'VideoStandard':
-			// check the reciving method version
+			// check the receiving method version
 			switch (params.receivingMethod.version) {
 				case '0.9':
 					processTsMethod = require('./unmux');
@@ -107,7 +111,7 @@ function proccesTS(params) {
 			}
 			break;
 		case 'stanag':
-			// check the reciving method version
+			// check the receiving method version
 			switch (params.receivingMethod.version) {
 				case '4609':
 					processTsMethod = require('./mux');
@@ -139,7 +143,7 @@ function produceJobs(params, paths) {
 		transactionId: params.transactionId,
 		flavors: []
 	};
-	// check if we recieved video path.
+	// check if we received video path.
 	if (paths.videoPath) {
 		message.videoFileName = path.parse(paths.videoPath).base;
 		paths.additionalPaths.push(paths.videoPath);
@@ -154,7 +158,7 @@ function produceJobs(params, paths) {
 			message.requestFormat = 'mp4';
 		}
 	}
-	// check if we recieved data path.
+	// check if we received data path.
 	if (paths.dataPath) {
 		message.dataFileName = path.parse(paths.dataPath).base;
 	}
