@@ -9,7 +9,8 @@
 // require packege needed.
 var dgram = require('dgram');
 var Promise = require('bluebird');
-var event = require('./EventEmitterSingleton');
+var event = require('events').EventEmitter,
+	util = require('util');
 
 // Defiend consts.
 const SERVICE_NAME = '#StreamListener#',
@@ -19,11 +20,9 @@ const SERVICE_NAME = '#StreamListener#',
 	IP_FORMAT = new RegExp('^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.' +
 		'(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$');
 
-// export our service.
-module.exports = new StreamListener();
-
 // Stream Listener Service.
 function StreamListener() {
+	var self = this;
 	// private variables
 	var _ip,
 		_port,
@@ -102,12 +101,12 @@ function StreamListener() {
 		// close the server so that the port will be open for the ffmpeg process to recording
 		_closeServer();
 		// emit an event so it could go next processing
-		event.emit('StreamingData');
+		self.emit('StreamingData');
 	}
 
 	function _handleErrorEvent(err) {
 		if (_finishedBind) {
-			event.emit('unexceptedError_StreamListener', SERVICE_NAME + ' Unexcepted Error eccured while trying listen to the address ' +
+			self.emit('unexceptedError_StreamListener', SERVICE_NAME + ' Unexcepted Error eccured while trying listen to the address ' +
 				_ip + ':' + _port + ' : ' + err);
 			_closeServer();
 		}
@@ -130,7 +129,7 @@ function StreamListener() {
 		_server.on('error', _handleErrorEvent);
 	}
 
-	var startListen = function(params) {
+	self.startListen = function(params) {
 		const METHOD_NAME = 'StartListen';
 		_finishedBind = false;
 		_bindingAttemptsCounts = 0;
@@ -154,7 +153,10 @@ function StreamListener() {
 		});
 		return promise;
 	};
-	return {
-		startListen: startListen
-	};
 }
+
+// Inhertis from the eventEmitter object
+util.inherits(StreamListener, event);
+
+// export out service.
+module.exports = new StreamListener();

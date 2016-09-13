@@ -7,7 +7,7 @@ var rabbit = require('replay-rabbitmq'),
 var _transactionId;
 var _jobStatusTag = 'video-object-saved';
 
-module.exports.start = function(params, error, done) {
+module.exports.start = function (params, error, done) {
 	console.log('SaveVideoService started.');
 
 	if (!validateInput(params)) {
@@ -21,15 +21,15 @@ module.exports.start = function(params, error, done) {
 	// then produce the next jobs.
 	// after that, wait for all produces to finish successfuly then call done.
 	JobService.findOrCreateJobStatus(_transactionId)
-		.then(function(jobStatus) {
+		.then(function (jobStatus) {
 			return trySaveVideoToMongo(jobStatus, params);
 		})
-		.then(function(params) {
+		.then(function (params) {
 			return produceJobs(params);
 		})
 		.all()
 		.then(done)
-		.catch(function(err) {
+		.catch(function (err) {
 			if (err) {
 				console.log(err);
 				// notify we've failed
@@ -39,21 +39,23 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
-	var relativePathToVideo = params.videoRelativePath;
-	var videoName = params.videoName;
+	var videoFileName = params.videoFileName;
 	var sourceId = params.sourceId;
 	var method = params.receivingMethod;
 	var transactionId = params.transactionId;
 	var startTime = params.startTime;
 	var endTime = params.endTime;
+	var baseName = params.baseName;
+	var contentDirectoryPath = params.contentDirectoryPath;
+	var requestFormat = params.requestFormat;
 
 	// validate vital params
-	if (!method || !method.standard || !method.version || !transactionId) {
+	if (!method || !method.standard || !method.version || !transactionId || !baseName || !contentDirectoryPath || !requestFormat) {
 		return false;
 	}
 
 	// validate that if there's a video, then all it's params exist
-	if ((videoName || relativePathToVideo) && !(videoName && relativePathToVideo && sourceId && startTime && endTime)) {
+	if (videoFileName && !(sourceId && startTime && endTime)) {
 		return false;
 	}
 
@@ -64,7 +66,7 @@ function validateInput(params) {
 // if we already saved it, just get it from mongo and continue
 function trySaveVideoToMongo(jobStatus, params) {
 	// case there's a video (sometimes there'd be only metadata)
-	if (params.videoName) {
+	if (params.videoFileName) {
 		var videoQuery;
 
 		// check if we've already saved video or not
@@ -75,7 +77,7 @@ function trySaveVideoToMongo(jobStatus, params) {
 		}
 
 		return videoQuery(params)
-			.then(function(video) {
+			.then(function (video) {
 				params.video = video;
 				return Promise.resolve(params);
 			});
@@ -92,14 +94,18 @@ function saveVideoToMongo(params) {
 	return Video
 		.create({
 			sourceId: params.sourceId,
-			relativePath: params.videoRelativePath,
-			name: params.videoName,
+			contentDirectoryPath: params.contentDirectoryPath,
+			videoFileName: params.videoFileName,
+			baseName: params.baseName,
+			flavors: params.flavors,
+			requestFormat: params.requestFormat,
 			receivingMethod: params.receivingMethod,
 			jobStatusId: _transactionId,
 			startTime: params.startTime,
-			endTime: params.endTime
+			endTime: params.endTime,
+			status: 'ready'
 		})
-		.then(function(video) {
+		.then(function (video) {
 			console.log('Video successfully saved to mongo:', video);
 			// call update job status but don't depend on it's result as we already succeeded in saving video
 			updateJobStatus();
@@ -118,7 +124,6 @@ function getVideo() {
 function produceJobs(params) {
 	return [
 		produceMetadataParserJob(params),
-		produceUploadToProviderJob(params),
 		produceAttachVideoToMetadataJob(params)
 	];
 	// etc...
@@ -130,7 +135,8 @@ function produceMetadataParserJob(params) {
 	var message = {
 		sourceId: params.sourceId,
 		videoId: params.video ? params.video.id : undefined, // could be undefined
-		dataRelativePath: params.dataRelativePath,
+		dataFileName: params.dataFileName,
+		contentDirectoryPath: params.contentDirectoryPath,
 		receivingMethod: params.receivingMethod,
 		transactionId: params.transactionId
 	};
@@ -139,27 +145,6 @@ function produceMetadataParserJob(params) {
 		return rabbit.produce(queueName, message);
 	}
 	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
-}
-
-function produceUploadToProviderJob(params) {
-	console.log('Producing UploadToProvider job...');
-
-	// upload to provider if video exists
-	if (params.videoRelativePath && params.video) {
-		var message = {
-			videoName: params.videoName,
-			videoRelativePath: params.videoRelativePath,
-			transactionId: params.transactionId
-		};
-
-		var queueName = JobsService.getQueueName('UploadVideoToProvider');
-		if (queueName) {
-			return rabbit.produce(queueName, message);
-		}
-		return Promise.reject(new Error('Could not find queue name of the inserted job type'));
-	}
-
-	return Promise.resolve();
 }
 
 function produceAttachVideoToMetadataJob(params) {
@@ -186,7 +171,7 @@ function produceAttachVideoToMetadataJob(params) {
 // update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
 	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
-		.catch(function(err) {
+		.catch(function (err) {
 			if (err) {
 				console.log(err);
 			}

@@ -1,0 +1,124 @@
+{
+	"apps": [{
+		"name": "transport-stream-processing",
+		"script": "index.js",
+		"cwd": "./",
+		"watch": true,
+		"args": "TransportStreamProcessing",
+		"env": {
+			"MONGO_HOST": "localhost",
+			"MONGO_PORT": "27017",
+			"MONGO_DATABASE": "replay_dev",
+			"RABBITMQ_HOST": "localhost",
+			"RABBITMQ_MAX_RESEND_ATTEMPTS": "3",
+			"RABBITMQ_MAX_UNACKED_MESSAGES": "10",
+			"FAILED_JOBS_QUEUE_NAME": "FailedJobsQueue",
+			"CAPTURE_STORAGE_PATH": "/mnt/vod-capture-storage",
+			"STORAGE_PATH": "/mnt/vod-content-directory",
+			"NODE_ENV": "development"
+		},
+		"env_production": {
+			"NODE_ENV": "production"
+		}
+	}, {
+		"name": "save-video",
+		"script": "index.js",
+		"cwd": "./",
+		"watch": true,
+		"args": "SaveVideo",
+		"env": {
+			"MONGO_HOST": "localhost",
+			"MONGO_PORT": "27017",
+			"MONGO_DATABASE": "replay_dev",
+			"RABBITMQ_HOST": "localhost",
+			"RABBITMQ_MAX_RESEND_ATTEMPTS": "3",
+			"RABBITMQ_MAX_UNACKED_MESSAGES": "10",
+			"FAILED_JOBS_QUEUE_NAME": "FailedJobsQueue",
+			"STORAGE_PATH": "/mnt/vod-content-directory",
+			"NODE_ENV": "development"
+		},
+		"env_production": {
+			"NODE_ENV": "production"
+		}
+	}, {
+		"name": "metadata-parser",
+		"script": "index.js",
+		"cwd": "./",
+		"watch": true,
+		"args": "MetadataParser",
+		"env": {
+			"MONGO_HOST": "localhost",
+			"MONGO_PORT": "27017",
+			"MONGO_DATABASE": "replay_dev",
+			"RABBITMQ_HOST": "localhost",
+			"RABBITMQ_MAX_RESEND_ATTEMPTS": "3",
+			"RABBITMQ_MAX_UNACKED_MESSAGES": "10",
+			"FAILED_JOBS_QUEUE_NAME": "FailedJobsQueue",
+			"STORAGE_PATH": "/mnt/vod-content-directory",
+			"NODE_ENV": "development"
+		},
+		"env_production": {
+			"NODE_ENV": "production"
+		}
+	}, {
+		"name": "metadata-to-mongo",
+		"script": "index.js",
+		"cwd": "./",
+		"watch": true,
+		"args": "MetadataToMongo",
+		"env": {
+			"MONGO_HOST": "localhost",
+			"MONGO_PORT": "27017",
+			"MONGO_DATABASE": "replay_dev",
+			"RABBITMQ_HOST": "localhost",
+			"RABBITMQ_MAX_RESEND_ATTEMPTS": "3",
+			"RABBITMQ_MAX_UNACKED_MESSAGES": "10",
+			"FAILED_JOBS_QUEUE_NAME": "FailedJobsQueue",
+			"STORAGE_PATH": "/mnt/vod-content-directory",
+			"NODE_ENV": "development"
+		},
+		"env_production": {
+			"NODE_ENV": "production"
+		}
+	}, {
+		"name": "video-boundries",
+		"script": "index.js",
+		"cwd": "./",
+		"watch": true,
+		"args": "VideoBoundingPolygon",
+		"env": {
+			"MONGO_HOST": "localhost",
+			"MONGO_PORT": "27017",
+			"MONGO_DATABASE": "replay_dev",
+			"RABBITMQ_HOST": "localhost",
+			"RABBITMQ_MAX_RESEND_ATTEMPTS": "3",
+			"RABBITMQ_MAX_UNACKED_MESSAGES": "10",
+			"FAILED_JOBS_QUEUE_NAME": "FailedJobsQueue",
+			"STORAGE_PATH": "/mnt/vod-content-directory",
+			"NODE_ENV": "development"
+		},
+		"env_production": {
+			"NODE_ENV": "production"
+		}
+	}, {
+		"name": "metadata-to-captions",
+		"script": "index.js",
+		"cwd": "./",
+		"watch": true,
+		"args": "MetadataToCaptions",
+		"env": {
+			"MONGO_HOST": "localhost",
+			"MONGO_PORT": "27017",
+			"MONGO_DATABASE": "replay_dev",
+			"RABBITMQ_HOST": "localhost",
+			"RABBITMQ_MAX_RESEND_ATTEMPTS": "3",
+			"RABBITMQ_MAX_UNACKED_MESSAGES": "10",
+			"FAILED_JOBS_QUEUE_NAME": "FailedJobsQueue",
+			"STORAGE_PATH": "/mnt/vod-content-directory",
+			"NODE_ENV": "development"
+		},
+		"env_production": {
+			"NODE_ENV": "production"
+		}
+	}]
+}
