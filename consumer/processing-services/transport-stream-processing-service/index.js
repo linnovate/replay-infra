@@ -23,16 +23,18 @@ module.exports.start = function(params, error, done) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				done();
 			} else {
-				proccesTS(params)
+				return proccesTS(params)
 					.then(function(paths) {
 						if (paths.videoPath) {
 							return generateSmil(params, paths)
 								.then(function() {
 									// add to the paths object the smil path.
 									paths.smilPath = changePathExtention(paths.videoPath, SMIL_POSFIX);
+
+									return null;
 								})
 								.catch(function(err) {
-									console.log(err);
+									console.trace(err);
 								})
 								.finally(function() {
 									return produceJobs(params, paths);
@@ -42,14 +44,14 @@ module.exports.start = function(params, error, done) {
 					})
 					.then(done)
 					.catch(function(err) {
-						console.log('error on:', CONSUMER_NAME, err);
+						console.trace(err);
 						error();
 					});
 			}
 		})
 		.catch(function(err) {
-			console.log('error on:', CONSUMER_NAME, err);
-			error();
+			console.trace(err);
+			return error();
 		});
 };
 
@@ -62,6 +64,11 @@ function paramsIsValid(params) {
 
 	// check the minimal requires for the message that send to the next job.
 	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
+		return false;
+	}
+
+	// check if there is start time and end time.
+	if (!params.startTime || !params.endTime) {
 		return false;
 	}
 
@@ -85,10 +92,8 @@ function proccesTS(params) {
 	var paramsForMethod = {
 		filesStoragePath: process.env.CAPTURE_STORAGE_PATH,
 		fileRelativePath: params.fileRelativePath,
-		fileType: params.sourceType,
-		hardCoded: true
+		fileType: params.sourceType
 	};
-	console.log(JSON.stringify(paramsForMethod));
 	// check the receiving method standard
 	switch (params.receivingMethod.standard) {
 		case 'VideoStandard':
@@ -103,11 +108,12 @@ function proccesTS(params) {
 
 					/*************************************************************/
 					// hardCoded for demoXML
+					paramsForMethod.hardCoded = true;
 					processTsMethod = require('./unmux');
 					/*************************************************************/
 					break;
 				default:
-					return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported version for video-standard'));
+					return Promise.reject(new Error(CONSUMER_NAME + ' Unsupported version for video-standard'));
 			}
 			break;
 		case 'stanag':
@@ -117,11 +123,11 @@ function proccesTS(params) {
 					processTsMethod = require('./mux');
 					break;
 				default:
-					return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported version for stanag'));
+					return Promise.reject(new Error(CONSUMER_NAME + ' Unsupported version for stanag'));
 			}
 			break;
 		default:
-			return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported standard'));
+			return Promise.reject(new Error(CONSUMER_NAME + ' Unsupported standard'));
 	}
 	// activate the processing method
 	return processTsMethod(paramsForMethod);
