@@ -2,7 +2,8 @@
 var moment = require('moment'),
 	mongoose = require('mongoose'),
 	rabbit = require('replay-rabbitmq'),
-	ffmpeg = require('replay-ffmpeg');
+	ffmpeg = require('replay-ffmpeg'),
+	Promise = require('bluebird');
 
 var path = require('path');
 
@@ -42,9 +43,9 @@ module.exports = function() {
 
 	rabbit.connect(RABBITMQ_HOST)
 		.then(function() {
-			streamingSourceDAL.getStreamingSource(StreamingSourceIndex)
+			return streamingSourceDAL.getStreamingSource(StreamingSourceIndex)
 				.then(function(source) {
-					handleVideoSavingProcess(source);
+					return handleVideoSavingProcess(source);
 				})
 				.catch(function(err) {
 					throw err;
@@ -210,7 +211,7 @@ function handleVideoSavingProcess(streamingSource) {
 
 	// Starting Listen to the address.
 	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.sourcePort);
-	startStreamListener(streamingSource, globals.streamStatusTimer);
+	return startStreamListener(streamingSource, globals.streamStatusTimer);
 }
 
 /****************************************************************************************************/
@@ -241,6 +242,8 @@ function startStreamListener(streamingSource, streamStatusTimer) {
 			streamStatusTimer = setStatusTimer(streamStatusTimer, function() {
 				streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 			});
+
+			return Promise.resolve();
 		})
 		.catch(function(err) {
 			throw err;
