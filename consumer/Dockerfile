@@ -2,5 +2,13 @@ FROM node:4.5.0
 RUN git clone https://github.com/linnovate/replay-infra.git
 WORKDIR /replay-infra/consumer
 RUN npm install
-ENV RABBITMQ_HOST=rabbit-prod MONGO_HOST=mongodb-prod MONGO_PORT=27017 MONGO_DATABASE=replay_dev
-ENV ELASTIC_HOST=elastic DROP_FOLDER_PATH=/drop STORAGE_FOLDER_PATH=/storage
+# Setup
+RUN  mkdir -p /mnt/vod-capture-storage /mnt/vod-content-directory
+# Set Environment variables
+ENV RABBITMQ_HOST=rabbit-prod RABBITMQ_MAX_RESEND_ATTEMPTS=3 FAILED_JOBS_QUEUE_NAME=FailedJobsQueue RABBITMQ_MAX_UNACKED_MESSAGES=10
+ENV MONGO_HOST=mongodb-prod MONGO_PORT=27017 MONGO_DATABASE=replay_dev
+ENV CAPTURE_STORAGE_PATH=/mnt/vod-capture-storage STORAGE_PATH=/mnt/vod-content-directory
+ENV NODE_ENV=development
+
+CMD ["node", "index.js", "TransportStreamProcessing"]
+
