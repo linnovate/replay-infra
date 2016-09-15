@@ -26,11 +26,13 @@ global.assert = chai.assert;
 var _validMetadataObjectsPath = 'expected_parsed_data.json';
 
 resetEnvironment();
+
 function resetEnvironment() {
 	// set env variables
 	process.env.MONGO_HOST = 'localhost';
 	process.env.MONGO_DATABASE = 'replay_test';
 	process.env.STORAGE_PATH = path.join(__dirname, 'data');
+	process.env.CAPTURE_STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'capture');
 	process.env.RABBITMQ_HOST = 'localhost';
 	process.env.KALTURA_PARTNER_ID = 101;
 	process.env.PROVIDER = 'kaltura';
@@ -41,28 +43,28 @@ function resetEnvironment() {
 module.exports.resetEnvironment = resetEnvironment;
 
 // connect services
-module.exports.connectServices = function () {
+module.exports.connectServices = function() {
 	return connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
-		.then(function () {
+		.then(function() {
 			return rabbit.connect(process.env.RABBITMQ_HOST);
 		});
 };
 
 // wipe mongo collections
-module.exports.wipeMongoCollections = function () {
+module.exports.wipeMongoCollections = function() {
 	return Video.remove({})
-		.then(function () {
+		.then(function() {
 			return JobStatus.remove({});
 		})
-		.then(function () {
+		.then(function() {
 			return VideoMetadata.remove({});
 		})
-		.then(function () {
+		.then(function() {
 			return Query.remove({});
 		});
 };
 
-module.exports.generateValidMessage = function () {
+module.exports.generateValidMessage = function() {
 	var startTime = new Date();
 	var endTime = addMinutes(startTime, 30);
 
@@ -83,11 +85,11 @@ module.exports.generateValidMessage = function () {
 	};
 };
 
-module.exports.generateJobStatus = function () {
+module.exports.generateJobStatus = function() {
 	return JobStatus.create({});
 };
 
-module.exports.generateVideo = function (params, _transactionId) {
+module.exports.generateVideo = function(params, _transactionId) {
 	return {
 		_id: new mongoose.Types.ObjectId(),
 		sourceId: params.sourceId,
@@ -103,12 +105,12 @@ module.exports.generateVideo = function (params, _transactionId) {
 };
 
 // returns metadata objects from the VideoMetadata schema
-module.exports.getValidMetadataObjects = function () {
+module.exports.getValidMetadataObjects = function() {
 	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
 	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
-		.then(function (expectedDataAsString) {
+		.then(function(expectedDataAsString) {
 			var metadataObjects = JSON.parse(expectedDataAsString);
-			var videoMetadatas = _.map(metadataObjects, function (metadata) {
+			var videoMetadatas = _.map(metadataObjects, function(metadata) {
 				return new VideoMetadata(metadata);
 			});
 			return Promise.resolve(videoMetadatas);
@@ -116,17 +118,17 @@ module.exports.getValidMetadataObjects = function () {
 };
 
 // returns raw javascript metadata objects
-module.exports.getValidMetadataAsJson = function () {
+module.exports.getValidMetadataAsJson = function() {
 	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
 	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
-		.then(function (expectedDataAsString) {
+		.then(function(expectedDataAsString) {
 			return Promise.resolve(JSON.parse(expectedDataAsString));
 		});
 };
 
-module.exports.deleteAllQueues = function () {
+module.exports.deleteAllQueues = function() {
 	var jobConfigs = JobsService.getAllJobConfigs();
-	var queueNames = _.map(jobConfigs, function (jobConfig) {
+	var queueNames = _.map(jobConfigs, function(jobConfig) {
 		return jobConfig.queue;
 	});
 
@@ -143,3 +145,24 @@ function addMinutes(date, minutes) {
 	return new Date(date.getTime() + minutes * 60000);
 }
 module.exports.addMinutes = addMinutes;
+
+// simulate message from the video recorder.
+module.exports.generateMessageForTsProcessing = function() {
+	var startTime = new Date();
+	var endTime = addMinutes(startTime, 30);
+	return {
+		sourceId: 100,
+		videoName: 'my_video_name',
+		fileRelativePath: 'sample.ts',
+		storagePath: process.env.CAPTURE_STORAGE_PATH,
+		receivingMethod: {
+			standard: 'VideoStandard',
+			version: '1.0'
+		},
+		startTime: startTime,
+		endTime: endTime,
+		duration: 30,
+		sourceType: 'In VideoStandard V 1.0 it does not matter',
+		transactionId: new mongoose.Types.ObjectId()
+	};
+};

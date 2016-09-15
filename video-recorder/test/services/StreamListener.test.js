@@ -2,7 +2,6 @@ var chai = require('chai');
 var execComand = require('child_process');
 // var sinon = require('sinon');
 var assert = chai.assert;
-var event = require('../../services/EventEmitterSingleton');
 var streamListener = require('../../services/StreamListener');
 
 function start() {
@@ -235,8 +234,8 @@ function behaviorTests() {
 			tmpPorc.kill('SIGKILL');
 		});
 		it('should Emit event "StreamingData" when data is streaming', function(done) {
-			event.on('StreamingData', function tempFunc() {
-				event.removeListener('StreamingData', tempFunc);
+			streamListener.on('StreamingData', function tempFunc() {
+				streamListener.removeListener('StreamingData', tempFunc);
 				done();
 			});
 			streamListener.startListen({ ip: '0.0.0.0', port: 5555 })
