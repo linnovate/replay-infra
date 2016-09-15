@@ -42,9 +42,7 @@ module.exports = function() {
 				});
 		})
 		.catch(function(err) {
-			if (err) {
-				throw err;
-			}
+			throw err;
 		});
 };
 
@@ -169,9 +167,11 @@ function handleVideoSavingProcess(streamingSource) {
 		startStreamListener(streamingSource, globals.streamStatusTimer);
 	}
 
-	function fileDontExistHandler(err) {
-		console.log(err);
-		startStreamListener(streamingSource, globals.streamStatusTimer);
+	function fileDontExistHandler(tsPath) {
+		console.log("couldn't find the file, delete the path and continue");
+		util.deletePath(path.parse(tsPath).dir, function() {
+			startStreamListener(streamingSource, globals.streamStatusTimer);
+		});
 	}
 
 	function getDurationAndSendMessage(tsPath) {
