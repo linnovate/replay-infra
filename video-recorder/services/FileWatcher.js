@@ -40,8 +40,7 @@ var FileWatcher = function() {
 			if (err) {
 				if (_checkingAttempts === MAX_CHECK_TRIES) {
 					// Emit event of error and stop the timer.
-					self.emit('FileDontExist_FileWatcher', 'Error accured in :' + SERVICE_NAME + '.' + METHOD_NAME + ': ' +
-						'could not found any file, ignore it and continue on');
+					self.emit('FileDontExist_FileWatcher', path);
 					console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
 					_stopTimer(_fileTimer);
 				} else {

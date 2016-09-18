@@ -14,7 +14,8 @@
     "mongoose": "^4.6.0",
     "replay-ffmpeg": "^1.2.1",
     "replay-rabbitmq": "^1.0.5",
-    "replay-schemas": "^1.0.30"
+    "replay-schemas": "^1.0.30",
+    "rmdir": "^1.2.0"
   },
   "devDependencies": {
     "mocha": "^3.0.2",
