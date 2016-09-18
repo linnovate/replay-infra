@@ -1,5 +1,6 @@
 var config = require('../../config.js');
 var unmux = require('../../../processing-services/transport-stream-processing-service/unmux.js');
+var rmdir = require('rmdir');
 // var mkdirp = require('mkdirp');
 var fs = require('fs');
 var path = require('path');
@@ -32,6 +33,10 @@ function startTests() {
 function initAssets() {
 	beforeEach(function() {
 		config.resetEnvironment();
+	});
+	after(function(done) {
+		config.resetEnvironment();
+		rmdir(path.join(process.env.STORAGE_PATH, 'ts-output-unmux'), done);
 	});
 }
 

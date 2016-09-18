@@ -1,6 +1,7 @@
 var tsProcess = require('../../../processing-services/transport-stream-processing-service/index.js');
 var config = require('../../config.js');
 var path = require('path');
+var rmdir = require('rmdir');
 var message;
 
 function startTests() {
@@ -33,7 +34,8 @@ function initialForTests() {
 
 	after(function(done) {
 		config.deleteAllQueues().then(function() {
-			done();
+			config.resetEnvironment();
+			rmdir(path.join(process.env.STORAGE_PATH, 'ts-consumer'), done);
 		});
 	});
 }
