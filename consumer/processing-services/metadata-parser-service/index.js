@@ -26,11 +26,11 @@ module.exports.start = function (params, error, done) {
 			}
 			return performParseChain(params);
 		})
+		.then(updateJobStatus)
 		.then(function () {
 			done();
 			return Promise.resolve();
 		})
-		.then(updateJobStatus)
 		.catch(function (err) {
 			if (err) {
 				console.log(err);
@@ -119,7 +119,6 @@ function dataToObjects(method, data, params) {
 function produceJobs(params, videoMetadatas) {
 	return [
 		produceVideoMetadatasJobs('MetadataToMongo', videoMetadatas),
-		produceVideoMetadatasJobs('MetadataToCaptions', videoMetadatas),
 		produceAttachVideoToMetadataJob(videoMetadatas, params)
 	];
 }

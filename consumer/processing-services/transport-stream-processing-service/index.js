@@ -1,13 +1,14 @@
 var Promise = require('bluebird'),
 	JobService = require('replay-jobs-service'),
-	rabbit = require('replay-rabbitmq');
+	rabbit = require('replay-rabbitmq'),
+	SmilGeneretor = require('replay-smil-generator');
 var path = require('path');
 
 var _transactionId;
 var _jobStatusTag = 'transportStream-processing-done';
 
-const CONSUMER_NAME = '#transportStream-proccesing#';
-const CAPTURE_STORAGE_PATH = process.env.CAPTURE_STORAGE_PATH;
+const CONSUMER_NAME = '#transportStream-processing#';
+const SMIL_POSFIX = '.smil';
 
 module.exports.start = function(params, error, done) {
 	if (!paramsIsValid(params)) {
@@ -22,31 +23,56 @@ module.exports.start = function(params, error, done) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				done();
 			} else {
-				proccesTS(params)
+				return proccesTS(params)
 					.then(function(paths) {
+						if (paths.videoPath) {
+							return generateSmil(params, paths)
+								.then(function() {
+									// add to the paths object the smil path.
+									paths.smilPath = changePathExtention(paths.videoPath, SMIL_POSFIX);
+
+									return null;
+								})
+								.catch(function(err) {
+									console.trace(err);
+								})
+								.finally(function() {
+									return produceJobs(params, paths);
+								});
+						}
 						return produceJobs(params, paths);
 					})
 					.then(done)
 					.catch(function(err) {
-						console.log('error on:', CONSUMER_NAME, err);
+						console.trace(err);
 						error();
 					});
 			}
 		})
 		.catch(function(err) {
-			console.log('error on:', CONSUMER_NAME, err);
-			error();
+			console.trace(err);
+			return error();
 		});
 };
 
 // validate the params.
 function paramsIsValid(params) {
+	// check required process environment.
+	if (!process.env.CAPTURE_STORAGE_PATH || !process.env.STORAGE_PATH) {
+		return false;
+	}
+
 	// check the minimal requires for the message that send to the next job.
 	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
 		return false;
 	}
 
-	// check the require for the reciving method.
+	// check if there is start time and end time.
+	if (!params.startTime || !params.endTime) {
+		return false;
+	}
+
+	// check the require for the receiving method.
 	if (!params.receivingMethod || !params.receivingMethod.standard || !params.receivingMethod.version) {
 		return false;
 	}
@@ -64,16 +90,14 @@ function proccesTS(params) {
 	var processTsMethod;
 	// prepare the require params for the processing method.
 	var paramsForMethod = {
-		filesStoragePath: CAPTURE_STORAGE_PATH,
+		filesStoragePath: process.env.CAPTURE_STORAGE_PATH,
 		fileRelativePath: params.fileRelativePath,
-		fileType: params.sourceType,
-		hardCoded: true
+		fileType: params.sourceType
 	};
-	console.log(JSON.stringify(paramsForMethod));
-	// check the reciving method standard
+	// check the receiving method standard
 	switch (params.receivingMethod.standard) {
 		case 'VideoStandard':
-			// check the reciving method version
+			// check the receiving method version
 			switch (params.receivingMethod.version) {
 				case '0.9':
 					processTsMethod = require('./unmux');
@@ -84,25 +108,26 @@ function proccesTS(params) {
 
 					/*************************************************************/
 					// hardCoded for demoXML
+					paramsForMethod.hardCoded = true;
 					processTsMethod = require('./unmux');
 					/*************************************************************/
 					break;
 				default:
-					return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported version for video-standard'));
+					return Promise.reject(new Error(CONSUMER_NAME + ' Unsupported version for video-standard'));
 			}
 			break;
 		case 'stanag':
-			// check the reciving method version
+			// check the receiving method version
 			switch (params.receivingMethod.version) {
 				case '4609':
 					processTsMethod = require('./mux');
 					break;
 				default:
-					return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported version for stanag'));
+					return Promise.reject(new Error(CONSUMER_NAME + ' Unsupported version for stanag'));
 			}
 			break;
 		default:
-			return Promise.reject(new Error(CONSUMER_NAME + 'Unsupported standard'));
+			return Promise.reject(new Error(CONSUMER_NAME + ' Unsupported standard'));
 	}
 	// activate the processing method
 	return processTsMethod(paramsForMethod);
@@ -124,7 +149,7 @@ function produceJobs(params, paths) {
 		transactionId: params.transactionId,
 		flavors: []
 	};
-	// check if we recieved video path.
+	// check if we received video path.
 	if (paths.videoPath) {
 		message.videoFileName = path.parse(paths.videoPath).base;
 		paths.additionalPaths.push(paths.videoPath);
@@ -133,9 +158,13 @@ function produceJobs(params, paths) {
 				return path.parse(currentPath).base;
 			});
 		}
-		message.requestFormat = 'mp4';
+		if (paths.smilPath) {
+			message.requestFormat = 'smil';
+		} else {
+			message.requestFormat = 'mp4';
+		}
 	}
-	// check if we recieved data path.
+	// check if we received data path.
 	if (paths.dataPath) {
 		message.dataFileName = path.parse(paths.dataPath).base;
 	}
@@ -144,4 +173,26 @@ function produceJobs(params, paths) {
 		return rabbit.produce(queueName, message);
 	}
 	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
+}
+
+function generateSmil(params, paths) {
+	var newSmil = new SmilGeneretor();
+	var videosArray = [];
+	videosArray.push(path.parse(paths.videoPath).base);
+	paths.additionalPaths.forEach(function(flavor) {
+		videosArray.push(path.parse(flavor).base);
+	});
+	var paramsForGenerator = {
+		folderPath: path.parse(paths.videoPath).dir,
+		smilFileName: path.parse(changePathExtention(paths.videoPath, SMIL_POSFIX)).base,
+		title: path.parse(paths.videoPath).name + ' adaptive stream',
+		video: videosArray
+	};
+	return newSmil.generateSmil(paramsForGenerator);
+}
+
+function changePathExtention(wantedpath, ext) {
+	var dirPath = path.parse(wantedpath).dir;
+	var namePath = path.parse(wantedpath).name;
+	return path.join(dirPath, namePath + ext);
 }
