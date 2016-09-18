@@ -69,9 +69,8 @@ function performParseChain(params) {
 			return dataToObjects(method, data, params);
 		})
 		.then(function (videoMetadatas) {
-			return produceJobs(params, videoMetadatas);
-		})
-		.all();
+			return produceNextJob(params, videoMetadatas);
+		});
 }
 
 function readDataAsString(path) {
@@ -116,11 +115,14 @@ function dataToObjects(method, data, params) {
 	});
 }
 
-function produceJobs(params, videoMetadatas) {
-	return [
-		produceVideoMetadatasJobs('MetadataToMongo', videoMetadatas),
-		produceAttachVideoToMetadataJob(videoMetadatas, params)
-	];
+// produce AttachVideoToMetadata if it's 0.9 video, else produce MetadataToMongo job
+function produceNextJob(params, videoMetadatas) {
+	// produce AttachVideoToMetadata job only if the receiving method is VideoStandard 0.9
+	if (params.receivingMethod.standard === 'VideoStandard' && params.receivingMethod.version === '0.9') {
+		return produceAttachVideoToMetadataJob(videoMetadatas, params);
+	}
+
+	return produceVideoMetadatasJobs('MetadataToMongo', videoMetadatas);
 }
 
 function produceVideoMetadatasJobs(jobName, videoMetadatas) {
@@ -139,20 +141,17 @@ function produceVideoMetadatasJobs(jobName, videoMetadatas) {
 function produceAttachVideoToMetadataJob(videoMetadatas, params) {
 	var jobName = 'AttachVideoToMetadata';
 	// produce this job only if the receiving method is VideoStandard 0.9
-	if (params.receivingMethod.standard === 'VideoStandard' && params.receivingMethod.version === '0.9') {
-		console.log('Producing %s job...', jobName);
-		var message = {
-			transactionId: _transactionId,
-			sourceId: params.sourceId,
-			metadatas: videoMetadatas
-		};
-		var queueName = JobsService.getQueueName(jobName);
-		if (queueName) {
-			return rabbit.produce(queueName, message);
-		}
-		return Promise.reject(Error('Could not find queue name of the inserted job type'));
+	console.log('Producing %s job...', jobName);
+	var message = {
+		transactionId: _transactionId,
+		sourceId: params.sourceId,
+		metadatas: videoMetadatas
+	};
+	var queueName = JobsService.getQueueName(jobName);
+	if (queueName) {
+		return rabbit.produce(queueName, message);
 	}
-	return Promise.resolve();
+	return Promise.reject(Error('Could not find queue name of the inserted job type'));
 }
 
 // update job status, swallaw errors so they won't invoke error() on message
