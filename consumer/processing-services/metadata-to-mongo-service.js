@@ -23,9 +23,9 @@ module.exports.start = function(params, error, done) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}
-			return saveToMongo(params.metadatas);
+			return saveToMongo(params.metadatas)
+				.then(updateJobStatus);
 		})
-		.then(updateJobStatus)
 		.then(function() {
 			return produceJobs(params.metadatas);
 		})
