@@ -90,12 +90,12 @@ describe('metadata-to-mongo-service tests', function () {
 			);
 		});
 
-		it('should produce VideoBoundingPolygon with appropriate message', function (done) {
+		it('should produce VideoBoundingPolygon job with appropriate message', function (done) {
 			var message = generateValidParams();
 			config.testJobProduce(done, MetadataToMongoService, message, 'VideoBoundingPolygon');
 		});
 
-		it('should produce MetadataToCaptions with appropriate message', function (done) {
+		it('should produce MetadataToCaptions job with appropriate message', function (done) {
 			var message = generateValidParams();
 			config.testJobProduce(done, MetadataToMongoService, message, 'MetadataToCaptions');
 		});

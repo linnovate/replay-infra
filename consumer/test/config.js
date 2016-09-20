@@ -174,6 +174,25 @@ function getJobExpectedParamKeys(jobType) {
 	var params;
 
 	switch (jobType) {
+		case 'SaveVideo':
+			params = {
+				sourceId: undefined,
+				contentDirectoryPath: undefined,
+				dataFileName: undefined,
+				baseName: undefined,
+				receivingMethod: {
+					standard: undefined,
+					version: undefined
+				},
+				requestFormat: undefined,
+				startTime: undefined,
+				endTime: undefined,
+				duration: undefined,
+				transactionId: undefined,
+				flavors: undefined,
+				videoFileName: undefined
+			};
+			break;
 		case 'MetadataParser':
 			params = {
 				sourceId: undefined,

@@ -71,12 +71,12 @@ describe('save-video-service tests', function () {
 				});
 		});
 
-		it('should produce MetadataParserJob with appropriate message', function (done) {
+		it('should produce MetadataParser job with appropriate message', function (done) {
 			var message = config.generateValidMessage();
 			config.testJobProduce(done, SaveVideoService, message, 'MetadataParser');
 		});
 
-		it('should produce AttachVideoToMetadata with appropriate message', function (done) {
+		it('should produce AttachVideoToMetadata job with appropriate message', function (done) {
 			var message = config.generateValidMessage();
 			config.testJobProduce(done, SaveVideoService, message, 'AttachVideoToMetadata');
 		});

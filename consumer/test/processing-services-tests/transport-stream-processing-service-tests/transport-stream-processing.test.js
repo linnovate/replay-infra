@@ -363,6 +363,10 @@ function successTests() {
 				done();
 			});
 	});
+
+	it('should produce SaveVideo job with appropriate message', function (done) {
+		config.testJobProduce(done, tsProcess, message, 'SaveVideo');
+	});
 }
 
 startTests();
