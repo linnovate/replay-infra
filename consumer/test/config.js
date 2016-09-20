@@ -200,6 +200,18 @@ function getJobExpectedParamKeys(jobType) {
 				metadatas: undefined
 			};
 			break;
+		case 'VideoBoundingPolygon':
+			params = {
+				transactionId: undefined,
+				videoId: undefined
+			};
+			break;
+		case 'MetadataToCaptions':
+			params = {
+				transactionId: undefined,
+				videoId: undefined
+			};
+			break;
 		default:
 			throw new Error('Job type is missing.');
 	}
@@ -214,9 +226,9 @@ module.exports.testJobProduce = function (done, service, message, jobType) {
 		},
 		function _done() {
 			var queueName = JobsService.getQueueName(jobType);
-			rabbit.consume(queueName, 1, function (params, _error, _done) {
+			rabbit.consume(queueName, 1, function (params, __error, __done) {
 				expect(Object.keys(params).sort()).to.deep.equal(getJobExpectedParamKeys(jobType).sort());
-				_done();
+				__done();
 				done();
 			});
 		}
