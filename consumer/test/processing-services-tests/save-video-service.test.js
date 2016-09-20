@@ -1,9 +1,7 @@
 var config = require('../config');
 
 var SaveVideoService = require('../../processing-services/save-video-service');
-var Video = require('replay-schemas/Video'),
-	rabbit = require('replay-rabbitmq'),
-	JobsService = require('replay-jobs-service');
+var Video = require('replay-schemas/Video');
 
 describe('save-video-service tests', function () {
 	before(function () {

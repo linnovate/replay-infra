@@ -133,6 +133,8 @@ module.exports.deleteAllQueues = function () {
 		return jobConfig.queue;
 	});
 
+	queueNames.push('FailedJobsQueue');
+
 	var deleteQueuePromises = [];
 	for (var i = 0; i < queueNames.length; i++) {
 		var queueName = queueNames[i];
@@ -187,9 +189,15 @@ function getJobExpectedParamKeys(jobType) {
 			break;
 		case 'AttachVideoToMetadata':
 			params = {
-				video: undefined,
+				transactionId: undefined,
 				sourceId: undefined,
-				transactionId: undefined
+				metadatas: undefined
+			};
+			break;
+		case 'MetadataToMongo':
+			params = {
+				transactionId: undefined,
+				metadatas: undefined
 			};
 			break;
 		default:
@@ -205,14 +213,12 @@ module.exports.testJobProduce = function (done, service, message, jobType) {
 			done(new Error(util.format('%s\'s service has errored.', jobType)));
 		},
 		function _done() {
-			var queueName = JobsService.getQueueName('MetadataParser');
+			var queueName = JobsService.getQueueName(jobType);
 			rabbit.consume(queueName, 1, function (params, _error, _done) {
-				expect(Object.keys(params).sort()).to.deep.equal(getJobExpectedParamKeys('MetadataParser').sort());
+				expect(Object.keys(params).sort()).to.deep.equal(getJobExpectedParamKeys(jobType).sort());
 				_done();
 				done();
 			});
 		}
 	);
 };
-
-
