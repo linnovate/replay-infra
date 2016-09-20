@@ -135,7 +135,7 @@ function produceMetadataParserJob(params) {
 	var message = {
 		sourceId: params.sourceId,
 		videoId: params.video ? params.video.id : undefined, // could be undefined
-		dataFileName: params.dataFileName,
+		dataFileName: params.dataFilePath,
 		contentDirectoryPath: params.contentDirectoryPath,
 		receivingMethod: params.receivingMethod,
 		transactionId: params.transactionId
