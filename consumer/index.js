@@ -40,7 +40,9 @@ function isInputValid() {
 	console.log('Mongo host:', process.env.MONGO_HOST);
 	console.log('Mongo port:', process.env.MONGO_PORT);
 	console.log('Mongo database:', process.env.MONGO_DATABASE);
-	console.log('Files storage path:', process.env.STORAGE_PATH);
+	console.log('Storage path:', process.env.STORAGE_PATH);
+	console.log('Captions path:', process.env.CAPTIONS_PATH);
+	console.log('Capture storage path:', process.env.CAPTURE_STORAGE_PATH);
 
 	// check mandatory parameter we can't continue without
 	if (!JobsService.isKnownJobType(_jobType) || !process.env.MONGO_DATABASE || !process.env.STORAGE_PATH) {
