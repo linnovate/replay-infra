@@ -24,7 +24,7 @@ function processTS(params) {
 						outputPath: pathsForFFmpeg.outputPath,
 						divideToResolutions: true
 					});
-				ffmpeg.on('FFmpeg_finishConverting', function(paths) {
+				ffmpeg.once('FFmpeg_finishConverting', function(paths) {
 					paths.dataPath = pathsForFFmpeg.outputPath + '.data';
 					resolve(paths);
 				});
@@ -40,7 +40,7 @@ function processTS(params) {
 							outputPath: pathsForFFmpeg.outputPath,
 							divideToResolutions: true
 						});
-						ffmpeg.on('FFmpeg_finishConverting', resolve);
+						ffmpeg.once('FFmpeg_finishConverting', resolve);
 						ffmpeg.on('FFmpeg_errorOnConverting', reject);
 						break;
 					}
