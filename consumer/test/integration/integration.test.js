@@ -11,16 +11,19 @@ describe('integration tests', function () {
 		config.resetEnvironment();
 		return config.wipeMongoCollections()
 			.then(config.deleteAllQueues)
-			.then(() => liftConsumers());
+			.then(liftConsumers);
 	});
 
 	after(function () {
 		return config.wipeMongoCollections()
 			.then(config.deleteAllQueues)
-			.then(() => closeConsumers());
+			.then(closeConsumers);
 	});
 
-	describe('save-video-service', function () {
+	describe('sanity tests', function () {
+		it('should perform all jobs successfuly', function() {
+
+		});
 	});
 });
 
@@ -53,4 +56,5 @@ function closeConsumers() {
 	_childProcesses.forEach(function(proc) {
 		proc.kill('SIGINT');
 	});
+	return Promise.resolve();
 }
