@@ -1,0 +1,38 @@
+<script src="/javascript/new.js"></script>
+
+<form action="/midur/create" method="POST" id="sign-up-form" class="form-signin"
+style="direction:rtl; text-align:right; margin-top:5%; margin-right:15%;width:30%">
+	<h2 class="form-signin-heading">צור מידור לסרט</h2>
+
+	<div class="control-group">
+	<label>שם:</label>
+	<input type="text" class="form-control" style="height:35px" placeholder="שם הסרט" name="name">
+	</div>
+
+	<div class="control-group">
+	<label>מקור:</label>
+		<datalist id="sources-list">
+		</datalist>
+		<input type="text" class="form-control" list="sources-list" style="height:35px" placeholder="מקור" name="source">
+	</div>
+
+	<div class="control-group" style="text-align:right">
+	<label>זמן בתחלה:</label>
+	<input type=datetime-local step=1 class="form-control" style="text-align:right;height:35px" placeholder="זמן התחלה" name="start_time">
+	</div>
+
+	<div class="control-group">
+	<label>זמן סיום:</label>
+	<input type="datetime-local" class="form-control" style="text-align:right;height:35px" placeholder="זמן סיום" name="end_time">
+	</div>
+
+	<div class="control-group">
+	<label>יעד:</label>
+	<input type="text" class="form-control" placeholder="יעד" style="height:35px" name="destination">
+	</div>
+	<br>
+	<input type="submit" class="btn btn-lg btn-primary btn-block" value="צור מידור"/>
+	<input type="hidden" name="_csrf" value="<%= _csrf %>" />
+</form>
+
+
