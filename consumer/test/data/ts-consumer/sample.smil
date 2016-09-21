@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<smil title="sample adaptive stream">
+  <body>
+    <switch>
+      <video height="360" src="sample.mp4" width="640">
+        <param name="videoBitrate" value="826811" valuetype="data"/>
+        <param name="audioBitrate" value="70978" valuetype="data"/>
+      </video>
+      <video height="360" src="sample_360P.mp4" width="480">
+        <param name="videoBitrate" value="797650" valuetype="data"/>
+        <param name="audioBitrate" value="70978" valuetype="data"/>
+      </video>
+      <video height="480" src="sample_480P.mp4" width="640">
+        <param name="videoBitrate" value="1171246" valuetype="data"/>
+        <param name="audioBitrate" value="70978" valuetype="data"/>
+      </video>
+    </switch>
+  </body>
+</smil>

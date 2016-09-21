@@ -29,7 +29,8 @@ function initialForTests() {
 		config.resetEnvironment();
 		message = config.generateMessageForTsProcessing();
 		process.env.STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'ts-consumer');
-		done();
+		config.deleteAllQueues()
+			.then(() => done());
 	});
 
 	after(function (done) {
@@ -325,6 +326,10 @@ function successTests() {
 			});
 	});
 
+	it('should produce SaveVideo job in VideoStandard 1.0 mode', function (done) {
+		config.testJobProduce(done, tsProcess, message, 'SaveVideo', 'VideoStandard-1.0');
+	});
+
 	it('should work in VideoStandard 0.9 video', function (done) {
 		message.receivingMethod.version = '0.9';
 		message.sourceType = 'Video';
@@ -336,6 +341,13 @@ function successTests() {
 			function _done() {
 				done();
 			});
+	});
+
+	it('should produce SaveVideo job in VideoStandard 0.9 mode with video', function (done) {
+		message.receivingMethod.version = '0.9';
+		message.sourceType = 'Video';
+		message.fileRelativePath = 'sample-without-data.ts';
+		config.testJobProduce(done, tsProcess, message, 'SaveVideo', 'VideoStandard-0.9-video');
 	});
 
 	it('should work in VideoStandard 0.9 Telemetry', function (done) {
@@ -351,6 +363,13 @@ function successTests() {
 			});
 	});
 
+	it('should produce SaveVideo job in VideoStandard 0.9 mode with metadata', function (done) {
+		message.receivingMethod.version = '0.9';
+		message.sourceType = 'Telemetry';
+		message.fileRelativePath = 'sample.ts';
+		config.testJobProduce(done, tsProcess, message, 'SaveVideo', 'VideoStandard-0.9-metadata');
+	});
+
 	it('should work in stanag 4609', function (done) {
 		message.receivingMethod.standard = 'stanag';
 		message.receivingMethod.version = '4609';
@@ -364,8 +383,11 @@ function successTests() {
 			});
 	});
 
-	it('should produce SaveVideo job with appropriate message', function (done) {
-		config.testJobProduce(done, tsProcess, message, 'SaveVideo');
+	it('should produce SaveVideo job in Stanag 4609 mode', function (done) {
+		message.receivingMethod.standard = 'stanag';
+		message.receivingMethod.version = '4609';
+		message.fileRelativePath = 'sample.ts';
+		config.testJobProduce(done, tsProcess, message, 'SaveVideo', 'Stanag-4609');
 	});
 }
 

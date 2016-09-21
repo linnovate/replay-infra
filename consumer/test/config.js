@@ -170,28 +170,88 @@ module.exports.generateMessageForTsProcessing = function () {
 	};
 };
 
-function getJobExpectedParamKeys(jobType) {
+function getJobExpectedParamKeys(jobType, mode) {
 	var params;
 
 	switch (jobType) {
 		case 'SaveVideo':
-			params = {
-				sourceId: undefined,
-				contentDirectoryPath: undefined,
-				dataFileName: undefined,
-				baseName: undefined,
-				receivingMethod: {
-					standard: undefined,
-					version: undefined
-				},
-				requestFormat: undefined,
-				startTime: undefined,
-				endTime: undefined,
-				duration: undefined,
-				transactionId: undefined,
-				flavors: undefined,
-				videoFileName: undefined
-			};
+			switch (mode) {
+				case 'VideoStandard-1.0':
+					params = {
+						sourceId: undefined,
+						contentDirectoryPath: undefined,
+						dataFileName: undefined,
+						baseName: undefined,
+						receivingMethod: {
+							standard: undefined,
+							version: undefined
+						},
+						requestFormat: undefined,
+						startTime: undefined,
+						endTime: undefined,
+						duration: undefined,
+						transactionId: undefined,
+						flavors: undefined,
+						videoFileName: undefined
+					};
+					break;
+				case 'VideoStandard-0.9-video':
+					params = {
+						sourceId: undefined,
+						contentDirectoryPath: undefined,
+						baseName: undefined,
+						receivingMethod: {
+							standard: undefined,
+							version: undefined
+						},
+						requestFormat: undefined,
+						startTime: undefined,
+						endTime: undefined,
+						duration: undefined,
+						transactionId: undefined,
+						flavors: undefined,
+						videoFileName: undefined
+					};
+					break;
+				case 'VideoStandard-0.9-metadata':
+					params = {
+						sourceId: undefined,
+						contentDirectoryPath: undefined,
+						dataFileName: undefined,
+						baseName: undefined,
+						receivingMethod: {
+							standard: undefined,
+							version: undefined
+						},
+						startTime: undefined,
+						endTime: undefined,
+						duration: undefined,
+						transactionId: undefined,
+						flavors: undefined
+					};
+					break;
+				case 'Stanag-4609':
+					params = {
+						sourceId: undefined,
+						contentDirectoryPath: undefined,
+						dataFileName: undefined,
+						baseName: undefined,
+						receivingMethod: {
+							standard: undefined,
+							version: undefined
+						},
+						requestFormat: undefined,
+						startTime: undefined,
+						endTime: undefined,
+						duration: undefined,
+						transactionId: undefined,
+						flavors: undefined,
+						videoFileName: undefined
+					};
+					break;
+				default:
+					throw new Error('Unsupported mode.');
+			}
 			break;
 		case 'MetadataParser':
 			params = {
@@ -238,7 +298,7 @@ function getJobExpectedParamKeys(jobType) {
 	return Object.keys(params);
 }
 
-module.exports.testJobProduce = function (done, service, message, jobType) {
+module.exports.testJobProduce = function (done, service, message, jobType, serviceMode) {
 	service.start(message,
 		function _error() {
 			done(new Error(util.format('%s\'s service has errored.', jobType)));
@@ -246,7 +306,7 @@ module.exports.testJobProduce = function (done, service, message, jobType) {
 		function _done() {
 			var queueName = JobsService.getQueueName(jobType);
 			rabbit.consume(queueName, 1, function (params, __error, __done) {
-				expect(Object.keys(params).sort()).to.deep.equal(getJobExpectedParamKeys(jobType).sort());
+				expect(Object.keys(params).sort()).to.deep.equal(getJobExpectedParamKeys(jobType, serviceMode).sort());
 				__done();
 				done();
 			});
