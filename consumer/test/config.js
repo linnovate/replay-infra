@@ -270,7 +270,7 @@ function getJobExpectedParamKeys(jobType, mode) {
 			params = {
 				transactionId: undefined,
 				sourceId: undefined,
-				metadatas: undefined
+				video: undefined
 			};
 			break;
 		case 'MetadataToMongo':
