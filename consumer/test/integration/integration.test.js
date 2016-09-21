@@ -9,31 +9,33 @@ var _childProcesses = [];
 describe('integration tests', function () {
 	before(function () {
 		config.resetEnvironment();
-		return config.wipeMongoCollections()
+		return config.connectServices()
+			.then(config.wipeMongoCollections)
 			.then(config.deleteAllQueues)
 			.then(liftConsumers);
 	});
 
 	after(function () {
-		return config.wipeMongoCollections()
+		return config.connectServices()
+			.then(config.wipeMongoCollections)
 			.then(config.deleteAllQueues)
 			.then(closeConsumers);
 	});
 
 	describe('sanity tests', function () {
 		it('should perform all jobs successfuly', function() {
-
+			//
 		});
 	});
 });
 
 function liftConsumers() {
 	var consumersPromises = [];
-	var jobsConfig = JobsService.getAllJobsConfig();
+	var jobsConfig = JobsService.getAllJobConfigs();
 	jobsConfig.forEach(function (jobConfig) {
 		var jobName = jobConfig.type;
 
-		var promise = spawn('node', ['../index.js', jobName]);
+		var promise = spawn('node', ['index.js', jobName]);
 		var childProcess = promise.childProcess;
 		// track the child process
 		_childProcesses.push(childProcess);
