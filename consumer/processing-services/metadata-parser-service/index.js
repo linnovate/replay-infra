@@ -1,5 +1,6 @@
 var Promise = require('bluebird'),
 	rabbit = require('replay-rabbitmq'),
+	_ = require('lodash'),
 	JobsService = require('replay-jobs-service');
 
 var path = require('path');
@@ -24,9 +25,9 @@ module.exports.start = function (params, error, done) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}
-			return performParseChain(params);
+			return performParseChain(params)
+				.then(updateJobStatus);
 		})
-		.then(updateJobStatus)
 		.then(function () {
 			done();
 			return Promise.resolve();
@@ -46,8 +47,8 @@ function validateInput(params) {
 	var transactionId = params.transactionId;
 
 	// validate params
-	if (!dataFileName || !contentDirectoryPath || !process.env.STORAGE_PATH ||
-		!method || !method.standard || !method.version || !transactionId) {
+	if (_.isUndefined(dataFileName) || _.isUndefined(contentDirectoryPath) || _.isUndefined(process.env.STORAGE_PATH) ||
+		_.isUndefined(method) || _.isUndefined(method.standard) || _.isUndefined(method.version) || _.isUndefined(transactionId)) {
 		return false;
 	}
 
@@ -69,7 +70,7 @@ function performParseChain(params) {
 			return dataToObjects(method, data, params);
 		})
 		.then(function (videoMetadatas) {
-			return produceNextJob(params, videoMetadatas);
+			return produceNextJobs(params, videoMetadatas);
 		});
 }
 
@@ -116,16 +117,17 @@ function dataToObjects(method, data, params) {
 }
 
 // produce AttachVideoToMetadata if it's 0.9 video, else produce MetadataToMongo job
-function produceNextJob(params, videoMetadatas) {
+function produceNextJobs(params, videoMetadatas) {
 	// produce AttachVideoToMetadata job only if the receiving method is VideoStandard 0.9
 	if (params.receivingMethod.standard === 'VideoStandard' && params.receivingMethod.version === '0.9') {
 		return produceAttachVideoToMetadataJob(videoMetadatas, params);
 	}
 
-	return produceVideoMetadatasJobs('MetadataToMongo', videoMetadatas);
+	return produceMetadataToMongoJob(videoMetadatas);
 }
 
-function produceVideoMetadatasJobs(jobName, videoMetadatas) {
+function produceMetadataToMongoJob(videoMetadatas) {
+	var jobName = 'MetadataToMongo';
 	console.log('Producing %s job...', jobName);
 	var message = {
 		transactionId: _transactionId,
@@ -140,7 +142,6 @@ function produceVideoMetadatasJobs(jobName, videoMetadatas) {
 
 function produceAttachVideoToMetadataJob(videoMetadatas, params) {
 	var jobName = 'AttachVideoToMetadata';
-	// produce this job only if the receiving method is VideoStandard 0.9
 	console.log('Producing %s job...', jobName);
 	var message = {
 		transactionId: _transactionId,

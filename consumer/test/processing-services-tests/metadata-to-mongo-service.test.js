@@ -6,38 +6,40 @@ var VideoMetadata = require('replay-schemas/VideoMetadata');
 var _expectedParsedDataObjects;
 var _transactionId;
 
-describe('metadata-to-mongo-service tests', function() {
-	before(function() {
+describe('metadata-to-mongo-service tests', function () {
+	before(function () {
 		config.resetEnvironment();
 		return config.connectServices()
 			.then(config.wipeMongoCollections)
 			.then(config.getValidMetadataObjects)
-			.then(function(expectedDataAsObjects) {
+			.then(function (expectedDataAsObjects) {
 				_expectedParsedDataObjects = expectedDataAsObjects;
 				return Promise.resolve();
 			});
 	});
 
-	after(function() {
+	after(function () {
 		return config.wipeMongoCollections()
 			.then(config.deleteAllQueues);
 	});
 
-	describe('sanity tests', function() {
-		beforeEach(function() {
+	describe('sanity tests', function () {
+		beforeEach(function () {
 			return config.wipeMongoCollections()
 				.then(config.generateJobStatus)
-				.then(function(jobStatus) {
+				.then(function (jobStatus) {
 					_transactionId = jobStatus.id;
 					return Promise.resolve();
-				});
+				})
+				.then(config.deleteAllQueues);
 		});
 
-		afterEach(function() {
-			return config.wipeMongoCollections();
+		afterEach(function () {
+			return config.wipeMongoCollections()
+				.then(config.deleteAllQueues);
 		});
 
-		it('should insert metadata objects to mongo', function(done) {
+		it('should insert metadata objects to mongo', function (done) {
 			var params = generateValidParams();
 
 			MetadataToMongoService.start(params,
@@ -50,7 +52,7 @@ describe('metadata-to-mongo-service tests', function() {
 			);
 		});
 
-		it('should not insert metadata objects to mongo due to replay of job', function(done) {
+		it('should not insert metadata objects to mongo due to replay of job', function (done) {
 			var params = generateValidParams();
 
 			MetadataToMongoService.start(params,
@@ -60,7 +62,7 @@ describe('metadata-to-mongo-service tests', function() {
 				function _done() {
 					// allow status to be updated
 					// dont worry since as long as done is called, insertion succeeded
-					setTimeout(function() {
+					setTimeout(function () {
 						MetadataToMongoService.start(params,
 							function _error() {
 								errCallback(done);
@@ -74,7 +76,7 @@ describe('metadata-to-mongo-service tests', function() {
 			);
 		});
 
-		it('should not insert metadata objects to mongo due to lack of metadatas', function(done) {
+		it('should not insert metadata objects to mongo due to lack of metadatas', function (done) {
 			var params = generateValidParams();
 			params.metadatas = [];
 
@@ -87,10 +89,20 @@ describe('metadata-to-mongo-service tests', function() {
 				}
 			);
 		});
+
+		it('should produce VideoBoundingPolygon job with appropriate message', function (done) {
+			var message = generateValidParams();
+			config.testJobProduce(done, MetadataToMongoService, message, 'VideoBoundingPolygon');
+		});
+
+		it('should produce MetadataToCaptions job with appropriate message', function (done) {
+			var message = generateValidParams();
+			config.testJobProduce(done, MetadataToMongoService, message, 'MetadataToCaptions');
+		});
 	});
 
-	describe('bad input tests', function() {
-		it('lacks transactionId', function(done) {
+	describe('bad input tests', function () {
+		it('lacks transactionId', function (done) {
 			var params = generateValidParams();
 			params.transactionId = undefined;
 
@@ -111,13 +123,13 @@ function errornousInputTest(params, done) {
 
 function testMetadatasInserted(done) {
 	VideoMetadata.count({})
-		.then(function(count) {
+		.then(function (count) {
 			expect(count).to.equal(_expectedParsedDataObjects.length);
 		})
-		.then(function() {
+		.then(function () {
 			done();
 		})
-		.catch(function(err) {
+		.catch(function (err) {
 			if (err) {
 				done(err);
 			}
@@ -126,13 +138,13 @@ function testMetadatasInserted(done) {
 
 function testMetadatasNotInserted(done) {
 	VideoMetadata.count({})
-		.then(function(count) {
+		.then(function (count) {
 			expect(count).to.equal(0);
 		})
-		.then(function() {
+		.then(function () {
 			done();
 		})
-		.catch(function(err) {
+		.catch(function (err) {
 			if (err) {
 				done(err);
 			}

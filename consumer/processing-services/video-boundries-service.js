@@ -5,7 +5,7 @@ var Video = require('replay-schemas/Video'),
 
 const _jobStatusTag = 'added-video-bounding-polygon-to-mongo';
 
-module.exports.start = function(params, error, done) {
+module.exports.start = function (params, error, done) {
 	console.log('Video Boundries service started.');
 	var _transactionId, _videoId;
 	// throw error for no video or job
@@ -20,27 +20,27 @@ module.exports.start = function(params, error, done) {
 	JobsService.findJobStatus(_transactionId)
 		// Make sure we haven't performed this job already
 		.then(validateJob)
-		.catch(function(err) {
+		.catch(function (err) {
 			console.log(err);
 		})
-		.then(function() {
+		.then(function () {
 			// Return a bounding polygon
 			return createBoundingPolygon(_videoId);
 		})
-		.then(function(mergedPolygon) {
+		.then(function (mergedPolygon) {
 			console.log('got merged polygon');
 			// Save bounding polygon to video object in db
-			return saveToMongo(mergedPolygon, _videoId);
+			return saveToMongo(mergedPolygon, _videoId)
+				.then(updateJobStatus(_transactionId));
 		})
-		.catch(function(err) {
+		.catch(function (err) {
 			console.log(err);
 			error();
 		})
-		.then(function() {
+		.then(function () {
 			done();
 			console.log('finished Job sucessfuly');
-			// Notify for job complete
-			return updateJobStatus(_transactionId);
+			return Promise.resolve();
 		});
 };
 
@@ -74,7 +74,7 @@ function createBoundingPolygon(videoId) {
 	return VideoMetadata.find({ videoId: videoId })
 		// pass to merging function of geometries
 		.then(mergeMetadataPolygons)
-		.catch(function(err) {
+		.catch(function (err) {
 			console.log('failed retrive video metadata: ');
 			return Promise.reject(err);
 		});
@@ -91,7 +91,7 @@ function mergeMetadataPolygons(metadatas) {
 		'type': 'FeatureCollection',
 		'features': []
 	};
-	metadatas.forEach(function(metadata) {
+	metadatas.forEach(function (metadata) {
 		// push the metadata to the feature collection
 		polygons.features.push({
 			'type': 'Feature',
@@ -112,14 +112,16 @@ function saveToMongo(polygon, videoId) {
 	if (polygon !== undefined && videoId !== undefined) {
 		// update video object in mongo by id
 		return Video.update({ _id: videoId }, { boundingPolygon: polygon })
-			.then(function(video) {
+			.then(function (video) {
 				console.log('Video updated successfuly.');
 				return Promise.resolve();
 			})
-			.catch(function(err) {
+			.catch(function (err) {
 				return Promise.reject('video object doesnt exists' + err);
 			});
 	}
+
+	return Promise.resolve();
 }
 
 // update the job with the appropriate status
