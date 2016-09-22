@@ -3,6 +3,7 @@ var spawn = require('child-process-promise').spawn,
 
 var config = require('../config');
 var JobsService = require('replay-jobs-service'),
+	JobStatus = require('replay-schemas/JobStatus'),
 	rabbit = require('replay-rabbitmq');
 
 var _childProcesses = [];
@@ -25,19 +26,30 @@ describe('integration tests', function () {
 	});
 
 	describe('sanity tests', function () {
-		it('should perform all jobs successfuly', function(done) {
+		it('should perform all jobs successfuly', function (done) {
+			var timeout = 45 * 1000;
+			this.timeout(timeout);
+
 			var message = config.generateMessageForTsProcessing();
 			rabbit.produce('TransportStreamProcessingQueue', message)
-				.then(setTimeout(() => Promise.resolve(), 5000))
-				.then(() => validateJobsSucceed())
-				.then(done);
-
+				.then(setTimeout(() => validateJobsSucceed(done), timeout - 3 * 1000));
 		});
 	});
 });
 
-function validateJobsSucceed() {
-	return Promise.resolve();
+function validateJobsSucceed(done) {
+	JobStatus
+		.find({})
+		.then(function (jobStatuses) {
+			expect(jobStatuses).to.have.lengthOf(1);
+			var jobStatus = jobStatuses[0];
+			console.log('Statuses:', jobStatus.statuses);
+			expect(jobStatus.statuses).to.have.lengthOf(JobsService.getAllJobConfigs().length);
+			done();
+		})
+		.catch(function (err) {
+			done(err);
+		});
 }
 
 function liftConsumers() {
@@ -66,7 +78,7 @@ function liftConsumers() {
 }
 
 function closeConsumers() {
-	_childProcesses.forEach(function(proc) {
+	_childProcesses.forEach(function (proc) {
 		proc.kill('SIGINT');
 	});
 	return Promise.resolve();

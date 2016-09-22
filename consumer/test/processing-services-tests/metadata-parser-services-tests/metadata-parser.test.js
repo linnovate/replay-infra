@@ -67,7 +67,7 @@ describe('metadata parser service tests', function () {
 			message.transactionId = _transactionId;
 			message.receivingMethod.standard = 'VideoStandard';
 			message.receivingMethod.version = '0.9';
-			config.testJobProduce(done, MetadataParser, message, 'AttachVideoToMetadata');
+			config.testJobProduce(done, MetadataParser, message, 'AttachVideoToMetadata', 'Metadatas');
 		});
 	});
 

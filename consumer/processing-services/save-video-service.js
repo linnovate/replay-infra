@@ -2,6 +2,7 @@ var rabbit = require('replay-rabbitmq'),
 	JobsService = require('replay-jobs-service'),
 	Video = require('replay-schemas/Video'),
 	Promise = require('bluebird'),
+	_ = require('lodash'),
 	JobService = require('replay-jobs-service');
 
 var _transactionId;
@@ -50,12 +51,13 @@ function validateInput(params) {
 	var requestFormat = params.requestFormat;
 
 	// validate vital params
-	if (!method || !method.standard || !method.version || !transactionId || !baseName || !contentDirectoryPath || !requestFormat) {
+	if (_.isUndefined(sourceId) || _.isUndefined(method) || _.isUndefined(method.standard) || _.isUndefined(method.version) ||
+		_.isUndefined(transactionId) || _.isUndefined(baseName) || _.isUndefined(contentDirectoryPath) || _.isUndefined(requestFormat)) {
 		return false;
 	}
 
 	// validate that if there's a video, then all it's params exist
-	if (videoFileName && !(sourceId && startTime && endTime)) {
+	if (videoFileName && !(startTime && endTime)) {
 		return false;
 	}
 

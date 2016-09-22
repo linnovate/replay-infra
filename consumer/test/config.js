@@ -106,7 +106,7 @@ module.exports.generateVideo = function (params, _transactionId) {
 };
 
 // returns metadata objects from the VideoMetadata schema
-module.exports.getValidMetadataObjects = function () {
+function getValidMetadataObjects() {
 	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
 	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
 		.then(function (expectedDataAsString) {
@@ -116,7 +116,8 @@ module.exports.getValidMetadataObjects = function () {
 			});
 			return Promise.resolve(videoMetadatas);
 		});
-};
+}
+module.exports.getValidMetadataObjects = getValidMetadataObjects;
 
 // returns raw javascript metadata objects
 module.exports.getValidMetadataAsJson = function () {
@@ -170,6 +171,7 @@ module.exports.generateMessageForTsProcessing = function () {
 	};
 };
 
+// return the expected message attributes for the specific jobType, possibly with different modes of operation
 function getJobExpectedParamKeys(jobType, mode) {
 	var params;
 
@@ -267,11 +269,24 @@ function getJobExpectedParamKeys(jobType, mode) {
 			};
 			break;
 		case 'AttachVideoToMetadata':
-			params = {
-				transactionId: undefined,
-				sourceId: undefined,
-				video: undefined
-			};
+			switch (mode) {
+				case 'Video':
+					params = {
+						transactionId: undefined,
+						sourceId: undefined,
+						video: undefined
+					};
+					break;
+				case 'Metadatas':
+					params = {
+						transactionId: undefined,
+						sourceId: undefined,
+						metadatas: undefined
+					};
+					break;
+				default:
+					throw new Error('Unsupported mode.');
+			}
 			break;
 		case 'MetadataToMongo':
 			params = {

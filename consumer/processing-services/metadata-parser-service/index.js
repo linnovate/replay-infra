@@ -1,5 +1,6 @@
 var Promise = require('bluebird'),
 	rabbit = require('replay-rabbitmq'),
+	_ = require('lodash'),
 	JobsService = require('replay-jobs-service');
 
 var path = require('path');
@@ -46,8 +47,8 @@ function validateInput(params) {
 	var transactionId = params.transactionId;
 
 	// validate params
-	if (!dataFileName || !contentDirectoryPath || !process.env.STORAGE_PATH ||
-		!method || !method.standard || !method.version || !transactionId) {
+	if (_.isUndefined(dataFileName) || _.isUndefined(contentDirectoryPath) || _.isUndefined(process.env.STORAGE_PATH) ||
+		_.isUndefined(method) || _.isUndefined(method.standard) || _.isUndefined(method.version) || _.isUndefined(transactionId)) {
 		return false;
 	}
 

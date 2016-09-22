@@ -78,7 +78,7 @@ describe('save-video-service tests', function () {
 
 		it('should produce AttachVideoToMetadata job with appropriate message', function (done) {
 			var message = config.generateValidMessage();
-			config.testJobProduce(done, SaveVideoService, message, 'AttachVideoToMetadata');
+			config.testJobProduce(done, SaveVideoService, message, 'AttachVideoToMetadata', 'Video');
 		});
 	});
 
@@ -86,6 +86,13 @@ describe('save-video-service tests', function () {
 		it('lacks transactionId', function (done) {
 			var message = config.generateValidMessage();
 			message.transactionId = undefined;
+
+			errornousInputTest(message, done);
+		});
+
+		it('lacks sourceId', function (done) {
+			var message = config.generateValidMessage();
+			message.sourceId = undefined;
 
 			errornousInputTest(message, done);
 		});
@@ -100,13 +107,6 @@ describe('save-video-service tests', function () {
 		it('has videoFileName but lacks endTime', function (done) {
 			var message = config.generateValidMessage();
 			message.endTime = undefined;
-
-			errornousInputTest(message, done);
-		});
-
-		it('has videoFileName but lacks sourceId', function (done) {
-			var message = config.generateValidMessage();
-			message.sourceId = undefined;
 
 			errornousInputTest(message, done);
 		});
@@ -169,8 +169,6 @@ function testForOneVideo(done) {
 	Video.count({})
 		.then(function (count) {
 			expect(count).to.equal(1);
-		})
-		.then(function () {
 			done();
 		})
 		.catch(function (err) {
@@ -198,3 +196,4 @@ function testForNoVideos(done) {
 function errCallback(done) {
 	done(new Error('save video service errored.'));
 }
+
