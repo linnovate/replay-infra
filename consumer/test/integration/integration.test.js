@@ -1,28 +1,57 @@
-var spawn = require('child-process-promise').spawn,
-	Promise = require('bluebird');
+var path = require('path'),
+	spawn = require('child_process').spawn;
 
 var config = require('../config');
 var JobsService = require('replay-jobs-service'),
 	JobStatus = require('replay-schemas/JobStatus'),
-	rabbit = require('replay-rabbitmq');
+	rabbit = require('replay-rabbitmq'),
+	Promise = require('bluebird');
 
-var _childProcesses = [];
+var rimraf = Promise.promisify(require('rimraf')),
+	copyFolder = Promise.promisify(require('ncp').ncp);
+
+var _childProcesses = [],
+	_tmpFolder = '/tmp',
+	_newStoragePath;
 
 describe('integration tests', function () {
 	before(function (done) {
 		config.resetEnvironment();
-		config.connectServices()
+		_newStoragePath = path.join(process.env.STORAGE_PATH, _tmpFolder);
+		process.env.CAPTURE_STORAGE_PATH = path.join(_newStoragePath, 'capture');
+
+		createTempFolder()
+			.then(() => {
+				process.env.STORAGE_PATH = _newStoragePath;
+				return Promise.resolve();
+			})
+			.then(config.connectServices())
 			.then(config.wipeMongoCollections)
 			.then(config.deleteAllQueues)
 			.then(liftConsumers)
-			.then(setTimeout(() => done(), 4000));
+			.then(() => {
+				setTimeout(done, 4000);
+				return Promise.resolve();
+			})
+			.catch((err) => {
+				if (err) {
+					done(err);
+				}
+			});
 	});
 
-	after(function () {
-		return config.connectServices()
+	after(function (done) {
+		config.connectServices()
+			.then(wipeTempFolder)
 			.then(config.wipeMongoCollections)
 			.then(config.deleteAllQueues)
-			.then(closeConsumers);
+			.then(closeConsumers)
+			.then(() => done())
+			.catch((err) => {
+				if (err) {
+					done(err);
+				}
+			});
 	});
 
 	describe('sanity tests', function () {
@@ -53,13 +82,12 @@ function validateJobsSucceed(done) {
 }
 
 function liftConsumers() {
-	var consumersPromises = [];
+	// var consumersPromises = [];
 	var jobsConfig = JobsService.getAllJobConfigs();
 	jobsConfig.forEach(function (jobConfig) {
 		var jobName = jobConfig.type;
 
-		var promise = spawn('node', ['index.js', jobName]);
-		var childProcess = promise.childProcess;
+		var childProcess = spawn('node', ['index.js', jobName]);
 		// track the child process
 		_childProcesses.push(childProcess);
 
@@ -70,11 +98,11 @@ function liftConsumers() {
 		childProcess.stderr.on('data', function (data) {
 			console.log('%s job stderr: ', jobName, data.toString());
 		});
-
-		consumersPromises.push(promise);
+		// consumersPromises.push(promise);
 	});
 
-	return Promise.all(consumersPromises);
+	// return Promise.all(consumersPromises);
+	return Promise.resolve();
 }
 
 function closeConsumers() {
@@ -82,4 +110,12 @@ function closeConsumers() {
 		proc.kill('SIGINT');
 	});
 	return Promise.resolve();
+}
+
+function createTempFolder() {
+	return copyFolder(process.env.STORAGE_PATH, _newStoragePath);
+}
+
+function wipeTempFolder() {
+	return rimraf(_newStoragePath);
 }

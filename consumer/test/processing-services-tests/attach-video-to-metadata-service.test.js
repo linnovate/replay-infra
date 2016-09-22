@@ -43,12 +43,12 @@ describe('attach-video-to-metadata tests', function () {
 		config.resetEnvironment();
 		return config.connectServices()
 			.then(config.wipeMongoCollections)
-			.then(config.getValidMetadataObjects)
 			.then(config.deleteAllQueues);
 	});
 
 	after(function () {
-		return config.wipeMongoCollections()
+		return config.connectServices()
+			.then(config.wipeMongoCollections)
 			.then(config.deleteAllQueues);
 	});
 
@@ -100,7 +100,7 @@ describe('attach-video-to-metadata tests', function () {
 		});
 
 		it('should produce MetadataToMongo job in case metadatas received', function (done) {
-			attachVideoToMetadataWithMetadatas(function(done, params) {
+			attachVideoToMetadataWithMetadatas(function (done, params) {
 				config.testJobProduce(done, AttachVideoToMetadataService, params, 'MetadataToMongo');
 			}, done);
 		});
