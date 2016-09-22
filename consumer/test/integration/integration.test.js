@@ -1,4 +1,5 @@
 var path = require('path'),
+	fs = require('fs'),
 	spawn = require('child_process').spawn;
 
 var config = require('../config');
@@ -113,6 +114,9 @@ function closeConsumers() {
 }
 
 function createTempFolder() {
+	if (!fs.existsSync(_newStoragePath)) {
+		fs.mkdirSync(_newStoragePath);
+	}
 	return copyFolder(process.env.STORAGE_PATH, _newStoragePath);
 }
 
