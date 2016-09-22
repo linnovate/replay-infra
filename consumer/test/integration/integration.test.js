@@ -2,17 +2,19 @@ var spawn = require('child-process-promise').spawn,
 	Promise = require('bluebird');
 
 var config = require('../config');
-var JobsService = require('replay-jobs-service');
+var JobsService = require('replay-jobs-service'),
+	rabbit = require('replay-rabbitmq');
 
 var _childProcesses = [];
 
 describe('integration tests', function () {
-	before(function () {
+	before(function (done) {
 		config.resetEnvironment();
-		return config.connectServices()
+		config.connectServices()
 			.then(config.wipeMongoCollections)
 			.then(config.deleteAllQueues)
-			.then(liftConsumers);
+			.then(liftConsumers)
+			.then(setTimeout(() => done(), 4000));
 	});
 
 	after(function () {
@@ -23,11 +25,20 @@ describe('integration tests', function () {
 	});
 
 	describe('sanity tests', function () {
-		it('should perform all jobs successfuly', function() {
-			//
+		it('should perform all jobs successfuly', function(done) {
+			var message = config.generateMessageForTsProcessing();
+			rabbit.produce('TransportStreamProcessingQueue', message)
+				.then(setTimeout(() => Promise.resolve(), 5000))
+				.then(() => validateJobsSucceed())
+				.then(done);
+
 		});
 	});
 });
+
+function validateJobsSucceed() {
+	return Promise.resolve();
+}
 
 function liftConsumers() {
 	var consumersPromises = [];
