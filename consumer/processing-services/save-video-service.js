@@ -150,8 +150,8 @@ function produceMetadataParserJob(params) {
 function produceAttachVideoToMetadataJob(params) {
 	console.log('Producing AttachVideoToMetadata job...');
 
-	// upload to provider if video exists
-	if (params.videoRelativePath && params.video) {
+	// produce job if video exists
+	if (params.video) {
 		var message = {
 			video: params.video,
 			sourceId: params.sourceId,
