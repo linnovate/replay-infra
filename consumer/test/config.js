@@ -1,4 +1,5 @@
-var path = require('path');
+var path = require('path'),
+	util = require('util');
 
 var chai = require('chai'),
 	_ = require('lodash'),
@@ -43,28 +44,28 @@ function resetEnvironment() {
 module.exports.resetEnvironment = resetEnvironment;
 
 // connect services
-module.exports.connectServices = function() {
+module.exports.connectServices = function () {
 	return connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
-		.then(function() {
+		.then(function () {
 			return rabbit.connect(process.env.RABBITMQ_HOST);
 		});
 };
 
 // wipe mongo collections
-module.exports.wipeMongoCollections = function() {
+module.exports.wipeMongoCollections = function () {
 	return Video.remove({})
-		.then(function() {
+		.then(function () {
 			return JobStatus.remove({});
 		})
-		.then(function() {
+		.then(function () {
 			return VideoMetadata.remove({});
 		})
-		.then(function() {
+		.then(function () {
 			return Query.remove({});
 		});
 };
 
-module.exports.generateValidMessage = function() {
+module.exports.generateValidMessage = function () {
 	var startTime = new Date();
 	var endTime = addMinutes(startTime, 30);
 
@@ -85,11 +86,11 @@ module.exports.generateValidMessage = function() {
 	};
 };
 
-module.exports.generateJobStatus = function() {
+module.exports.generateJobStatus = function () {
 	return JobStatus.create({});
 };
 
-module.exports.generateVideo = function(params, _transactionId) {
+module.exports.generateVideo = function (params, _transactionId) {
 	return {
 		_id: new mongoose.Types.ObjectId(),
 		sourceId: params.sourceId,
@@ -105,32 +106,35 @@ module.exports.generateVideo = function(params, _transactionId) {
 };
 
 // returns metadata objects from the VideoMetadata schema
-module.exports.getValidMetadataObjects = function() {
+function getValidMetadataObjects() {
 	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
 	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
-		.then(function(expectedDataAsString) {
+		.then(function (expectedDataAsString) {
 			var metadataObjects = JSON.parse(expectedDataAsString);
-			var videoMetadatas = _.map(metadataObjects, function(metadata) {
+			var videoMetadatas = _.map(metadataObjects, function (metadata) {
 				return new VideoMetadata(metadata);
 			});
 			return Promise.resolve(videoMetadatas);
 		});
-};
+}
+module.exports.getValidMetadataObjects = getValidMetadataObjects;
 
 // returns raw javascript metadata objects
-module.exports.getValidMetadataAsJson = function() {
+module.exports.getValidMetadataAsJson = function () {
 	var fullPathToVideoMetadata = path.join(process.env.STORAGE_PATH, _validMetadataObjectsPath);
 	return fs.readFileAsync(fullPathToVideoMetadata, 'utf8')
-		.then(function(expectedDataAsString) {
+		.then(function (expectedDataAsString) {
 			return Promise.resolve(JSON.parse(expectedDataAsString));
 		});
 };
 
-module.exports.deleteAllQueues = function() {
+module.exports.deleteAllQueues = function () {
 	var jobConfigs = JobsService.getAllJobConfigs();
-	var queueNames = _.map(jobConfigs, function(jobConfig) {
+	var queueNames = _.map(jobConfigs, function (jobConfig) {
 		return jobConfig.queue;
 	});
+
+	queueNames.push('FailedJobsQueue');
 
 	var deleteQueuePromises = [];
 	for (var i = 0; i < queueNames.length; i++) {
@@ -147,7 +151,7 @@ function addMinutes(date, minutes) {
 module.exports.addMinutes = addMinutes;
 
 // simulate message from the video recorder.
-module.exports.generateMessageForTsProcessing = function() {
+module.exports.generateMessageForTsProcessing = function () {
 	var startTime = new Date();
 	var endTime = addMinutes(startTime, 30);
 	return {
@@ -165,4 +169,162 @@ module.exports.generateMessageForTsProcessing = function() {
 		sourceType: 'In VideoStandard V 1.0 it does not matter',
 		transactionId: new mongoose.Types.ObjectId()
 	};
+};
+
+// return the expected message attributes for the specific jobType, possibly with different modes of operation
+function getJobExpectedParamKeys(jobType, mode) {
+	var params;
+
+	switch (jobType) {
+		case 'SaveVideo':
+			switch (mode) {
+				case 'VideoStandard-1.0':
+					params = {
+						sourceId: undefined,
+						contentDirectoryPath: undefined,
+						dataFileName: undefined,
+						baseName: undefined,
+						receivingMethod: {
+							standard: undefined,
+							version: undefined
+						},
+						requestFormat: undefined,
+						startTime: undefined,
+						endTime: undefined,
+						duration: undefined,
+						transactionId: undefined,
+						flavors: undefined,
+						videoFileName: undefined
+					};
+					break;
+				case 'VideoStandard-0.9-video':
+					params = {
+						sourceId: undefined,
+						contentDirectoryPath: undefined,
+						baseName: undefined,
+						receivingMethod: {
+							standard: undefined,
+							version: undefined
+						},
+						requestFormat: undefined,
+						startTime: undefined,
+						endTime: undefined,
+						duration: undefined,
+						transactionId: undefined,
+						flavors: undefined,
+						videoFileName: undefined
+					};
+					break;
+				case 'VideoStandard-0.9-metadata':
+					params = {
+						sourceId: undefined,
+						contentDirectoryPath: undefined,
+						dataFileName: undefined,
+						baseName: undefined,
+						receivingMethod: {
+							standard: undefined,
+							version: undefined
+						},
+						startTime: undefined,
+						endTime: undefined,
+						duration: undefined,
+						transactionId: undefined,
+						flavors: undefined
+					};
+					break;
+				case 'Stanag-4609':
+					params = {
+						sourceId: undefined,
+						contentDirectoryPath: undefined,
+						dataFileName: undefined,
+						baseName: undefined,
+						receivingMethod: {
+							standard: undefined,
+							version: undefined
+						},
+						requestFormat: undefined,
+						startTime: undefined,
+						endTime: undefined,
+						duration: undefined,
+						transactionId: undefined,
+						flavors: undefined,
+						videoFileName: undefined
+					};
+					break;
+				default:
+					throw new Error('Unsupported mode.');
+			}
+			break;
+		case 'MetadataParser':
+			params = {
+				sourceId: undefined,
+				videoId: undefined,
+				dataFileName: undefined,
+				contentDirectoryPath: undefined,
+				receivingMethod: {
+					standard: undefined,
+					version: undefined
+				},
+				transactionId: undefined
+			};
+			break;
+		case 'AttachVideoToMetadata':
+			switch (mode) {
+				case 'Video':
+					params = {
+						transactionId: undefined,
+						sourceId: undefined,
+						video: undefined
+					};
+					break;
+				case 'Metadatas':
+					params = {
+						transactionId: undefined,
+						sourceId: undefined,
+						metadatas: undefined
+					};
+					break;
+				default:
+					throw new Error('Unsupported mode.');
+			}
+			break;
+		case 'MetadataToMongo':
+			params = {
+				transactionId: undefined,
+				metadatas: undefined
+			};
+			break;
+		case 'VideoBoundingPolygon':
+			params = {
+				transactionId: undefined,
+				videoId: undefined
+			};
+			break;
+		case 'MetadataToCaptions':
+			params = {
+				transactionId: undefined,
+				videoId: undefined
+			};
+			break;
+		default:
+			throw new Error('Job type is missing.');
+	}
+
+	return Object.keys(params);
+}
+
+module.exports.testJobProduce = function (done, service, message, jobType, serviceMode) {
+	service.start(message,
+		function _error() {
+			done(new Error(util.format('%s\'s service has errored.', jobType)));
+		},
+		function _done() {
+			var queueName = JobsService.getQueueName(jobType);
+			rabbit.consume(queueName, 1, function (params, __error, __done) {
+				expect(Object.keys(params).sort()).to.deep.equal(getJobExpectedParamKeys(jobType, serviceMode).sort());
+				__done();
+				done();
+			});
+		}
+	);
 };

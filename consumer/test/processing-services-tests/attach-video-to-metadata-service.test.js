@@ -38,80 +38,58 @@ var sampleSourceIdToTimeMapping = {
 // The numbers are the expected amount of metadatas in each time interval in sampleSourceIdToTimeMapping.
 var expectedVideosAmounts = [4, 3, 7, 2, 2, 2];
 
-describe('attach-video-to-metadata tests', function() {
-	before(function() {
+describe('attach-video-to-metadata tests', function () {
+	before(function () {
 		config.resetEnvironment();
 		return config.connectServices()
 			.then(config.wipeMongoCollections)
-			.then(config.getValidMetadataObjects)
 			.then(config.deleteAllQueues);
 	});
 
-	after(function() {
-		return config.wipeMongoCollections()
+	after(function () {
+		return config.connectServices()
+			.then(config.wipeMongoCollections)
 			.then(config.deleteAllQueues);
 	});
 
-	describe('sanity tests', function() {
-		beforeEach(function() {
+	describe('sanity tests', function () {
+		beforeEach(function () {
 			return config.wipeMongoCollections()
 				.then(config.generateJobStatus)
-				.then(function(jobStatus) {
+				.then(function (jobStatus) {
 					_transactionId = jobStatus.id;
 					return Promise.resolve();
 				})
 				.then(config.deleteAllQueues);
 		});
 
-		afterEach(function() {
+		afterEach(function () {
 			return config.wipeMongoCollections();
 		});
 
-		it('should attach videos to metadata in case video arrives after metadata', function(done) {
+		it('should attach videos to metadata in case video arrives after metadata', function (done) {
 			attachVideoToMetadataWithVideo(testMetadatasUpdated, done);
 		});
 
-		it('should attach videos to metadata in case metadata arrives after video', function(done) {
-			var params;
-
-			generateValidDiversedParams()
-				.then(function(_params) {
-					params = _params;
-					return Promise.resolve();
-				})
-				.then(generateAndSaveVideos)
-				.then(function() {
-					AttachVideoToMetadataService.start(params,
-						function _error() {
-							errCallback(done);
-						},
-						function _done() {
-							testMetadatasProduced(done);
-						}
-					);
-				})
-				.catch(function(err) {
-					if (err) {
-						done(err);
-					}
-				});
+		it('should attach videos to metadata in case metadata arrives after video', function (done) {
+			attachVideoToMetadataWithMetadatas(testMetadatasProduced, done);
 		});
 
-		it('should not attach videos to metadata due to replay of job', function(done) {
+		it('should not attach videos to metadata due to replay of job', function (done) {
 			// basically, VideoMetadatas are updated after the call to the service, so make sure that in second
 			// call the updated time is not progressing - then we know the job wasn't done
-			attachVideoToMetadataWithVideo(function(videoId, metadatasLength, done) {
+			attachVideoToMetadataWithVideo(function (videoId, metadatasLength, done) {
 				var lastUpdateTime;
 				VideoMetadata.find({}).sort('updatedAt')
-					.then(function(metadatas) {
+					.then(function (metadatas) {
 						// save first update time
 						lastUpdateTime = metadatas[0].updatedAt;
 					})
-					.then(function() {
+					.then(function () {
 						// perform the whole process again
-						attachVideoToMetadataWithVideo(function(videoId, metadatasLength, done) {
+						attachVideoToMetadataWithVideo(function (videoId, metadatasLength, done) {
 							VideoMetadata.find({}).sort('updatedAt')
-								.then(function(metadatas) {
+								.then(function (metadatas) {
 									// make sure the video was not updated
 									expect(metadatas[0].updatedAt).to.equalDate(lastUpdateTime);
 									done();
@@ -120,24 +98,30 @@ describe('attach-video-to-metadata tests', function() {
 					});
 			}, done);
 		});
+
+		it('should produce MetadataToMongo job in case metadatas received', function (done) {
+			attachVideoToMetadataWithMetadatas(function (done, params) {
+				config.testJobProduce(done, AttachVideoToMetadataService, params, 'MetadataToMongo');
+			}, done);
+		});
 	});
 
-	describe('bad input tests', function() {
-		it('lacks transactionId', function(done) {
+	describe('bad input tests', function () {
+		it('lacks transactionId', function (done) {
 			var params = generateValidParams();
 			params.transactionId = undefined;
 
 			errornousInputTest(params, done);
 		});
 
-		it('lacks sourceId', function(done) {
+		it('lacks sourceId', function (done) {
 			var params = generateValidParams();
 			params.sourceId = undefined;
 
 			errornousInputTest(params, done);
 		});
 
-		it('lacks metadatas and video', function(done) {
+		it('lacks metadatas and video', function (done) {
 			var params = generateValidParams();
 			params.metadatas = undefined;
 			params.video = undefined;
@@ -147,24 +131,50 @@ describe('attach-video-to-metadata tests', function() {
 	});
 });
 
+function attachVideoToMetadataWithMetadatas(testSuccessCallback, done) {
+	var params;
+
+	generateValidDiversedParams()
+		.then(function (_params) {
+			params = _params;
+			return Promise.resolve();
+		})
+		.then(generateAndSaveVideos)
+		.then(function () {
+			AttachVideoToMetadataService.start(params,
+				function _error() {
+					errCallback(done);
+				},
+				function _done() {
+					testSuccessCallback(done, params);
+				}
+			);
+		})
+		.catch(function (err) {
+			if (err) {
+				done(err);
+			}
+		});
+}
+
 function attachVideoToMetadataWithVideo(testSuccessCallback, done) {
 	var metadatas, params;
 
 	generateValidParams()
-		.then(function(_params) {
+		.then(function (_params) {
 			params = _params;
 			// remove metadatas as we only want to send video
 			params.metadatas = undefined;
 		})
 		.then(generateAndSaveMetadatas)
-		.then(function(_metadatas) {
+		.then(function (_metadatas) {
 			metadatas = _metadatas;
 			// generate video with overlapping time to metadata
 			var startTime = metadatas[0].timestamp;
 			var endTime = config.addMinutes(startTime, 30);
 			return generateAndSaveVideo(startTime, endTime);
 		})
-		.then(function(video) {
+		.then(function (video) {
 			params.video = video;
 			AttachVideoToMetadataService.start(params,
 				function _error() {
@@ -175,7 +185,7 @@ function attachVideoToMetadataWithVideo(testSuccessCallback, done) {
 				}
 			);
 		})
-		.catch(function(err) {
+		.catch(function (err) {
 			if (err) {
 				done(err);
 			}
@@ -195,13 +205,13 @@ function errornousInputTest(params, done) {
 function testMetadatasProduced(testDone) {
 	console.log('Validating that metadatas were produced to MetadataToMongoQueue...');
 	config.getValidMetadataObjects()
-		.then(function(metadatas) {
+		.then(function (metadatas) {
 			var queueName = JobsService.getQueueName('MetadataToMongo');
-			return rabbit.consume(queueName, 1, function(params, _error, _done) {
+			return rabbit.consume(queueName, 1, function (params, _error, _done) {
 				// check we have recieved all the metadatas (means nothing was lost)
 				expect(params.metadatas).to.have.lengthOf(metadatas.length);
 
-				var metadatasWithoutVideoId = _.filter(params.metadatas, function(metadata) {
+				var metadatasWithoutVideoId = _.filter(params.metadatas, function (metadata) {
 					return metadata.videoId === undefined;
 				});
 				// now make sure everything has videoId, means we haven't missed anything
@@ -210,16 +220,16 @@ function testMetadatasProduced(testDone) {
 				// an index to run on expectedVideosAmounts
 				var i = 0;
 				// now validate that the videoIds assigned is the good one
-				Object.keys(sampleSourceIdToTimeMapping).forEach(function(sourceId) {
+				Object.keys(sampleSourceIdToTimeMapping).forEach(function (sourceId) {
 					var timeIntervals = sampleSourceIdToTimeMapping[sourceId];
 
-					timeIntervals.forEach(function(timeInterval) {
+					timeIntervals.forEach(function (timeInterval) {
 						// get the start & end time of this timeIntervals array
 						var startTime = timeInterval[0];
 						var endTime = timeInterval[1];
 
 						// find all metadatas with the same sourceId and within the required times
-						var metadatas = _.filter(params.metadatas, function(metadata) {
+						var metadatas = _.filter(params.metadatas, function (metadata) {
 							return metadata.sourceId === sourceId &&
 								new Date(metadata.timestamp) >= startTime && new Date(metadata.timestamp) <= endTime;
 						});
@@ -240,13 +250,13 @@ function testMetadatasUpdated(videoId, metadatasLength, done) {
 		.count({
 			videoId: videoId
 		})
-		.then(function(count) {
+		.then(function (count) {
 			expect(count).to.equal(metadatasLength);
 		})
-		.then(function() {
+		.then(function () {
 			done();
 		})
-		.catch(function(err) {
+		.catch(function (err) {
 			if (err) {
 				done(err);
 			}
@@ -260,7 +270,7 @@ function errCallback(done) {
 function generateValidParams() {
 	var params = config.generateValidMessage();
 	return config.getValidMetadataObjects()
-		.then(function(metadatas) {
+		.then(function (metadatas) {
 			return Promise.resolve({
 				transactionId: _transactionId,
 				metadatas: metadatas,
@@ -273,12 +283,12 @@ function generateValidParams() {
 function generateValidDiversedParams() {
 	var _params;
 	return generateValidParams()
-		.then(function(params) {
+		.then(function (params) {
 			_params = params;
 			return removeVideoIdFromMetadatas(_params.metadatas);
 		})
 		.then(diverseMetadatas)
-		.then(function(metadatas) {
+		.then(function (metadatas) {
 			_params.metadatas = metadatas;
 			return Promise.resolve(_params);
 		});
@@ -303,9 +313,9 @@ function diverseMetadatasBySourceId(metadatas) {
 	var metadatasChunks = _.chunk(metadatas, chunksLength);
 	// now that metadatas are chunked into N sub arrays, modify each sub array
 	// with its own different sourceId
-	metadatasChunks.forEach(function(metadatasArr, i) {
+	metadatasChunks.forEach(function (metadatasArr, i) {
 		var sourceId = Object.keys(sampleSourceIdToTimeMapping)[i];
-		metadatasArr.forEach(function(metadata) {
+		metadatasArr.forEach(function (metadata) {
 			metadata.sourceId = sourceId;
 		});
 	});
@@ -320,7 +330,7 @@ function diverseMetadatasBySourceId(metadatas) {
 // (mapped to different videos) in every sourceId chunk.
 function diverseMetadatasByTimeIntervals(groupedMetadatasBySourceId) {
 	// for every group of the same sourceId metadatas, apply the matching time intervals
-	Object.keys(groupedMetadatasBySourceId).forEach(function(sourceId) {
+	Object.keys(groupedMetadatasBySourceId).forEach(function (sourceId) {
 		// extract the metadatas of the group and it's time intervals
 		var metadatasChunk = groupedMetadatasBySourceId[sourceId];
 		var timeIntervals = sampleSourceIdToTimeMapping[sourceId];
@@ -330,12 +340,12 @@ function diverseMetadatasByTimeIntervals(groupedMetadatasBySourceId) {
 		var chunksLength = Math.ceil(metadatasChunk.length / timeIntervals.length);
 		var metadatasChunksByTimeIntervals = _.chunk(metadatasChunk, chunksLength);
 		// now metadatas are chunked into N sub arrays, modify each with its timeIntervals
-		metadatasChunksByTimeIntervals.forEach(function(metadatasArr, j) {
+		metadatasChunksByTimeIntervals.forEach(function (metadatasArr, j) {
 			var interval = timeIntervals[j];
 			var startTime = interval[0];
 			var endTime = interval[1];
 
-			metadatasArr.forEach(function(metadata, k) {
+			metadatasArr.forEach(function (metadata, k) {
 				// advance timestamps by minutes
 				var timestamp = config.addMinutes(startTime, k);
 				// make sure we haven't passed the endTime
@@ -353,9 +363,9 @@ function diverseMetadatasByTimeIntervals(groupedMetadatasBySourceId) {
 function generateAndSaveVideos() {
 	var generateVideosPromises = [];
 
-	Object.keys(sampleSourceIdToTimeMapping).forEach(function(sourceId) {
+	Object.keys(sampleSourceIdToTimeMapping).forEach(function (sourceId) {
 		var timeIntervals = sampleSourceIdToTimeMapping[sourceId];
-		timeIntervals.forEach(function(timeInterval) {
+		timeIntervals.forEach(function (timeInterval) {
 			var startTime = timeInterval[0];
 			var endTime = timeInterval[1];
 			generateVideosPromises.push(generateAndSaveVideo(startTime, endTime, sourceId));
@@ -383,21 +393,21 @@ function generateAndSaveVideo(startTime, endTime, sourceId) {
 // generate and save metadatas without video id
 function generateAndSaveMetadatas() {
 	return config.getValidMetadataObjects()
-		.then(function(metadatas) {
+		.then(function (metadatas) {
 			var metadatasWithoutVideoId = removeVideoIdFromMetadatas(metadatas);
 			return Promise.resolve(metadatasWithoutVideoId);
 		})
-		.then(function(metadatas) {
+		.then(function (metadatas) {
 			return VideoMetadata.insertMany(metadatas);
 		})
-		.then(function(metadatas) {
+		.then(function (metadatas) {
 			// sort metadatas
 			return Promise.resolve(_.sortBy(metadatas, 'timestamp'));
 		});
 }
 
 function removeVideoIdFromMetadatas(metadatas) {
-	return _.map(metadatas, function(metadata) {
+	return _.map(metadatas, function (metadata) {
 		metadata.videoId = undefined;
 		return metadata;
 	});
