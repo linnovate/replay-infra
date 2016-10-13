@@ -1,14 +1,14 @@
-var Classification = require('./replay-schemas/Classification'),
-	VideoCompartment = require('./replay-schemas/VideoCompartment'),
-	VideoMetadata = require('./replay-schemas/VideoMetadata'),
-	Video = require('./replay-schemas/Video');
-var mongoose = require('mongoose');
+var Classification = require('replay-schemas/Classification'),
+	VideoCompartment = require('replay-schemas/VideoCompartment'),
+	VideoMetadata = require('replay-schemas/VideoMetadata'),
+	Video = require('replay-schemas/Video');
+// var mongoose = require('mongoose');
 var Promise = require('bluebird');
 var turf = require('turf-merge');
 
 // *** FOR TESTING ***
-mongoose.Promise = Promise;
-mongoose.connect('mongodb://localhost:27017/replay_dev');
+// mongoose.Promise = Promise;
+// mongoose.connect('mongodb://localhost:27017/replay_dev');
 // ***
 var cron = require('node-cron');
 /*
