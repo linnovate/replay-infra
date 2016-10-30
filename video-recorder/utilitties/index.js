@@ -1,5 +1,6 @@
 var fs = require('fs');
-var mkdirp = require('mkdirp');
+var mkdirp = require('mkdirp'),
+	rmdir = require('rmdir');
 
 module.exports = new Utilitties();
 
@@ -9,7 +10,8 @@ function Utilitties() {
 		getCurrentDate: getCurrentDate,
 		getCurrentTime: getCurrentTime,
 		addMetadataManualy: addMetadataManualy,
-		deleteFile: deleteFile
+		deleteFile: deleteFile,
+		deletePath: deletePath
 	};
 }
 
@@ -72,4 +74,9 @@ function deleteFile(path) {
 		}
 		return true;
 	});
+}
+
+// helper for delete path
+function deletePath(path, cb) {
+	rmdir(path, cb);
 }

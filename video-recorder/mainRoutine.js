@@ -2,7 +2,8 @@
 var moment = require('moment'),
 	mongoose = require('mongoose'),
 	rabbit = require('replay-rabbitmq'),
-	ffmpeg = require('replay-ffmpeg');
+	ffmpeg = require('replay-ffmpeg'),
+	Promise = require('bluebird');
 
 var path = require('path');
 
@@ -13,47 +14,35 @@ var streamListener = require('./services/StreamListener'),
 
 var streamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
 
-const DURATION = parseInt(process.env.DURATION, 10) || 10,
-	INTERVAL_TIME = process.env.INTERVAL_TIME || 5000,
-	PROCESS_NAME = '#MainRoutine#';
-const TS_SUFFIX = '.ts';
+const PROCESS_NAME = '#MainRoutine#',
+	TS_SUFFIX = '.ts';
 
 // Configuration
-const MONGO_HOST = process.env.MONGO_HOST,
-	MONGO_PORT = process.env.MONGO_PORT,
-	MONGO_DATABASE = process.env.MONGO_DATABASE,
-	STORAGE_PATH = process.env.STORAGE_PATH || '/VideoRecorder',
-	INDEX = process.env.INDEX,
-	RABBITMQ_HOST = process.env.RABBITMQ_HOST || 'localhost';
+const SOURCE_ID = process.env.SOURCE_ID || process.env.INDEX;
 
 module.exports = function() {
 	console.log('Video recorder service is up.');
-	console.log(PROCESS_NAME + ' Mongo host:', MONGO_HOST);
-	console.log(PROCESS_NAME + ' Mongo port:', MONGO_PORT);
-	console.log(PROCESS_NAME + ' Mongo database:', MONGO_DATABASE);
-	console.log(PROCESS_NAME + ' Files storage path: ', STORAGE_PATH);
-	console.log(PROCESS_NAME + ' RabbitMQ host: ', RABBITMQ_HOST);
-	console.log(PROCESS_NAME + ' Interval time: ', INTERVAL_TIME);
-	console.log(PROCESS_NAME + ' Duration: ', DURATION);
-	console.log(PROCESS_NAME + ' Index: ', INDEX);
+	console.log(PROCESS_NAME + ' Mongo host:', process.env.MONGO_HOST);
+	console.log(PROCESS_NAME + ' Mongo port:', process.env.MONGO_PORT);
+	console.log(PROCESS_NAME + ' Mongo database:', process.env.MONGO_DATABASE);
+	console.log(PROCESS_NAME + ' Files storage path: ', process.env.STORAGE_PATH);
+	console.log(PROCESS_NAME + ' RabbitMQ host: ', process.env.RABBITMQ_HOST);
+	console.log(PROCESS_NAME + ' Interval time: ', process.env.INTERVAL_TIME);
+	console.log(PROCESS_NAME + ' Duration: ', process.env.DURATION);
+	console.log(PROCESS_NAME + ' Index: ', process.env.INDEX);
 
-	// index used to find my StreamingSource object in the DB collection
-	var StreamingSourceIndex = INDEX;
-
-	rabbit.connect(RABBITMQ_HOST)
+	rabbit.connect(process.env.RABBITMQ_HOST)
 		.then(function() {
-			streamingSourceDAL.getStreamingSource(StreamingSourceIndex)
+			return streamingSourceDAL.getStreamingSource(SOURCE_ID)
 				.then(function(source) {
-					handleVideoSavingProcess(source);
+					return handleVideoSavingProcess(source);
 				})
 				.catch(function(err) {
 					throw err;
 				});
 		})
 		.catch(function(err) {
-			if (err) {
-				throw err;
-			}
+			throw err;
 		});
 };
 
@@ -114,7 +103,7 @@ function handleVideoSavingProcess(streamingSource) {
 	function streamingDataHandle() {
 		var dateOfCreating = util.getCurrentDate();
 		var newFileName = streamingSource.sourceID + '_' + dateOfCreating + '_' + util.getCurrentTime();
-		var newFilePath = path.join(STORAGE_PATH, streamingSource.sourceID, dateOfCreating, newFileName, newFileName);
+		var newFilePath = path.join(process.env.STORAGE_PATH, streamingSource.sourceID, dateOfCreating, newFileName, newFileName);
 		console.log(PROCESS_NAME + ' Record new video at: ', newFilePath);
 		// Check if the path exist,if not create it.
 		util.checkPath(path.parse(newFilePath).dir);
@@ -124,7 +113,7 @@ function handleVideoSavingProcess(streamingSource) {
 
 		var ffmpegParams = {
 			input: 'udp://' + streamingSource.sourceIP + ':' + streamingSource.sourcePort,
-			duration: DURATION,
+			duration: parseInt(process.env.DURATION, 10) || 10,
 			output: newFilePath
 		};
 
@@ -178,9 +167,11 @@ function handleVideoSavingProcess(streamingSource) {
 		startStreamListener(streamingSource, globals.streamStatusTimer);
 	}
 
-	function fileDontExistHandler(err) {
-		console.log(err);
-		startStreamListener(streamingSource, globals.streamStatusTimer);
+	function fileDontExistHandler(tsPath) {
+		console.log("couldn't find the file, delete the path and continue");
+		util.deletePath(path.parse(tsPath).dir, function() {
+			startStreamListener(streamingSource, globals.streamStatusTimer);
+		});
 	}
 
 	function getDurationAndSendMessage(tsPath) {
@@ -189,8 +180,8 @@ function handleVideoSavingProcess(streamingSource) {
 		var newMessage = {
 			streamingSource: streamingSource,
 			videoName: path.parse(tsPath).name,
-			fileRelativePath: path.relative(STORAGE_PATH, tsPath),
-			storagePath: STORAGE_PATH,
+			fileRelativePath: path.relative(process.env.STORAGE_PATH, tsPath),
+			storagePath: process.env.STORAGE_PATH,
 			startTime: globals.startRecordTime,
 			endTime: globals.endRecordTime
 		};
@@ -204,13 +195,13 @@ function handleVideoSavingProcess(streamingSource) {
 				newMessage.duration = null;
 			})
 			.finally(function() {
-				sendToJobQueue(newMessage);
+				return sendToJobQueue(newMessage);
 			});
 	}
 
 	// Starting Listen to the address.
 	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.sourcePort);
-	startStreamListener(streamingSource, globals.streamStatusTimer);
+	return startStreamListener(streamingSource, globals.streamStatusTimer);
 }
 
 /****************************************************************************************************/
@@ -225,7 +216,7 @@ function setStatusTimer(timer, callBack) {
 	timer = setInterval(function() {
 		console.log(PROCESS_NAME + ' updating status....' + moment().format());
 		callBack();
-	}, INTERVAL_TIME);
+	}, process.env.INTERVAL_TIME || 5000);
 
 	return timer;
 }
@@ -241,6 +232,8 @@ function startStreamListener(streamingSource, streamStatusTimer) {
 			streamStatusTimer = setStatusTimer(streamStatusTimer, function() {
 				streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 			});
+
+			return Promise.resolve();
 		})
 		.catch(function(err) {
 			throw err;
@@ -249,7 +242,7 @@ function startStreamListener(streamingSource, streamStatusTimer) {
 
 // Start timer that watch over file
 function startWatchFile(path) {
-	return fileWatcher.startWatchFile({ path: path, timeToWait: INTERVAL_TIME });
+	return fileWatcher.startWatchFile({ path: path, timeToWait: process.env.INTERVAL_TIME || 5000 });
 }
 
 // Stop timer that watch over file
