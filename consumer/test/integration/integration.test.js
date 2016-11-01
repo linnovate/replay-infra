@@ -13,12 +13,11 @@ var rimraf = Promise.promisify(require('rimraf')),
 
 var _childProcesses = [],
 	_tmpFolder = '/tmp',
-	_newStoragePath;
+	_newStoragePath = path.join(process.env.STORAGE_PATH, _tmpFolder);
 
 describe('integration tests', function () {
 	before(function (done) {
 		config.resetEnvironment();
-		_newStoragePath = path.join(process.env.STORAGE_PATH, _tmpFolder);
 		process.env.CAPTURE_STORAGE_PATH = path.join(_newStoragePath, 'capture');
 
 		createTempFolder()
