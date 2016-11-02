@@ -22,10 +22,13 @@ rabbit.connect(rabbitHost)
 			endTime: endTime,
 			transactionId: new mongoose.Types.ObjectId()
 		};
-		rabbit.produce('NewVideosQueue', message);
+		return rabbit.produce('NewVideosQueue', message);
 	})
 	.catch(function(err) {
 		console.log(err);
+	})
+	.finally(function() {
+		setTimeout(() => process.exit(), 3000);
 	});
 
 function addMinutes(date, minutes) {

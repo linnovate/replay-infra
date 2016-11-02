@@ -25,7 +25,9 @@ function processTS(params) {
 						divideToResolutions: true
 					});
 				ffmpeg.once('FFmpeg_finishConverting', function(paths) {
-					paths.dataPath = pathsForFFmpeg.outputPath + '.data';
+					if (params.fileType !== 'Video' && params.fileType !== 'Telemetry') {
+						paths.dataPath = pathsForFFmpeg.outputPath + '.data';
+					}
 					resolve(paths);
 				});
 				ffmpeg.on('FFmpeg_errorOnConverting', reject);
