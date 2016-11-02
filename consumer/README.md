@@ -13,7 +13,10 @@ Set environment variables to config the app:
 | MONGO_HOST                      | Mongo host URI                               | localhost         |
 | MONGO_PORT                      | Mongo port                                   | 27017             |
 | MONGO_DATABASE                  | Mongo database name                          | replay_dev        |
-| RABBITMQ_HOST                   | RabbitMQ host URI                            | localhost         |
+| RABBITMQ_HOST                   | RabbitMQ host name                           | localhost         |
+| RABBITMQ_PORT                   | RabbitMQ port                                | 5672              |
+| RABBITMQ_USERNAME               | RabbitMQ username                            | guest             |
+| RABBITMQ_PASSWORD               | RabbitMQ password                            | guest             |
 | RABBITMQ_MAX_RESEND_ATTEMPTS    | Max attempts to resend messages              | 3                 |
 | RABBITMQ_MAX_UNACKED_MESSAGES   | Max parallel messages to process without ACK |                   |
 | RABBITMQ_FAILED_JOBS_QUEUE_NAME | Name of the queue for failed jobs            | FAILED_JOBS_QUEUE |

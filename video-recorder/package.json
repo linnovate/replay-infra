@@ -13,7 +13,7 @@
     "moment": "^2.13.0",
     "mongoose": "^4.6.0",
     "replay-ffmpeg": "^1.2.1",
-    "replay-rabbitmq": "^1.0.5",
+    "replay-rabbitmq": "^1.1.0",
     "replay-schemas": "^1.0.30",
     "rmdir": "^1.2.0"
   },
