@@ -26,20 +26,33 @@ global.assert = chai.assert;
 
 var _validMetadataObjectsPath = 'expected_parsed_data.json';
 
+// extract outer environment variables which we do not override internally (such as hosts)
+var MONGO_HOST = process.env.MONGO_HOST;
+var MONGO_PORT = process.env.MONGO_PORT;
+var MONGO_DATABASE = process.env.MONGO_DATABASE;
+var RABBITMQ_HOST = process.env.RABBITMQ_HOST;
+var RABBITMQ_PORT = process.env.RABBITMQ_PORT;
+var RABBITMQ_USERNAME = process.env.RABBITMQ_USERNAME;
+var RABBITMQ_PASSWORD = process.env.RABBITMQ_PASSWORD;
+var RABBITMQ_MAX_RESEND_ATTEMPTS = process.env.RABBITMQ_MAX_RESEND_ATTEMPTS;
+
 resetEnvironment();
 
+// used to reset the environments variables after the tests, as they might be overrided
 function resetEnvironment() {
-	// set env variables
-	process.env.MONGO_HOST = 'localhost';
-	process.env.MONGO_DATABASE = 'replay_test';
+	// the idea behind the OR conditions is, that if the env. variable is declared
+	// from the outside, then use this value to override the environment each time.
+	// else, just use the default values supplied.
+	process.env.MONGO_HOST = MONGO_HOST || 'localhost';
+	process.env.MONGO_PORT = MONGO_PORT || '27017';
+	process.env.MONGO_DATABASE = MONGO_DATABASE || 'replay_test';
 	process.env.STORAGE_PATH = path.join(__dirname, 'data');
 	process.env.CAPTURE_STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'capture');
-	process.env.RABBITMQ_HOST = 'localhost';
-	process.env.KALTURA_PARTNER_ID = 101;
-	process.env.PROVIDER = 'kaltura';
-	process.env.KALTURA_URL = 'http://vod.linnovate.net';
-	process.env.KALTURA_ADMIN_SECRET = '96f2df9a0071cd8024463509439fedb9';
-	process.env.RABBITMQ_MAX_RESEND_ATTEMPS = 1;
+	process.env.RABBITMQ_HOST = RABBITMQ_HOST || 'localhost';
+	process.env.RABBITMQ_PORT = RABBITMQ_PORT || '5672';
+	process.env.RABBITMQ_USERNAME = RABBITMQ_USERNAME || 'guest';
+	process.env.RABBITMQ_PASSWORD = RABBITMQ_PASSWORD || 'guest';
+	process.env.RABBITMQ_MAX_RESEND_ATTEMPTS = RABBITMQ_MAX_RESEND_ATTEMPTS || 1;
 }
 module.exports.resetEnvironment = resetEnvironment;
 
@@ -47,7 +60,8 @@ module.exports.resetEnvironment = resetEnvironment;
 module.exports.connectServices = function () {
 	return connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
 		.then(function () {
-			return rabbit.connect(process.env.RABBITMQ_HOST);
+			return rabbit.connect(process.env.RABBITMQ_HOST, process.env.RABBITMQ_PORT,
+				process.env.RABBITMQ_USERNAME, process.env.RABBITMQ_PASSWORD);
 		});
 };
 

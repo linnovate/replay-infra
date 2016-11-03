@@ -1,3 +1,5 @@
+'use strict';
+
 var path = require('path'),
 	fs = require('fs'),
 	spawn = require('child_process').spawn;
@@ -12,13 +14,13 @@ var rimraf = Promise.promisify(require('rimraf')),
 	copyFolder = Promise.promisify(require('ncp').ncp);
 
 var _childProcesses = [],
-	_tmpFolder = '/tmp',
-	_newStoragePath;
+	_tmpFolder = '/tmp';
+// used in combination with 'use strict' because of a bug that this variable becomes /tmp/tmp.../tmp
+const _newStoragePath = path.join(process.env.STORAGE_PATH, _tmpFolder);
 
 describe('integration tests', function () {
 	before(function (done) {
 		config.resetEnvironment();
-		_newStoragePath = path.join(process.env.STORAGE_PATH, _tmpFolder);
 		process.env.CAPTURE_STORAGE_PATH = path.join(_newStoragePath, 'capture');
 
 		createTempFolder()
@@ -26,7 +28,7 @@ describe('integration tests', function () {
 				process.env.STORAGE_PATH = _newStoragePath;
 				return Promise.resolve();
 			})
-			.then(config.connectServices())
+			.then(config.connectServices)
 			.then(config.wipeMongoCollections)
 			.then(config.deleteAllQueues)
 			.then(liftConsumers)

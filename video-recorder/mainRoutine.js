@@ -27,11 +27,19 @@ module.exports = function() {
 	console.log(PROCESS_NAME + ' Mongo database:', process.env.MONGO_DATABASE);
 	console.log(PROCESS_NAME + ' Files storage path: ', process.env.STORAGE_PATH);
 	console.log(PROCESS_NAME + ' RabbitMQ host: ', process.env.RABBITMQ_HOST);
+	console.log(PROCESS_NAME + ' RabbitMQ port: ', process.env.RABBITMQ_PORT);
+	console.log(PROCESS_NAME + ' RabbitMQ username: ', process.env.RABBITMQ_USERNAME);
+	console.log(PROCESS_NAME + ' RabbitMQ password: ', process.env.RABBITMQ_PASSWORD);
 	console.log(PROCESS_NAME + ' Interval time: ', process.env.INTERVAL_TIME);
 	console.log(PROCESS_NAME + ' Duration: ', process.env.DURATION);
 	console.log(PROCESS_NAME + ' Index: ', process.env.INDEX);
 
-	rabbit.connect(process.env.RABBITMQ_HOST)
+	var RABBITMQ_HOST = process.env.RABBITMQ_HOST || 'localhost';
+	var RABBITMQ_PORT = process.env.RABBITMQ_PORT || '5672';
+	var RABBITMQ_USERNAME = process.env.RABBITMQ_USERNAME || 'guest';
+	var RABBITMQ_PASSWORD = process.env.RABBITMQ_PASSWORD || 'guest';
+
+	rabbit.connect(RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
 		.then(function() {
 			return streamingSourceDAL.getStreamingSource(SOURCE_ID)
 				.then(function(source) {
