@@ -210,7 +210,7 @@ function inputTests() {
 }
 
 function behaviorTests() {
-	describe('behavior test -', function() {
+	/*describe('behavior test -', function() {
 		this.timeout(10000);
 		it('should failed when the address is unavailable', function(done) {
 			streamListener.startListen({ ip: '0.0.0.0', port: 80 })
@@ -221,7 +221,7 @@ function behaviorTests() {
 					done();
 				});
 		});
-	});
+	});*/
 	describe('integration test -', function() {
 		this.timeout(5000);
 		var tmpPorc = null;
