@@ -94,7 +94,7 @@ function dataToObjects(method, data, params) {
 						resolve(standardHandler.parse(data.toString('utf8'), params));
 						break;
 					default:
-						reject('Unsupported version for video-standard');
+						reject(new Error('Unsupported version for video-standard'));
 						break;
 				}
 				break;
@@ -105,12 +105,12 @@ function dataToObjects(method, data, params) {
 						resolve(standardHandler.parse(data, params));
 						break;
 					default:
-						reject('Unsupported version for stanag');
+						reject(new Error('Unsupported version for stanag'));
 						break;
 				}
 				break;
 			default:
-				reject('Unsupported standard');
+				reject(new Error('Unsupported standard'));
 				break;
 		}
 	});
