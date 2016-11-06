@@ -4,6 +4,7 @@ WORKDIR /replay-infra/consumer
 RUN npm install
 # Setup
 ARG CONSUMER_TYPE 
+RUN echo $CONSUMER_TYPE #reassuring
 RUN  mkdir -p /mnt/vod-capture-storage /mnt/vod-content-directory
 # Set Environment variables
 ENV RABBITMQ_HOST=rabbit-prod RABBITMQ_MAX_RESEND_ATTEMPTS=3 FAILED_JOBS_QUEUE_NAME=FailedJobsQueue RABBITMQ_MAX_UNACKED_MESSAGES=10
