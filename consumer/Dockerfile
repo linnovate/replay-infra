@@ -12,6 +12,5 @@ ENV RABBITMQ_USERNAME=guest RABBITMQ_PASSWORD=guest
 ENV MONGO_HOST=mongodb-prod MONGO_PORT=27017 MONGO_DATABASE=replay_dev
 ENV CAPTURE_STORAGE_PATH=/mnt/vod-capture-storage STORAGE_PATH=/mnt/vod-content-directory
 ENV NODE_ENV=development
-RUN node index.js $CONSUMER_TYPE
-# CMD ["node", "index.js", $CONSUMER_TYPE]
+CMD ["/usr/local/bin/node", "index.js", $CONSUMER_TYPE]
 
