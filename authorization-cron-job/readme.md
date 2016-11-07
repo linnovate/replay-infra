@@ -2,7 +2,6 @@
 The cron job purpose is to check the missions and update their videos according to the mission details.
 
 ## Installation
-```
 
 Clone the repo and install dependencies:
 ```
@@ -24,3 +23,4 @@ Set environment variables to config the app:
 Run with:
 ```
 node set-video-authorization.js 
+```
