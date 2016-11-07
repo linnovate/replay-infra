@@ -44,21 +44,21 @@ $('#myEditModal').on('show', function() {
     var id = $(this).data('id');
     var  formData = "id=" + id;
     $.ajax({
-    url : "/classification/findone",
+    url : "/mission/findone",
     type: "POST",
     data : formData,
     success: function(midur)
     {
     	removeBtn = $(this).find('.danger');
     	$('#edit-mission').val(midur['missionName']);
-    	$('#edit-karon').val(midur['karonName']);
+    	$('#edit-tri').val(midur['triName']);
     	$('#edit-source').val(midur['source']);
     	$('#edit-start').val(midur['startTime'].substring(0,19));
     	$('#edit-end').val(midur['endTime'].substring(0,19));
     	$('#edit-dest').val(midur['destination']);
     },
-    error: function(){
-    	alert('התרחשה שגיאה')
+    error: function() {
+    	alert('התרחשה שגיאה');
     }
 	});
 });
@@ -89,7 +89,7 @@ $('#btnYes').click(function() {
     var id = $('#myModal').data('id');
     var  formData = "id=" + id;
     $.ajax({
-    url : "/classification/destroy",
+    url : "/mission/destroy",
     type: "POST",
     data : formData,
     success: function(data)
@@ -116,18 +116,18 @@ $('#btnYesEdit').click(function() {
     var id = $('#myEditModal').data('id');
     var  formData = "id=" + id +
     	'&missionName=' + $('#edit-mission').val() +
-    	'&karonName=' + $('#edit-karon').val() +
+    	'&triName=' + $('#edit-tri').val() +
     	'&source=' + $('#edit-source').val() +
     	'&start_time=' + $('#edit-start').val() +
     	'&end_time=' + $('#edit-end').val() +
     	'&destination=' + $('#edit-dest').val();
     $.ajax({
-    url : "/classification/update",
+    url : "/mission/update",
     type: "POST",
     data : formData,
     success: function(data)
     {
-    	console.log('work')
+    	console.log('work');
         if(data == "")
         {
     		//$('#myModal').modal('hide');
@@ -136,12 +136,12 @@ $('#btnYesEdit').click(function() {
         else
        	{
        		$('#myModal').modal('hide');
-       		alert('התרחשה שגיאה בעת העדכון')
+       		alert('התרחשה שגיאה בעת העדכון');
        	}
     },
     error: function(){
     	$('#myModal').modal('hide');
-    	alert('התרחשה שגיאה בעת העדכון')
+    	alert('התרחשה שגיאה בעת העדכון');
     }
 });
 });
@@ -151,19 +151,19 @@ $('#btnYesAdd').click(function() {
     var id = $('#myEditModal').data('id');
     var  formData =
     	'missionName=' + $('#add-mission').val() +
-    	'&karonName=' + $('#add-karon').val() +
+    	'&triName=' + $('#add-tri').val() +
     	'&source=' + $('#add-source').val() +
     	'&start_time=' + $('#add-start').val() +
     	'&end_time=' + $('#add-end').val() +
     	'&destination=' + $('#add-dest').val();
     $.ajax({
-    url : "/classification/create",
+    url : "/mission/create",
     type: "POST",
     data : formData,
     async: false,
     success: function(data)
     {
-    	console.log('work')
+    	console.log('work');
         if(data == "")
         {
     		//$('#myModal').modal('hide');
@@ -172,12 +172,12 @@ $('#btnYesAdd').click(function() {
         else
        	{
        		$('#myModal').modal('hide');
-       		alert('התרחשה שגיה בעת יצירת מידור חדש')
+       		alert('התרחשה שגיה בעת יצירת מידור חדש');
        	}
     },
     error: function(){
     	$('#myModal').modal('hide');
-    	alert('התרחשה שגיה בעת יצירת מידור חדש')
+    	alert('התרחשה שגיה בעת יצירת מידור חדש');
     }
 });
 });

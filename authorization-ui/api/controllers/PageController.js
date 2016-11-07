@@ -1,15 +1,15 @@
 var moment = require('moment');
-var classification = require('./replay-schemas/Classification');
+var mission = require('./replay-schemas/Mission');
 
 module.exports = {
 	index: function(req, res) {
-		classification.find({ videoStatus: { $in: ['new', 'updated', 'handled'] }}, function foundClassification(err, classificationObj) {
+		mission.find({ videoStatus: { $in: ['new', 'updated', 'handled'] }}, function foundClassification(err, MissionObj) {
 			if (err) {
 				return err;
 			}
 
 			res.view({
-				midur: classificationObj,
+				midur: MissionObj,
 				moment: moment
 			});
 			return true;

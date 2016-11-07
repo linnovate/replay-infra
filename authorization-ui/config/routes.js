@@ -34,10 +34,10 @@ module.exports.routes = {
 
   'get /': 'PageController.index',
   'post /sources': 'SourceController.getAllSources',
-  'post /classification/destroy': 'ClassificationController.destroy',
-  'post /classification/update': 'ClassificationController.update',
-  'post /classification/create': 'ClassificationController.create',
-  'post /classification/findone': 'ClassificationController.findone'
+  'post /mission/destroy': 'ClassificationController.destroy',
+  'post /mission/update': 'MissionController.update',
+  'post /mission/create': 'MissionController.create',
+  'post /mission/findone': 'MissionController.findone'
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *
