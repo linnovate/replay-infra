@@ -7,8 +7,6 @@ var path = require('path'),
 // export the process job for the video-standard version 0.9 (video/data).
 module.exports = processTS;
 
-var STORAGE_PATH = process.env.STORAGE_PATH;
-
 function processTS(params) {
 	if (!paramsIsValid(params)) {
 		return Promise.reject(new Error('there is missing parameters for the proccesing'));
@@ -26,8 +24,10 @@ function processTS(params) {
 						outputPath: pathsForFFmpeg.outputPath,
 						divideToResolutions: true
 					});
-				ffmpeg.on('FFmpeg_finishConverting', function(paths) {
-					paths.dataPath = pathsForFFmpeg.outputPath + '.data';
+				ffmpeg.once('FFmpeg_finishConverting', function(paths) {
+					if (params.fileType !== 'Video' && params.fileType !== 'Telemetry') {
+						paths.dataPath = pathsForFFmpeg.outputPath + '.data';
+					}
 					resolve(paths);
 				});
 				ffmpeg.on('FFmpeg_errorOnConverting', reject);
@@ -42,7 +42,7 @@ function processTS(params) {
 							outputPath: pathsForFFmpeg.outputPath,
 							divideToResolutions: true
 						});
-						ffmpeg.on('FFmpeg_finishConverting', resolve);
+						ffmpeg.once('FFmpeg_finishConverting', resolve);
 						ffmpeg.on('FFmpeg_errorOnConverting', reject);
 						break;
 					}
@@ -62,6 +62,9 @@ function processTS(params) {
 
 // validate the params, check if there is at least on of the paths.
 function paramsIsValid(params) {
+	if (!process.env.CAPTURE_STORAGE_PATH || !process.env.STORAGE_PATH) {
+		return false;
+	}
 	return (params && params.fileRelativePath && params.fileType);
 }
 
@@ -77,20 +80,17 @@ function checkPathAndCreate(path) {
 
 // handle all the path manipulation, create the given path if needed,return two paths,the original Path the the new Path
 function preparePath(params) {
-	var tsFilePath = params.fileRelativePath;
-	// set the paths to the new files that will create.
-	var outputPath = path.parse(tsFilePath);
-	outputPath = path.join(STORAGE_PATH, outputPath.dir);
+	var captureFilePath = path.join(process.env.CAPTURE_STORAGE_PATH, params.fileRelativePath);
+
+	var fileRelativePath = path.parse(params.fileRelativePath);
+
+	var outputPath = path.join(process.env.STORAGE_PATH, fileRelativePath.dir);
 	// create new path if dont exist.
 	checkPathAndCreate(outputPath);
 	// add the name of the file (without the extention).
-	outputPath = path.join(outputPath, path.parse(outputPath).name);
-	// set the storage path from the params or default.
-	var storagePath = params.filesStoragePath || STORAGE_PATH;
-	// set the path to the file.
-	tsFilePath = path.join(storagePath, tsFilePath);
+	outputPath = path.join(outputPath, fileRelativePath.name);
 
-	return { inputPath: tsFilePath, outputPath: outputPath };
+	return { inputPath: captureFilePath, outputPath: outputPath };
 }
 
 function demoXML(datapath, cb) {

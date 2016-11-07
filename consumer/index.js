@@ -9,8 +9,7 @@ var connectMongo = require('replay-schemas/connectMongo');
 
 // set mongoose promise library
 mongoose.Promise = bluebird.Promise;
-var _maxUnackedMessagesAmount = process.env.RABBITMQ_MAX_UNACKED_MESSAGES || 10;
-
+var _maxUnackedMessagesAmount = parseInt(process.env.RABBITMQ_MAX_UNACKED_MESSAGES, 10) || 10;
 // notify we're up, and check input
 console.log('Consumer is up!');
 
@@ -33,16 +32,17 @@ connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_D
 // such as mandatory parameters.
 // later on, specific functions should enforce specific validations on their inputs
 function isInputValid() {
-	console.log('Job type is: ', _jobType);
-	console.log('RabbitMQ host: ', process.env.RABBITMQ_HOST);
-	console.log('RabbitMQ max resend attempts: ', process.env.RABBITMQ_MAX_RESEND_ATTEMPTS);
-	console.log('RabbitMQ max unacked messages amount: ', process.env.RABBITMQ_MAX_UNACKED_MESSAGES);
-	console.log('Mongo host: ', process.env.MONGO_HOST);
-	console.log('Mongo port: ', process.env.MONGO_PORT);
-	console.log('Mongo database: ', process.env.MONGO_DATABASE);
-	console.log('Elastic host: ', process.env.ELASTIC_HOST);
-	console.log('Elastic port: ', process.env.ELASTIC_PORT);
-	console.log('Files storage path: ', process.env.STORAGE_PATH);
+	console.log('Job type is:', _jobType);
+	console.log('RabbitMQ host:', process.env.RABBITMQ_HOST);
+	console.log('RabbitMQ max unacked messages amount:', process.env.RABBITMQ_MAX_UNACKED_MESSAGES);
+	console.log('RabbitMQ max resend attempts:', process.env.RABBITMQ_MAX_RESEND_ATTEMPTS);
+	console.log('RabbitMQ failed jobs queue:', process.env.FAILED_JOBS_QUEUE_NAME);
+	console.log('Mongo host:', process.env.MONGO_HOST);
+	console.log('Mongo port:', process.env.MONGO_PORT);
+	console.log('Mongo database:', process.env.MONGO_DATABASE);
+	console.log('Storage path:', process.env.STORAGE_PATH);
+	console.log('Captions path:', process.env.CAPTIONS_PATH);
+	console.log('Capture storage path:', process.env.CAPTURE_STORAGE_PATH);
 
 	// check mandatory parameter we can't continue without
 	if (!JobsService.isKnownJobType(_jobType) || !process.env.MONGO_DATABASE || !process.env.STORAGE_PATH) {

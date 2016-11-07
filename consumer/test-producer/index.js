@@ -10,7 +10,7 @@ rabbit.connect(rabbitHost)
 		var message = {
 			sourceId: '123',
 			videoFileName: 'sample.ts',
-			dataFilePath: 'sample.data',
+			dataFileName: 'sample.data',
 			contentDirectoryPath: '/',
 			baseName: 'sample',
 			requestFormat: 'mp4',
@@ -22,10 +22,13 @@ rabbit.connect(rabbitHost)
 			endTime: endTime,
 			transactionId: new mongoose.Types.ObjectId()
 		};
-		rabbit.produce('NewVideosQueue', message);
+		return rabbit.produce('NewVideosQueue', message);
 	})
 	.catch(function(err) {
 		console.log(err);
+	})
+	.finally(function() {
+		setTimeout(() => process.exit(), 3000);
 	});
 
 function addMinutes(date, minutes) {

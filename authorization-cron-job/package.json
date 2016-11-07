@@ -1,5 +1,5 @@
 {
-  "name": "dolev",
+  "name": "authorization-cron-job",
   "version": "1.0.0",
   "description": "Consumers jobs for for the Replay project.",
   "main": "authorization-cron-job.js",

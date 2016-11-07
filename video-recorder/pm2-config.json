@@ -1,0 +1,22 @@
+{
+	"apps": [{
+		"name": "video-recorder",
+		"script": "index.js",
+		"cwd": "./",
+		"watch": true,
+		"env": {
+			"MONGO_HOST": "localhost",
+			"MONGO_PORT": "27017",
+			"MONGO_DATABASE": "replay_dev",
+			"RABBITMQ_HOST": "localhost",
+			"INDEX": "100",
+			"DURATION": "10",
+			"INTERVAL_TIME": "5000",
+			"STORAGE_PATH": "/mnt/vod-capture-storage",
+			"NODE_ENV": "development"
+		},
+		"env_production": {
+			"NODE_ENV": "production"
+		}
+	}]
+}

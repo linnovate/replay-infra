@@ -31,9 +31,9 @@ module.exports.start = function(params, error, done) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}
-			return performCaptionsChain(params);
+			return performCaptionsChain(params)
+				.then(updateJobStatus);
 		})
-		.then(updateJobStatus)
 		.then(function() {
 			done();
 			return Promise.resolve();

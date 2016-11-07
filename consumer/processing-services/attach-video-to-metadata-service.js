@@ -31,14 +31,14 @@ module.exports.start = function(params, error, done) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
 			}
-			return attachVideoToMetadata(params);
+			return attachVideoToMetadata(params)
+				.then(updateJobStatus);
 		})
 		.then(function() {
 			console.log('Calling done and updating job status...');
 			done();
 			return Promise.resolve();
 		})
-		.then(updateJobStatus)
 		.catch(function(err) {
 			if (err) {
 				console.log(err);
