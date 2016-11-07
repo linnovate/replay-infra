@@ -12,12 +12,12 @@ npm install
 ## Configurations
 Set environment variables to config the app:
 
-| Name                          | Description                                  | Default        |
-|-------------------------------|----------------------------------------------|----------------|
-| MONGO_HOST                    | Mongo host URI                               | localhost      |
-| MONGO_PORT                    | Mongo port                                   | 27017          |
-| MONGO_DATABASE                | Mongo database name                          | replay_dev     |
-| SET_AUTH_INTERVAL                  | cron job interval in minutes                            | 1      |
+| Name              | Description                  | Default    |
+|-------------------|------------------------------|------------|
+| MONGO_HOST        | Mongo host URI               | localhost  |
+| MONGO_PORT        | Mongo port                   | 27017      |
+| MONGO_DATABASE    | Mongo database name          | replay_dev |
+| SET_AUTH_INTERVAL | cron job interval in minutes | 1          |
 
 
 ## Usage
