@@ -1,5 +1,7 @@
 ## Description
-The cron job purpose is to check the missions and update their videos according to the mission details.
+Testing the set video autorization cron job by manipulating mission documents and run the cron job in the same time to check that it handled corectly.
+
+**The testing starts cron job process and should kill him at the end of the tests – try to avoid terminating the tests by yourself.
 
 ## Installation
 
@@ -24,5 +26,5 @@ Set environment variables to config the app:
 ## Usage
 Run with:
 ```
-node set-video-authorization.js 
+mocha test-video-authorization.js
 ```
