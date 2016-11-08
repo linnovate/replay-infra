@@ -58,7 +58,7 @@ module.exports.resetEnvironment = resetEnvironment;
 
 // connect services
 module.exports.connectServices = function () {
-	return connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE)
+	return connectMongo(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE, process.env.MONGO_USERNAME, process.env.MONGO_PASSWORD)
 		.then(function () {
 			return rabbit.connect(process.env.RABBITMQ_HOST, process.env.RABBITMQ_PORT,
 				process.env.RABBITMQ_USERNAME, process.env.RABBITMQ_PASSWORD);
