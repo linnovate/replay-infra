@@ -10,10 +10,12 @@ WORKDIR replay-infra/video-recorder
 RUN git checkout develop
 RUN npm install
 RUN mkdir -p /opt/output-test
-ENV MONGO_HOST=10.0.0.13
+
+ARG HOST_IP
+ENV MONGO_HOST=$HOST_IP
 ENV MONGO_PORT=27017
 ENV MONGO_DATABASE=replay_dev
-ENV RABBITMQ_HOST=localhost
+ENV RABBITMQ_HOST=$HOST_IP
 ENV INDEX=100
 ENV DURATION=10
 ENV INTERVAL_TIME=5000
