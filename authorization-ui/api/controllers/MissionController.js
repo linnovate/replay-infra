@@ -1,4 +1,4 @@
-var Mission = require('./replay-schemas/Mission');
+var Mission = require('replay-schemas/Mission');
 var parser = require('jsontoxml');
 var xml2js = require('xml2js');
 var Promise = require('bluebird');
@@ -9,8 +9,7 @@ module.exports = {
 	create: function(req, res) {
 		var missionObj = {
 			missionName: req.param('missionName'),
-			triName: req.param('triName'),
-			source: req.param('source'),
+			sourceId: req.param('sourceId'),
 			startTime: req.param('start_time'),
 			endTime: req.param('end_time'),
 			destination: req.param('destination')
@@ -19,13 +18,11 @@ module.exports = {
 		if (validateInput(missionObj)) {
 			var MissionObj = new Mission();
 			MissionObj.missionName = missionObj.missionName;
-			MissionObj.triName = missionObj.triName;
-			MissionObj.source = missionObj.source;
+			MissionObj.sourceId = missionObj.sourceId;
 			MissionObj.startTime = new Date(missionObj.startTime);
 			MissionObj.endTime = new Date(missionObj.endTime);
 			MissionObj.destination = missionObj.destination;
 			MissionObj.videoStatus = 'new';
-			MissionObj.sourceId = missionObj.triName;
 
 			MissionObj.save(function MissionCreated(err, Mission) {
 				if (err) {
@@ -43,19 +40,18 @@ module.exports = {
 	update: function(req, res) {
 		var MissionObj = {
 			missionName: req.param('missionName'),
-			triName: req.param('triName'),
-			source: req.param('source'),
+			sourceId: req.param('sourceId'),
 			startTime: req.param('start_time'),
 			endTime: req.param('end_time'),
 			destination: req.param('destination')
 		};
 
-		if (req.param('videoStatus') !== undefined) {
+		/*if (req.param('videoStatus') !== undefined) {
 			MissionObj.videoStatus = req.param('videoStatus');
 		} else {
 			MissionObj.videoStatus = 'updated';
 		}
-
+		*/
 		if (validateInput(MissionObj)) {
 			Mission.findOneAndUpdate({ _id: req.param('id') }, MissionObj, function(err, doc) {
 				if (err) {
@@ -81,17 +77,16 @@ module.exports = {
 
 	findOne: function(req, res) {
 		Mission.findOne({
-				$and: [{ _id: req.param('id') }, {
-					videoStatus: { $in: ['new', 'updated', 'handled'] }
-				}]
-			},
-			function foundMission(err, MissionObj) {
-				if (err) {
-					res.end(err);
-				}
-
-				res.json(MissionObj);
-			});
+			$and: [{ _id: req.param('id') }, {
+				videoStatus: { $in: ['new', 'updated', 'handled'] }
+			}]
+		},
+		function foundMission(err, MissionObj) {
+			if (err) {
+				res.end(err);
+			}
+			res.json(MissionObj);
+		});
 	},
 
 	find: function(req, res) {
@@ -111,22 +106,22 @@ module.exports = {
 		console.log('startTime: ' + fromTime);
 		console.log('toTime: ' + toTime);
 		Mission.find({
-				$and: [{
-					endTime: { $gte: fromTime }
-				}, {
-					endTime: { $lte: toTime }
-				}, {
-					videoStatus: { $in: ['new', 'updated', 'handled'] }
-				}]
-			},
-			function foundMission(err, MissionObj) {
-				if (err) {
-					res.json(err);
-				} else {
-					res.json(MissionObj);
-				}
-				return true;
-			});
+			$and: [{
+				endTime: { $gte: fromTime }
+			}, {
+				endTime: { $lte: toTime }
+			}, {
+				videoStatus: { $in: ['new', 'updated', 'handled'] }
+			}]
+		},
+		function foundMission(err, MissionObj) {
+			if (err) {
+				res.json(err);
+			} else {
+				res.json(MissionObj);
+			}
+			return true;
+		});
 	},
 
 	findCompartment: function(req, res) {
@@ -162,7 +157,7 @@ module.exports = {
 };
 
 function checkDate(param, defaultDifference) {
-	if (param == undefined || param.length == 0) {
+	if (param === undefined || param.length === 0) {
 		var newDate = new Date();
 		newDate.setDate(newDate.getDate() + defaultDifference);
 		return newDate;
@@ -174,8 +169,8 @@ function checkDate(param, defaultDifference) {
 function validateInput(MissionObj) {
 	if (MissionObj.missionName === undefined || MissionObj.missionName.length === 0 ||
 		MissionObj.destination === undefined || MissionObj.destination.length === 0 ||
-		new Date(MissionObj.startTime).toString() == 'Invalid Date' ||
-		new Date(MissionObj.endTime).toString() == 'Invalid Date') {
+		new Date(MissionObj.startTime).toString() === 'Invalid Date' ||
+		new Date(MissionObj.endTime).toString() === 'Invalid Date') {
 		return false;
 	}
 	return true;
@@ -200,7 +195,7 @@ function buildQuery(permissions) {
 		}
 	});
 }
-
+/*
 function validateGreaterThanStartTime(obj) {
 	if (obj.startTime <= obj.endTime) {
 		return false;
@@ -208,9 +203,9 @@ function validateGreaterThanStartTime(obj) {
 
 	return true;
 }
-
+*/
 function getUserPermissions(userCode) {
-	var PromiseRequest = Promise.method(function(options) {
+	var promiseRequest = Promise.method(function(options) {
 		return new Promise(function(resolve, reject) {
 			var request = http.request(options, function(response) {
 				// Bundle the result
@@ -236,7 +231,7 @@ function getUserPermissions(userCode) {
 		});
 	});
 
-	return PromiseRequest({
+	return promiseRequest({
 		host: process.env.COMPARTMENT_HOST || 'localhost', //
 		port: process.env.COMPARTMENT_PORT || 1337, //
 		path: '/compartment/getCompartment111',

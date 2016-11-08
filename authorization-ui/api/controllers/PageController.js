@@ -1,5 +1,5 @@
 var moment = require('moment');
-var mission = require('./replay-schemas/Mission');
+var mission = require('replay-schemas/Mission');
 
 module.exports = {
 	index: function(req, res) {

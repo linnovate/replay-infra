@@ -26,7 +26,7 @@
     "moment": "^2.14.1",
     "node-cron": "^1.1.2",
     "rc": "1.0.1",
-    "replay-schemas": "^1.0.26",
+    "replay-schemas": "^1.1.0",
     "sails": "~0.12.4",
     "sails-disk": "~0.10.9",
     "sails-mongo": "^0.12.1",

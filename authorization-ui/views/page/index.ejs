@@ -24,11 +24,6 @@
 	</div>
 
 	<div class="control-group">
-	<label>קרון:</label>
-		<input type="text" class="form-control" id="edit-tri" style="height:35px" placeholder="שם קרון" name="tri">
-	</div>
-
-	<div class="control-group">
 	<label>מקור:</label>
 		<datalist id="sources-list">
 		</datalist>
@@ -68,12 +63,6 @@
 	</div>
 
 	<div class="control-group">
-	<label>קרון:</label>
-		<input type="text" class="form-control" id="add-tri" style="height:35px" placeholder="שם קרון" name="tri">
-	</div>
-
-
-	<div class="control-group">
 	<label>מקור:</label>
 		<input type="text" class="form-control" id="add-source" list="sources-list" style="height:35px" placeholder="מקור" name="source">
 	</div>
@@ -108,7 +97,6 @@
     <tr>
       <th style="text-align:center">#</th>
       <th style="text-align:center">שם משימה</th>
-      <th style="text-align:center">שם מקור</th>
       <th style="text-align:center">מקור</th>
       <th style="text-align:center">זמן התחלה</th>
       <th style="text-align:center">זמן סיום</th>
@@ -123,8 +111,7 @@
 		<tr data-id="<%= curMidur.id %>" data-model="Midur" style="text-align:center">
 			<td style="text-align:center">1</td>
 			<td style="text-align:center"><%= curMidur.missionName %></td>
-			<td style="text-align:center"><%= curMidur.triName %></td>
-			<td style="text-align:center"><%= curMidur.source %></td>
+			<td style="text-align:center"><%= curMidur.sourceId %></td>
 			<td style="text-align:center"><%= moment(curMidur.startTime).format('MMMM Do YYYY, h:mm:ss a') %></td>
 			<td style="text-align:center"><%= moment(curMidur.endTime).format('MMMM Do YYYY, h:mm:ss a') %></td>
 			<td style="text-align:center"><%= curMidur.destination %></td>
