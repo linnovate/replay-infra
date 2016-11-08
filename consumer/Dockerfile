@@ -4,7 +4,8 @@ WORKDIR /replay-infra/consumer
 RUN npm install
 # Setup
 ARG CONSUMER_TYPE
-ARG HOST #Temporary patch
+#Temporary patch
+ARG HOST 
 RUN echo $CONSUMER_TYPE #reassuring
 RUN  mkdir -p /mnt/vod-capture-storage /mnt/vod-content-directory
 # Set Environment variables
