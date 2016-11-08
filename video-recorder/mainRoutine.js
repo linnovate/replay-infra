@@ -12,7 +12,8 @@ var streamListener = require('./services/StreamListener'),
 	util = require('./utilitties'),
 	exitHendler = require('./utilitties/exitUtil');
 
-var streamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE);
+var streamingSourceDAL = require('./services/StreamingSourceDAL')(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE,
+	process.env.MONGO_USERNAME, process.env.MONGO_PASSWORD);
 
 const PROCESS_NAME = '#MainRoutine#',
 	TS_SUFFIX = '.ts';
@@ -20,7 +21,7 @@ const PROCESS_NAME = '#MainRoutine#',
 // Configuration
 const SOURCE_ID = process.env.SOURCE_ID || process.env.INDEX;
 
-module.exports = function() {
+module.exports = function () {
 	console.log('Video recorder service is up.');
 	console.log(PROCESS_NAME + ' Mongo host:', process.env.MONGO_HOST);
 	console.log(PROCESS_NAME + ' Mongo port:', process.env.MONGO_PORT);
@@ -40,16 +41,16 @@ module.exports = function() {
 	var RABBITMQ_PASSWORD = process.env.RABBITMQ_PASSWORD || 'guest';
 
 	rabbit.connect(RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
-		.then(function() {
+		.then(function () {
 			return streamingSourceDAL.getStreamingSource(SOURCE_ID)
-				.then(function(source) {
+				.then(function (source) {
 					return handleVideoSavingProcess(source);
 				})
-				.catch(function(err) {
+				.catch(function (err) {
 					throw err;
 				});
 		})
-		.catch(function(err) {
+		.catch(function (err) {
 			throw err;
 		});
 };
@@ -83,7 +84,7 @@ function handleVideoSavingProcess(streamingSource) {
 	/****************************************************************************************************/
 
 	// When Error eccured in StreamListener
-	streamListener.on('unexceptedError_StreamListener', function(err) {
+	streamListener.on('unexceptedError_StreamListener', function (err) {
 		throw err;
 	});
 
@@ -127,24 +128,24 @@ function handleVideoSavingProcess(streamingSource) {
 
 		// starting the ffmpeg process
 		ffmpeg.record(ffmpegParams)
-			.then(function(ffmpegCommand) {
+			.then(function (ffmpegCommand) {
 				exitHendler.setFFmpegProcessCommand(ffmpegCommand);
 				globals.command = ffmpegCommand;
-				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
+				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function () {
 					streamingSourceDAL.notifySourceCapturing(streamingSource.sourceID);
 				});
 				globals.startRecordTime = moment().format();
 			})
-			.catch(function(err) {
+			.catch(function (err) {
 				throw err;
 			});
 
 		// starting to watch the file
 		startWatchFile(newFilePath + TS_SUFFIX)
-			.then(function(timer) {
+			.then(function (timer) {
 				globals.fileWatcherTimer = timer;
 			})
-			.catch(function(err) {
+			.catch(function (err) {
 				throw err;
 			});
 	}
@@ -177,7 +178,7 @@ function handleVideoSavingProcess(streamingSource) {
 
 	function fileDontExistHandler(tsPath) {
 		console.log("couldn't find the file, delete the path and continue");
-		util.deletePath(path.parse(tsPath).dir, function() {
+		util.deletePath(path.parse(tsPath).dir, function () {
 			startStreamListener(streamingSource, globals.streamStatusTimer);
 		});
 	}
@@ -195,14 +196,14 @@ function handleVideoSavingProcess(streamingSource) {
 		};
 		// get the duration of the file.
 		ffmpeg.duration({ filePath: tsPath })
-			.then(function(duration) {
+			.then(function (duration) {
 				newMessage.duration = duration;
 			})
-			.catch(function(err) {
+			.catch(function (err) {
 				console.log(err);
 				newMessage.duration = null;
 			})
-			.finally(function() {
+			.finally(function () {
 				return sendToJobQueue(newMessage);
 			});
 	}
@@ -221,7 +222,7 @@ function handleVideoSavingProcess(streamingSource) {
 // Sets a keep alive status notifier
 function setStatusTimer(timer, callBack) {
 	clearInterval(timer);
-	timer = setInterval(function() {
+	timer = setInterval(function () {
 		console.log(PROCESS_NAME + ' updating status....' + moment().format());
 		callBack();
 	}, process.env.INTERVAL_TIME || 5000);
@@ -236,14 +237,14 @@ function startStreamListener(streamingSource, streamStatusTimer) {
 		port: streamingSource.sourcePort
 	};
 	return streamListener.startListen(streamListenerParams)
-		.then(function() {
-			streamStatusTimer = setStatusTimer(streamStatusTimer, function() {
+		.then(function () {
+			streamStatusTimer = setStatusTimer(streamStatusTimer, function () {
 				streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 			});
 
 			return Promise.resolve();
 		})
-		.catch(function(err) {
+		.catch(function (err) {
 			throw err;
 		});
 }

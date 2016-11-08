@@ -8,18 +8,18 @@ const SERVICE_NAME = '#StreamingSourceDAL#';
 
 module.exports = StreamingSourceDAL;
 
-function StreamingSourceDAL(host, port, db) {
-	if (!host || !port || !db) {
+function StreamingSourceDAL(host, port, db, mongoUsername, mongoPassword) {
+	if (!host || !port || !db || !mongoUsername || !mongoPassword) {
 		throw new Error(SERVICE_NAME + ' bad conection params provided');
 	}
-	connectMongo(host, port, db)
-		.catch(function(err) {
+	connectMongo(host, port, db, mongoUsername, mongoPassword)
+		.catch(function (err) {
 			throw new Error('error connection mongo' + err);
 		});
 
 	// Retrives a stream source from the database by ID
 	function getStreamingSource(sourceId) {
-		return StreamingSource.findOne({ sourceID: sourceId }, function(err, StreamingSource) {
+		return StreamingSource.findOne({ sourceID: sourceId }, function (err, StreamingSource) {
 			// make sure StreamingSource exist and also our object at the specified sourceId
 			if (err) {
 				throw new Error('StreamingSource has no object at sourceId ' + sourceId);
@@ -38,7 +38,7 @@ function StreamingSourceDAL(host, port, db) {
 	function updateSourceStatus(sourceStatus) {
 		StreamingSource.update({ sourceID: sourceStatus.sourceId }, { streamingStatus: sourceStatus.status },
 			null,
-			function(err, numEffected) {
+			function (err, numEffected) {
 				if (err) {
 					return Promise.reject('Canot update streaming source status: ' + err);
 				}

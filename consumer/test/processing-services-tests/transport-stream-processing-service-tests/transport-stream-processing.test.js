@@ -6,7 +6,7 @@ var message;
 
 function startTests() {
 	describe('\ntransport-stream-processing-service tests:', function () {
-		this.timeout(30000);
+		this.timeout(50000);
 		initialForTests();
 		describe('\ninput Tests:', function () {
 			inputTests();

@@ -19,6 +19,8 @@ var FAILED_JOBS_QUEUE_NAME = process.env.FAILED_JOBS_QUEUE_NAME;
 var MONGO_HOST = process.env.MONGO_HOST;
 var MONGO_PORT = process.env.MONGO_PORT;
 var MONGO_DATABASE = process.env.MONGO_DATABASE;
+var MONGO_USERNAME = process.env.MONGO_USERNAME;
+var MONGO_PASSWORD = process.env.MONGO_PASSWORD;
 var STORAGE_PATH = process.env.STORAGE_PATH;
 var CAPTIONS_PATH = process.env.CAPTIONS_PATH;
 var CAPTURE_STORAGE_PATH = process.env.CAPTURE_STORAGE_PATH;
@@ -33,7 +35,7 @@ if (!isInputValid()) {
 	process.exit(1);
 }
 
-connectMongo(MONGO_HOST, MONGO_PORT, MONGO_DATABASE)
+connectMongo(MONGO_HOST, MONGO_PORT, MONGO_DATABASE, MONGO_USERNAME, MONGO_PASSWORD)
 	.then(connectRabbitMQ)
 	.then(consumeRabbitMQ)
 	.catch(function(err) {
@@ -56,6 +58,8 @@ function isInputValid() {
 	console.log('Mongo host:', MONGO_HOST);
 	console.log('Mongo port:', MONGO_PORT);
 	console.log('Mongo database:', MONGO_DATABASE);
+	console.log('Mongo username:', MONGO_USERNAME);
+	console.log('Mongo password:', MONGO_PASSWORD);
 	console.log('Storage path:', STORAGE_PATH);
 	console.log('Captions path:', CAPTIONS_PATH);
 	console.log('Capture storage path:', CAPTURE_STORAGE_PATH);
