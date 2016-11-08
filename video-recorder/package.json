@@ -4,7 +4,7 @@
   "description": "Video-recorder is the 'Capture' component for the Replay project.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha ./test --recursive",
+    "test": "mocha ./test/config.js ./test --recursive",
     "coverage": "istanbul cover _mocha test -- --recursive; sensible-browser coverage/lcov-report/index.html"
   },
   "dependencies": {
