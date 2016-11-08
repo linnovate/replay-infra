@@ -3,11 +3,14 @@ var config = require('./config');
 var Mission = require('replay-schemas/Mission');
 var Promise = require('bluebird');
 var interval = (process.env.SET_AUTH_INTERVAL || 1) * 60000;
+var buffer = 3000;
 
 describe('Handle Mission flow', function() {
 	before(function(done) {
 		config.connectMongo()
+			.then(config.wipeCollections)
 			.then(config.liftAuthCronJob)
+			.then(config.prepareDataForTest)
 			.then(() => done())
 			.catch(function(err) {
 				if (err) {
@@ -28,92 +31,46 @@ describe('Handle Mission flow', function() {
 			});
 	});
 
-	describe('insert new Mission', function() {
-		it('add new Mission', function(done) {
-			sleep(3000).then(() => {
-				var missionObj = new Mission();
-				missionObj.missionName = 'test mission';
-				missionObj.sourceId = 123;
-				var newStartDate = new Date();
-				newStartDate.setDate(newStartDate.getDate() - 5000);
-				var newEndDate = new Date();
-				newEndDate.setDate(newEndDate.getDate() + 1);
-				missionObj.startTime = newStartDate;
-				missionObj.endTime = newEndDate;
-				missionObj.destination = 'test destination';
-				missionObj.videoStatus = 'new';
-				console.log('insert');
-				missionObj.save(function(err, Mission) {
-					console.log('insert here');
-					if (err) {
-						console.log(err);
-						assert.fail(err, 'condition');
-					} else {
-						assert.isOk(Mission, 'Mission inserted successfully');
-					}
-					done();
-				}).catch(function(err) {
-					if (err) {
-						console.log(err);
-					}
+	describe('Test new mission', function() {
+
+		describe('check that the mission has related to the video', function() {
+			it('check missions video compartments', function(done) {
+				this.timeout(interval + buffer);
+				sleep(interval).then(() => {
+					Mission.find({
+						$and: [{ missionName: 'test mission' }, {
+							videoStatus: 'handled'
+						}]
+					}).then(function(mission) {
+						assert.notEqual(mission[0].videoCompartments.length, 0);
+						done();
+					});
 				});
 			});
 		});
-	});
 
-	describe('check that the new Mission has been handled', function() {
-		it('is Mission handled', function(done) {
-			sleep(interval).then(() => {
+		describe('check that the mission has bounding polygon', function() {
+			it('check missions bounding polygon', function(done) {
+				this.timeout(interval + buffer);
 				Mission.find({
 					$and: [{ missionName: 'test mission' }, {
 						videoStatus: 'handled'
 					}]
-				}, function(err, docs) {
-					if (err) {
-						assert.fail(err, 'find error');
-					} else if (docs.length === 0) {
-						assert.fail('no docs found', 'expected to find docs');
-					} else {
-						assert.isOk(docs, 'Document handled as expected');
-					}
+				}).then(function(mission) {
+					assert.notEqual(mission[0].boundingPolygon.length, 0);
 					done();
 				});
 			});
 		});
-	});
 
-	describe('update Mission', function() {
-		it('update the test document', function(done) {
-			Mission.update({
-				$and: [{ missionName: 'test mission' }, {
-					videoStatus: 'handled'
-				}]
-			}, {
-				$set: {
-					videoStatus: 'updated'
-				}
-			}, function(err, doc) {
-				if (err) {
-					assert.fail(err, 'error while update the test Document');
-				} else {
-					assert.isOk(doc, 'Document updated successfully');
-				}
-				done();
-			});
-		});
-	});
-
-	describe('check that the updated Mission has been handled', function() {
-		it('is Mission handled', function(done) {
-			sleep(interval).then(() => {
+		describe('check that the new Mission has been handled', function() {
+			it('is Mission handled', function(done) {
 				Mission.find({
 					$and: [{ missionName: 'test mission' }, {
 						videoStatus: 'handled'
 					}]
-				}, function(err, docs) {
-					if (err) {
-						assert.fail(err, 'find error');
-					} else if (docs.length === 0) {
+				}).then(function(docs) {
+					if (docs.length === 0) {
 						assert.fail('no docs found', 'expected to find docs');
 					} else {
 						assert.isOk(docs, 'Document handled as expected');
@@ -124,43 +81,97 @@ describe('Handle Mission flow', function() {
 		});
 	});
 
-	describe('delete Mission', function() {
-		it('update the test document to deleted', function(done) {
-			Mission.update({
-				$and: [{ missionName: 'test mission' },
-					{ videoStatus: 'handled' }
-				]
-			}, {
-				$set: {
-					videoStatus: 'deleted'
-				}
-			}, function(err, doc) {
-				if (err) {
-					assert.fail(err, 'error while update the test Document');
-				} else {
-					assert.isOk(doc, 'Document updated successfully');
-				}
-				done();
+	describe('Test updated mission', function() {
+
+		before(function(done) {
+			console.log('update status to updated');
+			config.updateTestMission('updated')
+				.then(() => done())
+				.catch(function(err) {
+					if (err) {
+						done(err);
+					}
+				});
+		});
+
+		describe('check that the mission has related to the video', function() {
+			it('check missions video compartments', function(done) {
+				this.timeout(interval + buffer);
+				sleep(interval).then(() => {
+					Mission.find({
+						$and: [{ missionName: 'test mission' }, {
+							videoStatus: 'handled'
+						}]
+					}).then(function(mission) {
+						assert.notEqual(mission[0].videoCompartments.length, 0);
+						done();
+					});
+				});
 			});
 		});
-	});
 
-	describe('check that the deleted Mission has been handled', function() {
-		it('is Mission handled', function(done) {
-			sleep(interval + 1000).then(() => {
+		describe('check that the mission has bounding polygon', function() {
+			it('check missions bounding polygon', function(done) {
+				this.timeout(interval + buffer);
 				Mission.find({
 					$and: [{ missionName: 'test mission' }, {
-						videoStatus: 'handledDeleted'
+						videoStatus: 'handled'
 					}]
-				}, function(err, docs) {
-					if (err) {
-						assert.fail(err, 'find error');
-					} else if (docs.length === 0) {
+				}).then(function(mission) {
+					assert.notEqual(mission[0].boundingPolygon.length, 0);
+					done();
+				});
+			});
+		});
+
+		describe('check that the new Mission has been handled', function() {
+			it('is Mission handled', function(done) {
+				this.timeout(interval + buffer);
+				Mission.find({
+					$and: [{ missionName: 'test mission' }, {
+						videoStatus: 'handled'
+					}]
+				}).then(function(docs) {
+					if (docs.length === 0) {
 						assert.fail('no docs found', 'expected to find docs');
 					} else {
 						assert.isOk(docs, 'Document handled as expected');
 					}
 					done();
+				});
+			});
+		});
+	});
+
+	describe('Test deleted mission', function() {
+
+		before(function(done) {
+			console.log('update status to deleted');
+			config.updateTestMission('deleted')
+				.then(() => done())
+				.catch(function(err) {
+					if (err) {
+						done(err);
+					}
+				});
+		});
+
+		describe('check that the new Mission has been handled', function() {
+			it('is Mission handled', function(done) {
+				this.timeout(interval + buffer);
+				sleep(interval).then(() => {
+					Mission.find({
+						$and: [{ missionName: 'test mission' }, {
+							videoStatus: 'handledDeleted'
+						}]
+					}).then(function(docs) {
+						if (docs.length === 0) {
+							assert.fail('no docs found', 'expected to find docs');
+						} else {
+							assert.isOk(docs, 'Document handled as expected');
+						}
+						done();
+					});
 				});
 			});
 		});

@@ -42,7 +42,6 @@ function mergeCompartmentsPolygons(mission) {
 		'features': []
 	};
 
-	console.log(mission);
 	mission.videoCompartments.forEach(function(videoCompartment) {
 		// push the videoCompartment to the feature collection
 		polygons.features.push({

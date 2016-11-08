@@ -58,7 +58,7 @@ module.exports = {
 		console.log('Adding new video compartment...');
 		return prepareCompartmentObject(missionObj, videoObj)
 			.then(function(compartmentObj) {
-				console.log('Inserted video compartment to the database', compartmentObj);
+				console.log('Inserted video compartment to the database');
 				return Mission.update({ _id: missionObj._id }, { $push: { videoCompartments: compartmentObj } });
 			});
 	}
