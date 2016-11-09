@@ -7,7 +7,7 @@ ARG CONSUMER_TYPE
 #Temporary patch
 ARG HOST_IP
 RUN echo $CONSUMER_TYPE #reassuring
-RUN if [ $CONSUMER_TYPE = "TransportStreamProcessing" ]; then wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz; mv ./ffmpeg-release-64bit-static.tar.xz /opt; tar -xvf /opt/ffmpeg-release-64bit-static.tar.xz -C /opt/; fi
+RUN if [ $CONSUMER_TYPE = "TransportStreamProcessing" ]; then wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz; mv ./ffmpeg-release-64bit-static.tar.xz /opt; tar -xvf /opt/ffmpeg-release-64bit-static.tar.xz -C /opt/; ln -s /opt/ffmpeg-3.2-64bit-static/ffmpeg /bin/ffmpeg; fi
 RUN  mkdir -p /mnt/vod-capture-storage /mnt/vod-content-directory
 # Set Environment variables
 ENV RABBITMQ_HOST=$HOST_IP RABBITMQ_MAX_RESEND_ATTEMPTS=3 FAILED_JOBS_QUEUE_NAME=FailedJobsQueue RABBITMQ_MAX_UNACKED_MESSAGES=10
