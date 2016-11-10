@@ -9,6 +9,8 @@ var _authorizationCronJobPath = '../authorization-cron-job.js';
 var metadataPath = './MongoData/videometadata.json';
 var videoPath = './MongoData/videos.json';
 var missionPath = './MongoData/mission.json';
+var newMetadataPath = './MongoData/newMetadata.json';
+var newVideoPath = './MongoData/newVideo.json';
 var importCommand = 'mongoimport --host %s --port %s --collection %s --db %s --file %s --username %s --password %s --authenticationDatabase %s';
 var mongoHost = process.env.MONGO_HOST || 'localhost';
 var mongoPort = process.env.MONGO_PORT || 27017;
@@ -50,9 +52,9 @@ module.exports = {
 	},
 
 	prepareDataForTest: function() {
-		insertVideoMetadata()
-			.then(insertVideos)
-			.then(insertNewMission)
+		return insertVideoMetadata(metadataPath)
+			.then(insertVideos(videoPath))
+			.then(insertNewMission(missionPath))
 			.catch(function(err) {
 				if (err) {
 					console.log(err);
@@ -70,22 +72,36 @@ module.exports = {
 				console.log(err);
 			}
 		});
+	},
+
+	addNewVideo: function() {
+		return insertVideoMetadata(newMetadataPath)
+			.then(insertVideos(newVideoPath))
+			.catch(function(err) {
+				if (err) {
+					console.log(err);
+				}
+			});
+	},
+
+	getNewVideo: function() {
+		return Video.findOne({ copyright: 'newVideo' });
 	}
 };
 
-function insertVideoMetadata() {
+function insertVideoMetadata(importFilePath) {
 	console.log('prepare video metadata for test');
-	return executeImport('videometadatas', metadataPath);
+	return executeImport('videometadatas', importFilePath);
 }
 
-function insertVideos() {
+function insertVideos(importFilePath) {
 	console.log('prepare video for test');
-	return executeImport('videos', videoPath);
+	return executeImport('videos', importFilePath);
 }
 
-function insertNewMission() {
+function insertNewMission(importFilePath) {
 	console.log('prepare new mission for test');
-	return executeImport('missions', missionPath);
+	return executeImport('missions', importFilePath);
 }
 
 function executeImport(collection, filePath) {

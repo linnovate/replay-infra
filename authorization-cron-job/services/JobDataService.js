@@ -13,7 +13,7 @@ module.exports = {
 
 		return Video.find({
 			$and: [{ endTime: { $gte: missionObj.startTime } },
-				{ endTime: { $lte: missionObj.endTime } },
+				{ startTime: { $lte: missionObj.endTime } },
 				{ sourceId: missionObj.sourceId }
 			]
 		});
@@ -61,6 +61,15 @@ module.exports = {
 				console.log('Inserted video compartment to the database');
 				return Mission.update({ _id: missionObj._id }, { $push: { videoCompartments: compartmentObj } });
 			});
+	},
+
+	getVideoMissions: function(videoObj) {
+		return Mission.find({
+			$and: [{ endTime: { $gte: videoObj.startTime } },
+				{ startTime: { $lte: videoObj.endTime } },
+				{ sourceId: videoObj.sourceId }
+			]
+		});
 	}
 };
 

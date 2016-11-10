@@ -67,6 +67,18 @@ module.exports = {
 					console.log(err);
 				}
 			});
+	},
+
+	handleNewVideo: function(video) {
+		return JobDataService.getVideoMissions(video)
+			.then(function(missions) {
+				return attachNewVideoToMissions(video, missions);
+			})
+			.catch(function(err) {
+				if (err) {
+					console.log(err);
+				}
+			});
 	}
 };
 
@@ -78,4 +90,20 @@ function setVideoCompartment(missionObj, videos) {
 
 	return Promise.all(promises)
 		.then(() => JobDataService.setHandledStatus(missionObj, 'handled'));
+}
+
+function attachNewVideoToMissions(videoObj, missions) {
+	var promises = [];
+	missions.forEach(function(mission) {
+		promises.push(addNewVideoToMissions(videoObj, mission));
+	});
+
+	return Promise.all(promises);
+}
+
+function addNewVideoToMissions(videoObj, missionObj) {
+	return JobDataService.addNewVideoCompartment(missionObj, videoObj)
+		.then(function() {
+			return JobDataService.setHandledStatus(missionObj, 'handled');
+		});
 }
