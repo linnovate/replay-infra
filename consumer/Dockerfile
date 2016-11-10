@@ -14,7 +14,7 @@ ENV RABBITMQ_HOST=$HOST_IP RABBITMQ_MAX_RESEND_ATTEMPTS=3 FAILED_JOBS_QUEUE_NAME
 ENV RABBITMQ_USERNAME=guest RABBITMQ_PASSWORD=guest 
 ENV MONGO_HOST=$HOST_IP MONGO_PORT=27017 MONGO_DATABASE=replay_dev
 ENV CAPTURE_STORAGE_PATH=/mnt/vod-capture-storage STORAGE_PATH=/mnt/vod-content-directory
-ENV PATH=$PATH:/opt/fmpeg-3.2-64bit-static
+ENV PATH=$PATH:/opt/fmpeg-3.2-64bit-static/
 ENV NODE_ENV=development
 #ENTRYPOINT ["/usr/local/bin/node", "index.js", $CONSUMER_TYPE]
 
