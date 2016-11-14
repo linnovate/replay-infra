@@ -12,7 +12,7 @@ var missionPath = './MongoData/mission.json';
 var importCommand = 'mongoimport --host %s --port %s --collection %s --db %s --file %s --username %s --password %s --authenticationDatabase %s';
 var mongoHost = process.env.MONGO_HOST || 'localhost';
 var mongoPort = process.env.MONGO_PORT || 27017;
-var mongoDb = process.env.MONGO_DATABASE || 'replay_dev';
+var mongoDb = 'replay_test_auth_cron_job';
 var mongoUser = process.env.MONGO_USERNAME || 'replay';
 var mongoPassword = process.env.MONGO_PASSWORD || 'replay';
 
