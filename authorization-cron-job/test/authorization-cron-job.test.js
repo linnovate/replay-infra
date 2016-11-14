@@ -1,6 +1,8 @@
 var assert = require('chai').assert;
+var expect = require('chai').expect;
 var config = require('./config');
 var Mission = require('replay-schemas/Mission');
+var missionService = require('../services/MissionService');
 var Promise = require('bluebird');
 var interval = (process.env.SET_AUTH_INTERVAL || 1) * 60000;
 var buffer = 3000;
@@ -173,6 +175,46 @@ describe('Handle Mission flow', function() {
 						done();
 					});
 				});
+			});
+		});
+	});
+
+	describe('Test new video handling', function() {
+
+		before(function(done) {
+			console.log('adding new video to check that he relating to the right mission');
+			config.addNewVideo()
+				.then(() => done())
+				.catch(function(err) {
+					if (err) {
+						done(err);
+					}
+				});
+		});
+
+		describe('check that the new video has been attached to mission', function() {
+			it('is video handled', function(done) {
+				this.timeout(interval + buffer);
+				config.getNewVideo()
+					.then(function(video) {
+						return missionService.handleNewVideo(video)
+							.then(function() {
+								return Mission.find({
+									$and: [{ missionName: 'test mission' }, {
+										'videoCompartments.videoId': video._id
+									}]
+								}).then(function(docs) {
+									console.log('docs found: ', docs);
+									expect(docs.length).to.not.equal(0);
+									done();
+								});
+							});
+					})
+					.catch(function(err) {
+						if (err) {
+							done(err);
+						}
+					});
 			});
 		});
 	});

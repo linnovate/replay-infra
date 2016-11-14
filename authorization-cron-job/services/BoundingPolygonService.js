@@ -13,13 +13,13 @@ module.exports = {
 			// pass to merging function of geometries
 			.then(mergeMetadataPolygons)
 			.catch(function(err) {
-				console.log('failed retrive video metadata: ');
+				console.log('failed retrive video metadata: ', err);
 				return Promise.reject(err);
 			});
 	},
 
 	compartmentsBoundingPolygon: function(missionId) {
-		console.log('create mission bounding polygon from videos compartments');
+		console.log('create mission bounding polygon from videos compartments for id', missionId);
 
 		return Mission.findOne({ _id: missionId })
 			.then(mergeCompartmentsPolygons)
