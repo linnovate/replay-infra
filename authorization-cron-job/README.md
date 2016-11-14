@@ -26,3 +26,12 @@ Run with:
 ```
 node set-video-authorization.js 
 ```
+
+## Testing
+Testing the video autorization cron job by manipulating mission documents and run the cron job in the same time to check that it handled corectly.  
+The testing starts cron job process and should kill him at the end of the tests – try to avoid terminating the tests in the middle.  
+
+Run with:
+```
+npm test
+```
