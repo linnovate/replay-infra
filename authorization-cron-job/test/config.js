@@ -17,6 +17,7 @@ var importCommand = 'mongoimport --host %s --port %s --collection %s --db %s --f
 var mongoHost = process.env.MONGO_HOST || 'localhost';
 var mongoPort = process.env.MONGO_PORT || 27017;
 var mongoDb = 'replay_test_auth_cron_job';
+process.env.MONGO_DATABASE = mongoDb;
 var mongoUser = process.env.MONGO_USERNAME || 'replay';
 var mongoPassword = process.env.MONGO_PASSWORD || 'replay';
 
