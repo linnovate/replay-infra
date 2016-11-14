@@ -45,7 +45,7 @@ function resetEnvironment() {
 	// else, just use the default values supplied.
 	process.env.MONGO_HOST = MONGO_HOST || 'localhost';
 	process.env.MONGO_PORT = MONGO_PORT || '27017';
-	process.env.MONGO_DATABASE = MONGO_DATABASE || 'replay_test';
+	process.env.MONGO_DATABASE = MONGO_DATABASE || 'replay_test_consumer';
 	process.env.STORAGE_PATH = path.join(__dirname, 'data');
 	process.env.CAPTURE_STORAGE_PATH = path.join(process.env.STORAGE_PATH, 'capture');
 	process.env.RABBITMQ_HOST = RABBITMQ_HOST || 'localhost';
