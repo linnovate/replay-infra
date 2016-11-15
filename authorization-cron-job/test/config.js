@@ -23,6 +23,8 @@ var mongoPassword = process.env.MONGO_PASSWORD || 'replay';
 
 var _process;
 
+process.env.SET_AUTH_INTERVAL = 10;
+
 module.exports = {
 	connectMongo: function() {
 		return connectMongo(mongoHost, mongoPort, mongoDb, mongoUser, mongoPassword)
