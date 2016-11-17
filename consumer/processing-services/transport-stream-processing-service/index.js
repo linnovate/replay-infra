@@ -135,10 +135,30 @@ function proccesTS(params) {
 
 // produce to the next job.
 function produceJobs(params, paths) {
-	var message = {
+	// build message.
+	var message = buildMessageParams(params, paths);
+	if (paths.videoPath) { // add video params for message if received video path.
+		message = receivedVideo(message, paths);
+	}
+	if (paths.dataPath) { //  add data params for message if received data path.
+		message = receivedData(message, paths);
+	}
+
+	// send message to queue.
+	var queueName = JobService.getQueueName('SaveVideo');
+	if (queueName) {
+		return rabbit.produce(queueName, message);
+	}
+	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
+}
+
+function buildMessageParams(params, paths) {
+	var fileRelativePathParse = path.parse(params.fileRelativePath);
+
+	return {
 		sourceId: params.sourceId,
-		contentDirectoryPath: path.parse(params.fileRelativePath).dir,
-		baseName: path.parse(params.fileRelativePath).name,
+		contentDirectoryPath: fileRelativePathParse.dir,
+		baseName: fileRelativePathParse.name,
 		receivingMethod: {
 			standard: params.receivingMethod.standard,
 			version: params.receivingMethod.version
@@ -149,50 +169,49 @@ function produceJobs(params, paths) {
 		transactionId: params.transactionId,
 		flavors: []
 	};
-	// check if we received video path.
-	if (paths.videoPath) {
-		message.videoFileName = path.parse(paths.videoPath).base;
-		paths.additionalPaths.push(paths.videoPath);
-		if (paths.additionalPaths && paths.additionalPaths.length > 1) {
-			message.flavors = paths.additionalPaths.map(function(currentPath) {
-				return path.parse(currentPath).base;
-			});
-		}
-		if (paths.smilPath) {
-			message.requestFormat = 'smil';
-		} else {
-			message.requestFormat = 'mp4';
-		}
+}
+
+function receivedVideo(paths, message) {
+	message.videoFileName = path.parse(paths.videoPath).base;
+	paths.additionalPaths.push(paths.videoPath);
+	if (paths.additionalPaths && paths.additionalPaths.length > 1) {
+		message.flavors = paths.additionalPaths.map(function(currentPath) {
+			return path.parse(currentPath).base;
+		});
 	}
-	// check if we received data path.
-	if (paths.dataPath) {
-		message.dataFileName = path.parse(paths.dataPath).base;
+	if (paths.smilPath) {
+		message.requestFormat = 'smil';
+	} else {
+		message.requestFormat = 'mp4';
 	}
-	var queueName = JobService.getQueueName('SaveVideo');
-	if (queueName) {
-		return rabbit.produce(queueName, message);
-	}
-	return Promise.reject(new Error('Could not find queue name of the inserted job type'));
+	return message;
+}
+
+function receivedData(paths, message) {
+	message.dataFileName = path.parse(paths.dataPath).base;
+	return message;
 }
 
 function generateSmil(params, paths) {
-	var newSmil = new SmilGeneretor();
+	var videoPathParse = path.parse(params.videoPath);
 	var videosArray = [];
-	videosArray.push(path.parse(paths.videoPath).base);
+
+	videosArray.push(videoPathParse.base);
 	paths.additionalPaths.forEach(function(flavor) {
 		videosArray.push(path.parse(flavor).base);
 	});
 	var paramsForGenerator = {
-		folderPath: path.parse(paths.videoPath).dir,
+		folderPath: videoPathParse.dir,
 		smilFileName: path.parse(changePathExtention(paths.videoPath, SMIL_POSFIX)).base,
-		title: path.parse(paths.videoPath).name + ' adaptive stream',
+		title: videoPathParse.name + ' adaptive stream',
 		video: videosArray
 	};
+
+	var newSmil = new SmilGeneretor();
 	return newSmil.generateSmil(paramsForGenerator);
 }
 
-function changePathExtention(wantedpath, ext) {
-	var dirPath = path.parse(wantedpath).dir;
-	var namePath = path.parse(wantedpath).name;
-	return path.join(dirPath, namePath + ext);
+function changePathExtention(wantedPath, ext) {
+	var wantedPathParse = path.parse(wantedPath);
+	return path.join(wantedPathParse.dir, wantedPathParse.name + ext);
 }
