@@ -6,20 +6,30 @@ var StreamingStatuses = require('../enums/StreamingStatuses');
 
 const SERVICE_NAME = '#StreamingSourceDAL#';
 
-module.exports = StreamingSourceDAL;
+module.exports = new StreamingSourceDAL();
 
-function StreamingSourceDAL(host, port, db, mongoUsername, mongoPassword) {
-	if (!host || !port || !db || !mongoUsername || !mongoPassword) {
-		throw new Error(SERVICE_NAME + ' bad conection params provided');
+function StreamingSourceDAL() {
+	function connect(host, port, db, mongoUsername, mongoPassword) {
+		if (!host || !port || !db || !mongoUsername || !mongoPassword) {
+			return Promise.reject(SERVICE_NAME + ' bad conection params provided');
+		}
+		return connectMongo(host, port, db, mongoUsername, mongoPassword)
+			.then(function() {
+				return Promise.resolve({
+					getStreamingSource: getStreamingSource,
+					notifySourceCapturing: notifySourceCapturing,
+					notifySourceNone: notifySourceNone,
+					notifySourceListening: notifySourceListening
+				});
+			})
+			.catch(function(err) {
+				return Promise.reject('error connection mongo' + err);
+			});
 	}
-	connectMongo(host, port, db, mongoUsername, mongoPassword)
-		.catch(function (err) {
-			throw new Error('error connection mongo' + err);
-		});
 
 	// Retrives a stream source from the database by ID
 	function getStreamingSource(sourceId) {
-		return StreamingSource.findOne({ sourceID: sourceId }, function (err, StreamingSource) {
+		return StreamingSource.findOne({ sourceID: sourceId }, function(err, StreamingSource) {
 			// make sure StreamingSource exist and also our object at the specified sourceId
 			if (err) {
 				throw new Error('StreamingSource has no object at sourceId ' + sourceId);
@@ -38,7 +48,7 @@ function StreamingSourceDAL(host, port, db, mongoUsername, mongoPassword) {
 	function updateSourceStatus(sourceStatus) {
 		StreamingSource.update({ sourceID: sourceStatus.sourceId }, { streamingStatus: sourceStatus.status },
 			null,
-			function (err, numEffected) {
+			function(err, numEffected) {
 				if (err) {
 					return Promise.reject('Canot update streaming source status: ' + err);
 				}
@@ -62,9 +72,6 @@ function StreamingSourceDAL(host, port, db, mongoUsername, mongoPassword) {
 	}
 
 	return {
-		getStreamingSource: getStreamingSource,
-		notifySourceCapturing: notifySourceCapturing,
-		notifySourceNone: notifySourceNone,
-		notifySourceListening: notifySourceListening
+		connect: connect
 	};
 }
