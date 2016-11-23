@@ -9,8 +9,8 @@ var path = require('path');
 
 var streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
-	util = require('./utilitties'),
-	exitHendler = require('./utilitties/exitUtil');
+	util = require('./utilities'),
+	exitHendler = require('./utilities/exitUtil');
 
 var streamingSourceDAL = require('./services/StreamingSourceDAL');
 
