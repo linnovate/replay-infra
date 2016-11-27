@@ -77,13 +77,15 @@ function prepareCompartmentObject(missionObj, videoObj) {
 	return BoundingPolygonService.createBoundingPolygon(videoObj._id, missionObj.startTime, missionObj.endTime)
 		.then(function(boundingPolygon) {
 			var relativeStartTime = calculateRelativeStartTime(missionObj.startTime, videoObj.startTime);
+			var startTime = getMaximumDate(new Date(missionObj.startTime), new Date(videoObj.startTime));
+			var endTime = getMinimumDate(new Date(missionObj.endTime), new Date(videoObj.endTime));
+			// VideoCompartment Object by mongo schema
 			var compartmentObj = {
+				durationInSeconds: ((endTime.getTime() - startTime.getTime()) / 1000),
 				boundingPolygon: boundingPolygon,
 				videoId: videoObj._id,
-				startTime: getMaximumDate(new Date(missionObj.startTime),
-					new Date(videoObj.startTime)),
-				endTime: getMinimumDate(new Date(missionObj.endTime),
-					new Date(videoObj.endTime)),
+				startTime: startTime,
+				endTime: endTime,
 				relativeStartTime: relativeStartTime
 			};
 			return Promise.resolve(compartmentObj);

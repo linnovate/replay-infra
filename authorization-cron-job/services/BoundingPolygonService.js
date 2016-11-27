@@ -13,8 +13,7 @@ module.exports = {
 			// pass to merging function of geometries
 			.then(mergeMetadataPolygons)
 			.catch(function(err) {
-				console.log('failed retrive video metadata: ', err);
-				return Promise.reject(err);
+				console.log(err);
 			});
 	},
 
@@ -60,7 +59,7 @@ function mergeCompartmentsPolygons(mission) {
 // function that merges sensor trace of metadata
 function mergeMetadataPolygons(metadatas) {
 	console.log('merging polygons');
-	if (!metadatas) {
+	if (!metadatas || metadatas.length === 0) {
 		return Promise.reject('No metadatas found');
 	}
 	// initiate a GeoJson feature collection

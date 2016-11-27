@@ -4,7 +4,7 @@ var config = require('./config');
 var Mission = require('replay-schemas/Mission');
 var missionService = require('../services/MissionService');
 var Promise = require('bluebird');
-var interval = (process.env.SET_AUTH_INTERVAL || 60) * 1000;
+var interval = process.env.SET_AUTH_INTERVAL * 1000;
 var buffer = 3000;
 
 describe('Handle Mission flow', function() {
