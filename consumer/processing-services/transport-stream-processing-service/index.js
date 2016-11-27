@@ -1,7 +1,10 @@
 var Promise = require('bluebird'),
-	JobService = require('replay-jobs-service'),
+	fse = require('fs-extra'),
 	rabbit = require('replay-rabbitmq'),
-	SmilGeneretor = require('replay-smil-generator');
+	JobService = require('replay-jobs-service'),
+	SmilGeneretor = require('replay-smil-generator'),
+	S3 = require('replay-aws-s3');
+
 var path = require('path');
 
 var _transactionId;
@@ -214,4 +217,37 @@ function generateSmil(params, paths) {
 function changePathExtention(wantedPath, ext) {
 	var wantedPathParse = path.parse(wantedPath);
 	return path.join(wantedPathParse.dir, wantedPathParse.name + ext);
+}
+
+function uploadToS3(params) {
+	// need to add those process environment variables:
+	process.env.AWS_ACCESS_KEY_ID = 'AKIAJNDEXOJEP6IIANDQ';
+	process.env.AWS_SECRET_ACCESS_KEY = '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';
+	process.env.AWS_BUCKET = 'Replay';
+
+	var dirPath = path.parse(params.fileRelativePath).dir;
+	var bucket = process.env.AWS_BUCKET;
+	var prefix = dirPath;
+
+	return S3.uploadDir(dirPath, bucket, prefix)
+		.then(function() {
+			console.log('Directory %s successfully uploaded to S3', dirPath);
+			rmDir(dirPath);
+		})
+		.catch(function(err) {
+			return Promise.reject(err);
+		});
+}
+
+function rmDir(dirPath) {
+	return new Promise(function(resolve, reject) {
+		fse.remove(dirPath, function(err) {
+			if (err) {
+				console.error('Unable to removed %s directory from the file system: %s', dirPath, err);
+				reject(err);
+			}
+			console.log('Directory %s successfully removed from the file system', dirPath);
+			resolve();
+		});
+	});
 }
