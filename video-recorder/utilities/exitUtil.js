@@ -6,45 +6,42 @@
 /*                                                                                          */
 /********************************************************************************************/
 
-module.exports = new Exitutil();
+var event = require('events').EventEmitter,
+	util = require('util');
 
 function Exitutil() {
-	var _ffmpegProcessCommand;
+	var self = this;
 
-	function _setFFmpegProcessCommand(command) {
-		_ffmpegProcessCommand = command;
+	function processExit() {
+		console.log('process is about to exit');
 	}
 
-	function exitHandler(options, err) {
-		if (err) {
-			console.log(err);
-		}
-		if (_ffmpegProcessCommand) {
-			console.log('Killing FFmpeg Process');
-			_ffmpegProcessCommand.kill('SIGKILL');
-		}
-		if (options.exit) {
-			console.log('process exit');
-			process.exit();
-		}
+	function processSigint() {
+		self.emit('processBeforeExit');
+	}
+
+	function processError(err) {
+		console.trace(err);
+		self.emit('processBeforeExit');
 	}
 
 	function exitBind() {
 		process.stdin.resume(); // so the program will not close instantly
 
 		// do something when app is closing
-		// process.on('exit', exitHandler.bind(null));
+		process.on('exit', processExit);
 		// catches ctrl+c event
-		process.on('SIGINT', exitHandler.bind(null, { exit: true }));
+		process.on('SIGINT', processSigint);
 		// catches uncaught exceptions
-		process.on('uncaughtException', exitHandler.bind(null, { exit: true }));
+		process.on('uncaughtException', processError);
 	}
 
 	// function body:
-
 	exitBind();
-
-	return {
-		setFFmpegProcessCommand: _setFFmpegProcessCommand
-	};
 }
+
+// Inhertis from the eventEmitter object
+util.inherits(Exitutil, event);
+
+// export out service.
+module.exports = new Exitutil();

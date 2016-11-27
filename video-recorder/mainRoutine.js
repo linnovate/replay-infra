@@ -10,7 +10,7 @@ var path = require('path');
 var streamListener = require('./services/StreamListener'),
 	fileWatcher = require('./services/FileWatcher'),
 	util = require('./utilities'),
-	exitHendler = require('./utilities/exitUtil');
+	exitHandler = require('./utilities/exitUtil');
 
 var streamingSourceDAL = require('./services/StreamingSourceDAL');
 
@@ -75,7 +75,8 @@ function handleVideoSavingProcess(streamingSource) {
 		videoRelativePath: '',
 		command: null,
 		startRecordTime: null,
-		endRecordTime: null
+		endRecordTime: null,
+		currentRecordingFile: ''
 	};
 
 	/****************************************************************************************************/
@@ -101,8 +102,13 @@ function handleVideoSavingProcess(streamingSource) {
 	// When error eccured while recording.
 	ffmpeg.on('ffmpegWrapper_error_while_recording', errorOnRecordHandle);
 
+	// when ffmpeg start to record
+	ffmpeg.on('FFmpeg_start_recording', startRecordHandler);
+
 	// When the source stop stream data.
 	fileWatcher.on('FileWatchStop', fileWatcherStopHandler);
+
+	exitHandler.on('processBeforeExit', processExitHandler);
 
 	/****************************************************************************************************/
 	/*                                                                                                  */
@@ -130,7 +136,6 @@ function handleVideoSavingProcess(streamingSource) {
 		// starting the ffmpeg process
 		ffmpeg.record(ffmpegParams)
 			.then(function(ffmpegCommand) {
-				exitHendler.setFFmpegProcessCommand(ffmpegCommand);
 				globals.command = ffmpegCommand;
 				globals.streamStatusTimer = setStatusTimer(globals.streamStatusTimer, function() {
 					streamingSourceDAL.notifySourceCapturing(streamingSource.sourceID);
@@ -152,11 +157,18 @@ function handleVideoSavingProcess(streamingSource) {
 	}
 
 	function finishRecordHandle(tsPath) {
-		getDurationAndSendMessage(tsPath);
 		// stop the fileWatcher
 		stopWatchFile(globals.fileWatcherTimer);
-		// Starting Listen to the address again.
-		startStreamListener(streamingSource, globals.streamStatusTimer);
+		// get video duration.
+		getDurationAndSendMessage(tsPath)
+			.then(function() {
+				// Starting Listen to the address again.
+				globals.currentRecordingFile = '';
+				return startStreamListener(streamingSource, globals.streamStatusTimer);
+			})
+			.catch(function(err) {
+				console.trace(err);
+			});
 	}
 
 	function errorOnRecordHandle(err) {
@@ -166,20 +178,30 @@ function handleVideoSavingProcess(streamingSource) {
 		// Stop the timer
 		stopWatchFile(globals.fileWatcherTimer);
 		// Starting Listen to the address again.
+		globals.currentRecordingFile = '';
 		startStreamListener(streamingSource, globals.streamStatusTimer);
 	}
 
 	function fileWatcherStopHandler(tsPath) {
 		// kill The FFmpeg Process.
 		console.log(PROCESS_NAME + ' The Source stop stream data, Killing the ffmpeg process');
-		stopFFmpegProcess(globals.command);
-		getDurationAndSendMessage(tsPath);
-		startStreamListener(streamingSource, globals.streamStatusTimer);
+		stopFFmpegProcess(globals.command)
+			.then(function() {
+				return getDurationAndSendMessage(tsPath);
+			})
+			.then(function() {
+				globals.currentRecordingFile = '';
+				return startStreamListener(streamingSource, globals.streamStatusTimer);
+			})
+			.catch(function(err) {
+				console.trace(err);
+			});
 	}
 
 	function fileDontExistHandler(tsPath) {
 		console.log("couldn't find the file, delete the path and continue");
 		util.deletePath(path.parse(tsPath).dir, function() {
+			globals.currentRecordingFile = '';
 			startStreamListener(streamingSource, globals.streamStatusTimer);
 		});
 	}
@@ -187,16 +209,9 @@ function handleVideoSavingProcess(streamingSource) {
 	function getDurationAndSendMessage(tsPath) {
 		globals.endRecordTime = moment().format();
 		// prepare the message for sending.
-		var newMessage = {
-			streamingSource: streamingSource,
-			videoName: path.parse(tsPath).name,
-			fileRelativePath: path.relative(process.env.STORAGE_PATH, tsPath),
-			storagePath: process.env.STORAGE_PATH,
-			startTime: globals.startRecordTime,
-			endTime: globals.endRecordTime
-		};
+		var newMessage = prepareMessage(tsPath);
 		// get the duration of the file.
-		ffmpeg.duration({ filePath: tsPath })
+		return ffmpeg.duration({ filePath: tsPath })
 			.then(function(duration) {
 				newMessage.duration = duration;
 			})
@@ -209,8 +224,46 @@ function handleVideoSavingProcess(streamingSource) {
 			});
 	}
 
+	function processExitHandler() {
+		var newMessage = prepareMessage(globals.currentRecordingFile);
+		newMessage.duration = null;
+		streamingSourceDAL.notifySourceNone(streamingSource.sourceID)
+			.then(function() {
+				return stopFFmpegProcess(globals.command);
+			})
+			.then(function() {
+				if (globals.currentRecordingFile !== '') {
+					return sendToJobQueue(newMessage);
+				}
+				return Promise.resolve();
+			})
+			.catch(function(err) {
+				console.trace(err);
+			})
+			.finally(function() {
+				process.exit();
+			});
+	}
+
+	function prepareMessage(tsPath) {
+		return {
+			streamingSource: streamingSource,
+			videoName: path.parse(tsPath).name,
+			fileRelativePath: path.relative(process.env.STORAGE_PATH, tsPath),
+			storagePath: process.env.STORAGE_PATH,
+			startTime: globals.startRecordTime,
+			endTime: globals.endRecordTime
+		};
+	}
+
+	function startRecordHandler(tsPath) {
+		console.log('start FFmpeg');
+		globals.currentRecordingFile = tsPath;
+	}
+
 	// Starting Listen to the address.
 	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.sourcePort);
+	globals.currentRecordingFile = '';
 	return startStreamListener(streamingSource, globals.streamStatusTimer);
 }
 
@@ -263,13 +316,11 @@ function stopWatchFile(timer) {
 }
 
 // Stop the ffmpeg process
-function stopFFmpegProcess(command, callBack) {
+function stopFFmpegProcess(command) {
 	if (command) {
 		command.kill('SIGKILL');
 	}
-	if (callBack) {
-		callBack();
-	}
+	return Promise.resolve();
 }
 
 // Send message to the next service.
@@ -289,5 +340,5 @@ function sendToJobQueue(params) {
 		sourceType: params.streamingSource.sourceType,
 		transactionId: new mongoose.Types.ObjectId()
 	};
-	rabbit.produce('TransportStreamProcessingQueue', message);
+	return rabbit.produce('TransportStreamProcessingQueue', message);
 }

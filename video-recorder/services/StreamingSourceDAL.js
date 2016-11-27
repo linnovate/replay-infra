@@ -29,31 +29,35 @@ function StreamingSourceDAL() {
 
 	// Retrives a stream source from the database by ID
 	function getStreamingSource(sourceId) {
-		return StreamingSource.findOne({ sourceID: sourceId }, function(err, StreamingSource) {
-			// make sure StreamingSource exist and also our object at the specified sourceId
-			if (err) {
-				throw new Error('StreamingSource has no object at sourceId ' + sourceId);
-			}
+		return new Promise(function(resolve, reject) {
+			StreamingSource.findOne({ sourceID: sourceId }, function(err, StreamingSource) {
+				// make sure StreamingSource exist and also our object at the specified sourceId
+				if (err) {
+					return reject(new Error('StreamingSource has no object at sourceId ' + sourceId));
+				}
 
-			if (!StreamingSource) {
-				console.log(SERVICE_NAME, 'no Streaming Source found');
-				throw new Error('no stream source found');
-			}
+				if (!StreamingSource) {
+					console.log(SERVICE_NAME, 'no Streaming Source found');
+					return reject(new Error('no stream source found'));
+				}
 
-			return Promise.resolve(StreamingSource);
+				return resolve(StreamingSource);
+			});
 		});
 	}
 
 	// Help method to update data source
 	function updateSourceStatus(sourceStatus) {
-		StreamingSource.update({ sourceID: sourceStatus.sourceId }, { streamingStatus: sourceStatus.status },
-			null,
-			function(err, numEffected) {
-				if (err) {
-					return Promise.reject('Canot update streaming source status: ' + err);
-				}
-				return Promise.resolve(numEffected);
-			});
+		return new Promise(function(resolve, reject) {
+			StreamingSource.update({ sourceID: sourceStatus.sourceId }, { streamingStatus: sourceStatus.status },
+				null,
+				function(err, numEffected) {
+					if (err) {
+						return reject('Canot update streaming source status: ' + err);
+					}
+					return resolve(numEffected);
+				});
+		});
 	}
 
 	// Update CAPTURING status and current update time
