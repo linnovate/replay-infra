@@ -24,39 +24,64 @@ module.exports.start = function(params, error, done) {
 	JobService.findOrCreateJobStatus(_transactionId)
 		.then(function(jobStatus) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
-				done();
-			} else {
-				return proccesTS(params)
-					.then(function(paths) {
-						if (paths.videoPath) {
-							return generateSmil(params, paths)
-								.then(function() {
-									// add to the paths object the smil path.
-									paths.smilPath = changePathExtention(paths.videoPath, SMIL_POSFIX);
-
-									return null;
-								})
-								.catch(function(err) {
-									console.trace(err);
-								})
-								.finally(function() {
-									return produceJobs(params, paths);
-								});
-						}
-						return produceJobs(params, paths);
-					})
-					.then(done)
-					.catch(function(err) {
-						console.trace(err);
-						error();
-					});
+				// case we've already performed the action, ack the message
+				return Promise.resolve();
 			}
+			// else:
+			return performProcessingChain(params);
+		})
+		.then(function() {
+			done();
+			return Promise.resolve();
 		})
 		.catch(function(err) {
 			console.trace(err);
 			return error();
 		});
 };
+
+function performProcessingChain(params) {
+	return proccesTS(params)
+		.then(function(paths) {
+			if (paths.videoPath) {
+				return generateSmil(params, paths)
+					.then(function() {
+						// add to the paths object the smil path.
+						paths.smilPath = changePathExtention(paths.videoPath, SMIL_POSFIX);
+
+						return null;
+					})
+					.catch(function(err) {
+						console.trace(err);
+					})
+					.finally(function() {
+						return finishProcessingChain(params, paths);
+					});
+			}
+			return finishProcessingChain(params, paths);
+		})
+		.catch(function(err) {
+			return Promise.reject(err);
+		});
+}
+
+function finishProcessingChain(params, paths) {
+	var dirPath = path.parse(params.fileRelativePath).dir;
+	return uploadToS3(dirPath)
+		.then(function() {
+			return rmDir(dirPath);
+		}).then(function() {
+			// call update job status but don't depend on it's result as we already finished the processing chain
+			updateJobStatus();
+			return Promise.resolve();
+		}).then(function() {
+			return produceJobs(params, paths);
+		})
+		.catch(function(err) {
+			console.error(err);
+			return Promise.reject(err);
+		});
+}
 
 // validate the params.
 function paramsIsValid(params) {
@@ -136,6 +161,73 @@ function proccesTS(params) {
 	return processTsMethod(paramsForMethod);
 }
 
+function generateSmil(params, paths) {
+	var videoPathParse = path.parse(params.videoPath);
+	var videosArray = [];
+
+	videosArray.push(videoPathParse.base);
+	paths.additionalPaths.forEach(function(flavor) {
+		videosArray.push(path.parse(flavor).base);
+	});
+	var paramsForGenerator = {
+		folderPath: videoPathParse.dir,
+		smilFileName: path.parse(changePathExtention(paths.videoPath, SMIL_POSFIX)).base,
+		title: videoPathParse.name + ' adaptive stream',
+		video: videosArray
+	};
+
+	var newSmil = new SmilGeneretor();
+	return newSmil.generateSmil(paramsForGenerator);
+}
+
+function changePathExtention(wantedPath, ext) {
+	var wantedPathParse = path.parse(wantedPath);
+	return path.join(wantedPathParse.dir, wantedPathParse.name + ext);
+}
+
+function uploadToS3(dirPath) {
+	// need to add those process environment variables:
+	process.env.AWS_ACCESS_KEY_ID = 'AKIAJNDEXOJEP6IIANDQ';
+	process.env.AWS_SECRET_ACCESS_KEY = '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';
+	process.env.AWS_BUCKET = 'Replay';
+
+	var bucket = process.env.AWS_BUCKET;
+	var prefix = dirPath;
+
+	return S3.uploadDir(dirPath, bucket, prefix)
+		.then(function() {
+			console.log('Directory %s successfully uploaded to S3', dirPath);
+			return Promise.resolve();
+		})
+		.catch(function(err) {
+			console.error('Unable to uploaded %s directory to S3: %s', dirPath, err);
+			return Promise.reject(err);
+		});
+}
+
+function rmDir(dirPath) {
+	return new Promise(function(resolve, reject) {
+		fse.remove(dirPath, function(err) {
+			if (err) {
+				console.error('Unable to removed %s directory from the file system: %s', dirPath, err);
+				reject(err);
+			}
+			console.log('Directory %s successfully removed from the file system', dirPath);
+			resolve();
+		});
+	});
+}
+
+// update job status, swallaw errors so they won't invoke error() on message
+function updateJobStatus() {
+	return JobService.updateJobStatus(_transactionId, _jobStatusTag)
+		.catch(function(err) {
+			if (err) {
+				console.log(err);
+			}
+		});
+}
+
 // produce to the next job.
 function produceJobs(params, paths) {
 	// build message.
@@ -193,61 +285,4 @@ function receivedVideo(paths, message) {
 function receivedData(paths, message) {
 	message.dataFileName = path.parse(paths.dataPath).base;
 	return message;
-}
-
-function generateSmil(params, paths) {
-	var videoPathParse = path.parse(params.videoPath);
-	var videosArray = [];
-
-	videosArray.push(videoPathParse.base);
-	paths.additionalPaths.forEach(function(flavor) {
-		videosArray.push(path.parse(flavor).base);
-	});
-	var paramsForGenerator = {
-		folderPath: videoPathParse.dir,
-		smilFileName: path.parse(changePathExtention(paths.videoPath, SMIL_POSFIX)).base,
-		title: videoPathParse.name + ' adaptive stream',
-		video: videosArray
-	};
-
-	var newSmil = new SmilGeneretor();
-	return newSmil.generateSmil(paramsForGenerator);
-}
-
-function changePathExtention(wantedPath, ext) {
-	var wantedPathParse = path.parse(wantedPath);
-	return path.join(wantedPathParse.dir, wantedPathParse.name + ext);
-}
-
-function uploadToS3(params) {
-	// need to add those process environment variables:
-	process.env.AWS_ACCESS_KEY_ID = 'AKIAJNDEXOJEP6IIANDQ';
-	process.env.AWS_SECRET_ACCESS_KEY = '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';
-	process.env.AWS_BUCKET = 'Replay';
-
-	var dirPath = path.parse(params.fileRelativePath).dir;
-	var bucket = process.env.AWS_BUCKET;
-	var prefix = dirPath;
-
-	return S3.uploadDir(dirPath, bucket, prefix)
-		.then(function() {
-			console.log('Directory %s successfully uploaded to S3', dirPath);
-			rmDir(dirPath);
-		})
-		.catch(function(err) {
-			return Promise.reject(err);
-		});
-}
-
-function rmDir(dirPath) {
-	return new Promise(function(resolve, reject) {
-		fse.remove(dirPath, function(err) {
-			if (err) {
-				console.error('Unable to removed %s directory from the file system: %s', dirPath, err);
-				reject(err);
-			}
-			console.log('Directory %s successfully removed from the file system', dirPath);
-			resolve();
-		});
-	});
 }
