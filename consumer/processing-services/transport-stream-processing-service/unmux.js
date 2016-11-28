@@ -62,7 +62,7 @@ function processTS(params) {
 
 // validate the params, check if there is at least on of the paths.
 function paramsIsValid(params) {
-	if (!process.env.CAPTURE_STORAGE_PATH || !process.env.STORAGE_PATH) {
+	if (!process.env.STORAGE_PATH) {
 		return false;
 	}
 	return (params && params.fileRelativePath && params.fileType);
@@ -80,7 +80,7 @@ function checkPathAndCreate(path) {
 
 // handle all the path manipulation, create the given path if needed,return two paths,the original Path the the new Path
 function preparePath(params) {
-	var captureFilePath = path.join(process.env.CAPTURE_STORAGE_PATH, params.fileRelativePath);
+	var captureFilePath = path.join(process.env.STORAGE_PATH, params.fileRelativePath);
 
 	var fileRelativePath = path.parse(params.fileRelativePath);
 

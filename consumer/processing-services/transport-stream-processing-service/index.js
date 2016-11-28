@@ -86,7 +86,7 @@ function finishProcessingChain(params, paths) {
 // validate the params.
 function paramsIsValid(params) {
 	// check required process environment.
-	if (!process.env.CAPTURE_STORAGE_PATH || !process.env.STORAGE_PATH) {
+	if (!process.env.STORAGE_PATH) {
 		return false;
 	}
 
@@ -118,7 +118,7 @@ function proccesTS(params) {
 	var processTsMethod;
 	// prepare the require params for the processing method.
 	var paramsForMethod = {
-		filesStoragePath: process.env.CAPTURE_STORAGE_PATH,
+		filesStoragePath: process.env.STORAGE_PATH,
 		fileRelativePath: params.fileRelativePath,
 		fileType: params.sourceType
 	};
