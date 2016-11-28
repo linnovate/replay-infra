@@ -66,7 +66,7 @@ function performProcessingChain(params) {
 }
 
 function finishProcessingChain(params, paths) {
-	var dirPath = path.parse(params.fileRelativePath).dir;
+	var dirPath = path.dirname(params.fileRelativePath);
 	return uploadToS3(dirPath)
 		.then(function() {
 			return rmDir(dirPath);
@@ -186,10 +186,11 @@ function changePathExtention(wantedPath, ext) {
 }
 
 function uploadToS3(dirPath) {
+	var fullDirPath = path.join(process.env.STORAGE_PATH, dirPath);
 	var bucket = process.env.AWS_BUCKET;
 	var prefix = dirPath;
 
-	return S3.uploadDir(dirPath, bucket, prefix)
+	return S3.uploadDir(fullDirPath, bucket, prefix)
 		.then(function() {
 			console.log('Directory %s successfully uploaded to S3', dirPath);
 			return Promise.resolve();
@@ -202,7 +203,8 @@ function uploadToS3(dirPath) {
 
 function rmDir(dirPath) {
 	return new Promise(function(resolve, reject) {
-		dirPath = path.join(process.env.STORAGE_PATH, dirPath);
+		dirPath = resolveDirPath(process.env.STORAGE_PATH, dirPath);
+
 		fse.remove(dirPath, function(err) {
 			if (err) {
 				console.error('Unable to removed %s directory from the file system: %s', dirPath, err);
@@ -212,6 +214,15 @@ function rmDir(dirPath) {
 			resolve();
 		});
 	});
+}
+
+function resolveDirPath(storagePath, dirPath) {
+	// find root directory from the given storagePath
+	dirPath = path.join(storagePath, dirPath);
+	while (path.relative(storagePath, path.dirname(dirPath))) {
+		dirPath = path.dirname(dirPath);
+	}
+	return dirPath;
 }
 
 // update job status, swallaw errors so they won't invoke error() on message
