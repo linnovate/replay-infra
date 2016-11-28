@@ -14,7 +14,7 @@
     "mocha": "^3.1.2",
     "moment": "^2.15.2",
     "mongoose": "^4.6.6",
-    "replay-aws-s3": "^1.0.3",
+    "replay-aws-s3": "^1.0.4",
     "replay-ffmpeg": "^1.2.1",
     "replay-jobs-service": "^1.0.18",
     "replay-rabbitmq": "^1.1.0",
