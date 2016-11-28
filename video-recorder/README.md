@@ -92,7 +92,7 @@ route add -net 238.0.0.0 netmask 255.255.255.0 docker0
 
 #### 3. Run the container from the image you have just created with bash shell
 ``` bash
-docker run -it -p <SourcePort>:<SourcePort>/udp -v /mnt/vod-storage/vod-capture-storage:/opt/output-test replay/video-recorder:1.0 /bin/bash
+docker run -it -p <SourcePort>:<SourcePort>/udp -v </mnt/your-vod-storage/path>:<relevante/path/in/docker> replay/video-recorder:1.0 /bin/bash
 ```
 
 #### 4. From the shell run the capture process
