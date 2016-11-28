@@ -5,6 +5,7 @@ WORKDIR /opt
 RUN wget https://nodejs.org/dist/v4.4.7/node-v4.4.7-linux-x64.tar.xz
 RUN tar -C /usr/local --strip-components 1 -xJf node-v4.4.7-linux-x64.tar.xz
 RUN wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz; mv ./ffmpeg-release-64bit-static.tar.xz /opt; tar -xvf /opt/ffmpeg-release-64bit-static.tar.xz -C /opt/
+RUN ln -s /opt/ffmpeg-3.2-64bit-static/ffmpeg /usr/bin/ffmpeg
 RUN npm install -g npm
 RUN git clone https://github.com/linnovate/replay-infra.git
 WORKDIR replay-infra/video-recorder
