@@ -186,11 +186,6 @@ function changePathExtention(wantedPath, ext) {
 }
 
 function uploadToS3(dirPath) {
-	// need to add those process environment variables:
-	process.env.AWS_ACCESS_KEY_ID = 'AKIAJNDEXOJEP6IIANDQ';
-	process.env.AWS_SECRET_ACCESS_KEY = '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';
-	process.env.AWS_BUCKET = 'Replay';
-
 	var bucket = process.env.AWS_BUCKET;
 	var prefix = dirPath;
 
