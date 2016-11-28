@@ -162,7 +162,7 @@ function proccesTS(params) {
 }
 
 function generateSmil(params, paths) {
-	var videoPathParse = path.parse(params.videoPath);
+	var videoPathParse = path.parse(paths.videoPath);
 	var videosArray = [];
 
 	videosArray.push(videoPathParse.base);
@@ -202,6 +202,7 @@ function uploadToS3(dirPath) {
 
 function rmDir(dirPath) {
 	return new Promise(function(resolve, reject) {
+		dirPath = path.join(process.env.STORAGE_PATH, dirPath);
 		fse.remove(dirPath, function(err) {
 			if (err) {
 				console.error('Unable to removed %s directory from the file system: %s', dirPath, err);
@@ -261,7 +262,7 @@ function buildMessageParams(params, paths) {
 	};
 }
 
-function receivedVideo(paths, message) {
+function receivedVideo(message, paths) {
 	message.videoFileName = path.parse(paths.videoPath).base;
 	paths.additionalPaths.push(paths.videoPath);
 	if (paths.additionalPaths && paths.additionalPaths.length > 1) {
@@ -277,7 +278,7 @@ function receivedVideo(paths, message) {
 	return message;
 }
 
-function receivedData(paths, message) {
+function receivedData(message, paths) {
 	message.dataFileName = path.parse(paths.dataPath).base;
 	return message;
 }
