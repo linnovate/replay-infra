@@ -15,17 +15,15 @@ const SERVICE_NAME = '#FileWatcher#',
 var FileWatcher = function() {
 	var self = this;
 
+	self.timer = undefined;
 	var _currentFileSize = -1,
-		_fileTimer,
 		_timeToWait = 5000,
 		_checkingAttempts = 1;
 
 	// Stoping the timer when it needed.
-	var _stopTimer = function(timer) {
-		if (timer) {
-			clearInterval(timer);
-		} else if (_fileTimer) {
-			clearInterval(_fileTimer);
+	var _stopTimer = function() {
+		if (self.timer) {
+			clearInterval(self.timer);
 		}
 		_currentFileSize = -1;
 		_checkingAttempts = 1;
@@ -40,9 +38,9 @@ var FileWatcher = function() {
 			if (err) {
 				if (_checkingAttempts === MAX_CHECK_TRIES) {
 					// Emit event of error and stop the timer.
-					self.emit('FileDontExist_FileWatcher', path);
+					self.emit('FileDosentExist_FileWatcher', path);
 					console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
-					_stopTimer(_fileTimer);
+					_stopTimer();
 				} else {
 					console.log(SERVICE_NAME, 'Could not find the file, trying again...');
 					_checkingAttempts++;
@@ -59,7 +57,7 @@ var FileWatcher = function() {
 			} else {
 				// Callback called when the file stopped grow.
 				console.log(SERVICE_NAME, METHOD_NAME, ': ', 'Stop the Timer...');
-				_stopTimer(_fileTimer);
+				_stopTimer();
 				self.emit('FileWatchStop', path);
 			}
 			// console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
@@ -67,11 +65,18 @@ var FileWatcher = function() {
 	};
 
 	/*
+		    This func stop the follow of the file when it needed.
+		*/
+	self.stopWatchFile = function() {
+		_stopTimer();
+	};
+	/*
 	    This func start watch given file,
 	    It Check every X seconds if the file has changed, if it didnt change in the last X seconds, it will stop watch the file and will emit event.
 
 	    Params should contain at least Path To the file we want to watch.
 	*/
+
 	self.startWatchFile = function(params) {
 		var promise = new Promise(function(resolve, reject) {
 			const METHOD_NAME = 'StartWatchFile';
@@ -87,21 +92,14 @@ var FileWatcher = function() {
 			console.log(SERVICE_NAME, METHOD_NAME, ' Start checking at:', params.path);
 
 			// Start Timer to follow the file.
-			_fileTimer = setInterval(function() {
+			self.timer = setInterval(function() {
 				_CheckFileSize(params.path);
 			}, _timeToWait);
 
 			// console.log(SERVICE_NAME, '.', METHOD_NAME, ' Finished...');
-			return resolve(_fileTimer);
+			return resolve(self.timer);
 		});
 		return promise;
-	};
-
-	/*
-	    This func stop the follow of the file when it needed.
-	*/
-	self.stopWatchFile = function(timer) {
-		_stopTimer(timer);
 	};
 };
 
@@ -109,4 +107,4 @@ var FileWatcher = function() {
 util.inherits(FileWatcher, event);
 
 // export out service.
-module.exports = new FileWatcher();
+module.exports = FileWatcher;
