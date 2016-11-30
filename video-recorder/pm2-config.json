@@ -8,11 +8,16 @@
 			"MONGO_HOST": "localhost",
 			"MONGO_PORT": "27017",
 			"MONGO_DATABASE": "replay_dev",
+			"MONGO_USERNAME": "replay",
+			"MONGO_PASSWORD": "replay",
 			"RABBITMQ_HOST": "localhost",
+			"RABBITMQ_PORT": "5672",
+			"RABBITMQ_USERNAME": "guest",
+			"RABBITMQ_PASSWORD": "guest",
 			"INDEX": "100",
 			"DURATION": "10",
 			"INTERVAL_TIME": "5000",
-			"STORAGE_PATH": "/mnt/vod-capture-storage",
+			"STORAGE_PATH": "/mnt/replay-fs-storage",
 			"NODE_ENV": "development"
 		},
 		"env_production": {
