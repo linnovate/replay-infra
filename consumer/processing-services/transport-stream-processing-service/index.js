@@ -204,7 +204,7 @@ function uploadToS3(dirPath) {
 
 function rmDir(dirPath) {
 	var fullDirPath = path.join(process.env.STORAGE_PATH, dirPath);
-	return fse.remove(fullDirPath)
+	return fse.removeAsync(fullDirPath)
 		.then(function() {
 			console.log('Directory %s successfully removed from the file system', fullDirPath);
 			return Promise.resolve();
