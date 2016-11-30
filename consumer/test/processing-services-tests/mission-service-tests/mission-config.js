@@ -2,7 +2,6 @@ var Mission = require('replay-schemas/Mission'),
 	VideoMetadata = require('replay-schemas/VideoMetadata'),
 	Video = require('replay-schemas/Video');
 var connectMongo = require('replay-schemas/connectMongo');
-//var Promise = require('bluebird');
 var mongoHost = process.env.MONGO_HOST || 'localhost';
 var mongoPort = process.env.MONGO_PORT || 27017;
 var mongoDb = 'replay_test_auth_cron_job';
