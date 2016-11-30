@@ -1,5 +1,6 @@
 var Mission = require('replay-schemas/Mission'),
-	Video = require('replay-schemas/Video');
+	Video = require('replay-schemas/Video'),
+	VideoMetadata = require('replay-schemas/VideoMetadata');
 var BoundingPolygonService = require('./bounding-polygon');
 var Promise = require('bluebird');
 
@@ -43,7 +44,7 @@ module.exports = {
 	},
 
 	setBoundingPolygon: function(missionObj) {
-		console.log('set bounding polygon to', missionObj);
+		console.log('set bounding polygon to mission ', missionObj.missionName);
 		return BoundingPolygonService.compartmentsBoundingPolygon(missionObj._id)
 			.then(function(compartmentBoundingPolygon) {
 				return Mission.update({ _id: missionObj._id }, {
@@ -54,6 +55,11 @@ module.exports = {
 			});
 	},
 
+	deleteMissionVideoCompartment: function(missionObj, videoObj) {
+		console.log('remove video compartment if exist...');
+		return Mission.update({ _id: missionObj._id }, { $pull: { videoCompartments: { videoId: videoObj._id } } });
+	},
+
 	addNewVideoCompartment: function(missionObj, videoObj) {
 		console.log('Adding new video compartment...');
 		return prepareCompartmentObject(missionObj, videoObj)
@@ -61,6 +67,16 @@ module.exports = {
 				console.log('Inserted video compartment to the database');
 				return Mission.update({ _id: missionObj._id }, { $push: { videoCompartments: compartmentObj } });
 			});
+	},
+
+	updateMetadataMission: function(missionObj, videoObj) {
+		console.log('Set mission id to metadata objects...');
+		return VideoMetadata.update({ videoId: videoObj._id.toString() }, { $set: { missionId: missionObj._id } }, { multi: true });
+	},
+
+	removeMetadataMission: function(mission) {
+		console.log('Set mission id to metadata objects...');
+		return VideoMetadata.update({ missionId: mission }, { $unset: { missionId: 1 } }, { multi: true });
 	},
 
 	getVideoMissions: function(videoObj) {

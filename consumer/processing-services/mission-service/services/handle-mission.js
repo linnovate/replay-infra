@@ -22,6 +22,7 @@ module.exports = {
 	handleDeletedMission: function(missionId) {
 		return MissionData.getMissionById(missionId)
 			.then(MissionData.removeVideoCompartment)
+			.then(() => MissionData.removeMetadataMission(missionId))
 			.catch(function(err) {
 				if (err) {
 					return Promise.reject(err);
@@ -73,13 +74,14 @@ function setVideoCompartment(missionObj, videos) {
 		Promise.resolve();
 	} else {
 		var promises = [];
-		console.log('videos: ', videos);
 		videos.forEach(function(video) {
-			promises.push(MissionData.addNewVideoCompartment(missionObj, video));
+			promises.push(MissionData.deleteMissionVideoCompartment(missionObj, video)
+				.then(() => MissionData.addNewVideoCompartment(missionObj, video))
+				.then(() => MissionData.updateMetadataMission(missionObj, video))
+				.then(() => MissionData.setBoundingPolygon(missionObj)));
 		});
 
-		return Promise.all(promises)
-			.then(() => MissionData.setBoundingPolygon(missionObj));
+		return Promise.all(promises);
 	}
 }
 
@@ -98,8 +100,8 @@ function attachNewVideoToMissions(videoObj, missions) {
 }
 
 function addNewVideoToMissions(videoObj, missionObj) {
-	return MissionData.addNewVideoCompartment(missionObj, videoObj)
-		.then(function() {
-			return MissionData.setBoundingPolygon(missionObj);
-		});
+	return MissionData.deleteMissionVideoCompartment(missionObj, videoObj)
+		.then(() => MissionData.addNewVideoCompartment(missionObj, videoObj))
+		.then(() => MissionData.setBoundingPolygon(missionObj))
+		.then(() => MissionData.updateMetadataMission(missionObj, videoObj));
 }

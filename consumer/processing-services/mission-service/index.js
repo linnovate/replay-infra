@@ -5,9 +5,9 @@
 
 // message structure: { type: mission/video ,id: _mongoId, status: new/update/delete}
 
-var JobsService = require('replay-jobs-service'),
-	Promise = require('bluebird');
+var Promise = require('bluebird');
 var MissionHandler = require('./services/handle-mission');
+var JobsService = require('replay-jobs-service');
 
 var _transactionId;
 var _jobStatusTag = 'attached-video-to-mission';
@@ -22,16 +22,8 @@ module.exports.start = function(params, error, done) {
 
 	_transactionId = params.transactionId;
 
-	// Make sure we haven't performed this job already
-	JobsService.findJobStatus(_transactionId)
-		.then(function(jobStatus) {
-			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
-				// case we've already performed the action, ack the message
-				return Promise.resolve();
-			}
-			return attachVideoToMission(params)
-				.then(updateJobStatus);
-		})
+	attachVideoToMission(params)
+		.then(updateJobStatus)
 		.then(function() {
 			console.log('Calling done and updating job status...');
 			done();
@@ -46,8 +38,8 @@ module.exports.start = function(params, error, done) {
 };
 
 function validateInput(params) {
-	// we always need transactionId and sourceId
-	if (!params.transactionId || !params.sourceId) {
+	// we always need transactionId
+	if (!params.transactionId) {
 		return false;
 	}
 
