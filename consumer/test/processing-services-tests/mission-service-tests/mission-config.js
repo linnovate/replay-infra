@@ -14,22 +14,13 @@ var testUtils = require('replay-test-utils/test-data');
 module.exports = {
 	connectMongo: function() {
 		return connectMongo(mongoHost, mongoPort, mongoDb, mongoUser, mongoPassword);
-			/*.catch(function(err) {
-				console.log('An error occured in bootstrap.');
-				console.log(err);
-			});*/
 	},
 
 	wipeCollections: function() {
 		console.log('clear database before test');
 		return Mission.remove({})
 			.then(() => Video.remove({}))
-			.then(() => VideoMetadata.remove({}));/*
-			.catch(function(err) {
-				if (err) {
-					console.log(err);
-				}
-			});*/
+			.then(() => VideoMetadata.remove({}));
 	},
 
 	prepareDataForTest: function() {
@@ -37,11 +28,6 @@ module.exports = {
 		return testUtils.insertVideoMetadata(testUtils.metadataPath)
 			.then(() => testUtils.insertVideos(testUtils.videoPath))
 			.then(() => testUtils.insertNewMission(testUtils.missionPath));
-			/*.catch(function(err) {
-				if (err) {
-					console.log(err);
-				}
-			});*/
 	},
 
 	updateTestMission: function(status) {
@@ -49,21 +35,12 @@ module.exports = {
 			$set: {
 				videoStatus: status
 			}
-		});/*.catch(function(err) {
-			if (err) {
-				console.log(err);
-			}
-		});*/
+		});
 	},
 
 	addNewVideo: function() {
 		return testUtils.insertVideoMetadata(testUtils.newMetadataPath)
 			.then(() => testUtils.insertVideos(testUtils.newVideoPath));
-			/*.catch(function(err) {
-				if (err) {
-					console.log(err);
-				}
-			});*/
 	},
 
 	getNewVideo: function() {
