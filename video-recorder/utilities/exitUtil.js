@@ -17,12 +17,20 @@ function Exitutil() {
 	}
 
 	function processSigint() {
-		self.emit('processBeforeExit');
+		if (self.listenerCount('processBeforeExit') > 0) {
+			self.emit('processBeforeExit');
+		} else {
+			process.exit();
+		}
 	}
 
 	function processError(err) {
 		console.trace(err);
-		self.emit('processBeforeExit');
+		if (self.listenerCount('processBeforeExit') > 0) {
+			self.emit('processBeforeExit');
+		} else {
+			process.exit();
+		}
 	}
 
 	function exitBind() {
