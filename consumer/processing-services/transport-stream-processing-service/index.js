@@ -1,11 +1,12 @@
 var Promise = require('bluebird'),
-	fse = require('fs-extra'),
 	rabbit = require('replay-rabbitmq'),
 	JobService = require('replay-jobs-service'),
 	SmilGeneretor = require('replay-smil-generator'),
 	S3 = require('replay-aws-s3');
 
 var path = require('path');
+
+var fse = Promise.promisifyAll(require('fs-extra'));
 
 var _transactionId;
 var _jobStatusTag = 'transportStream-processing-done';
@@ -202,29 +203,17 @@ function uploadToS3(dirPath) {
 }
 
 function rmDir(dirPath) {
-	return new Promise(function(resolve, reject) {
-		// dirPath = resolveDirPath(process.env.STORAGE_PATH, dirPath);
-		var fullDirPath = path.join(process.env.STORAGE_PATH, dirPath);
-
-		fse.remove(fullDirPath, function(err) {
-			if (err) {
-				console.error('Unable to removed %s directory from the file system: %s', fullDirPath, err);
-				reject(err);
-			}
+	var fullDirPath = path.join(process.env.STORAGE_PATH, dirPath);
+	return fse.remove(fullDirPath)
+		.then(function() {
 			console.log('Directory %s successfully removed from the file system', fullDirPath);
-			resolve();
+			return Promise.resolve();
+		})
+		.catch(function(err) {
+			console.error('Unable to removed %s directory from the file system: %s', fullDirPath, err);
+			return Promise.reject(err);
 		});
-	});
 }
-
-// function resolveDirPath(storagePath, dirPath) {
-// 	// find root directory from the given storagePath
-// 	dirPath = path.join(storagePath, dirPath);
-// 	while (path.relative(storagePath, path.dirname(dirPath))) {
-// 		dirPath = path.dirname(dirPath);
-// 	}
-// 	return dirPath;
-// }
 
 // update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
