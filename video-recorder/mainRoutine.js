@@ -39,7 +39,7 @@ module.exports = function() {
 	var RABBITMQ_USERNAME = process.env.RABBITMQ_USERNAME || 'guest';
 	var RABBITMQ_PASSWORD = process.env.RABBITMQ_PASSWORD || 'guest';
 
-	streamingSourceDAL.connect(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE,
+	return streamingSourceDAL.connect(process.env.MONGO_HOST, process.env.MONGO_PORT, process.env.MONGO_DATABASE,
 			process.env.MONGO_USERNAME, process.env.MONGO_PASSWORD)
 		.then(function(methods) {
 			streamingSourceDAL = methods;
@@ -52,7 +52,7 @@ module.exports = function() {
 			return handleVideoSavingProcess(source);
 		})
 		.catch(function(err) {
-			throw err;
+			return Promise.reject(err);
 		});
 };
 
@@ -68,9 +68,9 @@ function handleVideoSavingProcess(streamingSource) {
 	// const METHOD_NAME = 'handleVideoSavingProcess';
 	var self = this;
 
-	self.streamListener = new StreamListener();
-	self.fileWatcher = new FileWatcher();
-	self.ffmpeg = new FFmpeg();
+	self.streamListener = StreamListener;
+	self.fileWatcher = FileWatcher;
+	self.ffmpeg = FFmpeg;
 
 	self.fileWatcherTimer = undefined;
 	self.streamStatusTimer = undefined;
@@ -140,17 +140,15 @@ function handleVideoSavingProcess(streamingSource) {
 		self.ffmpeg.record(ffmpegParams)
 			.then(function(ffmpegCommand) {
 				self.command = ffmpegCommand;
-				self.streamStatusTimer = setStatusTimer(self.streamStatusTimer, function() {
-					streamingSourceDAL.notifySourceCapturing(streamingSource.sourceID);
-				});
-				self.startRecordTime = moment().format();
+				return setStatusTimer(self.streamStatusTimer);
 			})
-			.catch(function(err) {
-				throw err;
-			});
-
-		// starting to watch the file
-		startWatchFile(newFilePath + TS_SUFFIX)
+			.then(function() {
+				return streamingSourceDAL.notifySourceCapturing(streamingSource.sourceID);
+			})
+			.then(function() {
+				self.startRecordTime = moment().format();
+				return startWatchFile(newFilePath + TS_SUFFIX);
+			})
 			.then(function(timer) {
 				self.fileWatcherTimer = timer;
 			})
@@ -205,7 +203,10 @@ function handleVideoSavingProcess(streamingSource) {
 		console.log("couldn't find the file, delete the path and continue");
 		util.deletePath(path.parse(tsPath).dir, function() {
 			self.currentRecordingFile = '';
-			startStreamListener(streamingSource, self.streamStatusTimer);
+			startStreamListener(streamingSource, self.streamStatusTimer)
+				.catch(function(err) {
+					throw err;
+				});
 		});
 	}
 
@@ -260,13 +261,11 @@ function handleVideoSavingProcess(streamingSource) {
 	}
 
 	function startRecordHandler(tsPath) {
-		console.log('start FFmpeg');
 		self.currentRecordingFile = tsPath;
 	}
 
 	// Starting Listen to the address.
 	console.log(PROCESS_NAME + ' Start listen to port: ' + streamingSource.sourcePort);
-	self.currentRecordingFile = '';
 	return startStreamListener(streamingSource, self.streamStatusTimer);
 }
 
@@ -277,14 +276,13 @@ function handleVideoSavingProcess(streamingSource) {
 /****************************************************************************************************/
 
 // Sets a keep alive status notifier
-function setStatusTimer(timer, callBack) {
+function setStatusTimer(timer) {
 	clearInterval(timer);
 	timer = setInterval(function() {
 		console.log(PROCESS_NAME + ' updating status....' + moment().format());
-		callBack();
 	}, process.env.INTERVAL_TIME || 5000);
 
-	return timer;
+	return Promise.resolve(timer);
 }
 
 // starting Listen to the stream
@@ -293,28 +291,28 @@ function startStreamListener(streamingSource, streamStatusTimer) {
 		ip: streamingSource.sourceIP,
 		port: streamingSource.sourcePort
 	};
-	return streamListener.startListen(streamListenerParams)
-		.then(function() {
-			streamStatusTimer = setStatusTimer(streamStatusTimer, function() {
-				streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
-			});
 
-			return Promise.resolve();
+	return StreamListener.startListen(streamListenerParams)
+		.then(function() {
+			return setStatusTimer(streamStatusTimer);
+		})
+		.then(function() {
+			return streamingSourceDAL.notifySourceListening(streamingSource.sourceID);
 		})
 		.catch(function(err) {
-			throw err;
+			return Promise.reject(err);
 		});
 }
 
 // Start timer that watch over file
 function startWatchFile(path) {
-	return fileWatcher.startWatchFile({ path: path, timeToWait: process.env.INTERVAL_TIME || 5000 });
+	return FileWatcher.startWatchFile({ path: path, timeToWait: process.env.INTERVAL_TIME || 5000 });
 }
 
 // Stop timer that watch over file
 function stopWatchFile(timer) {
 	if (timer) {
-		fileWatcher.stopWatchFile(timer);
+		FileWatcher.stopWatchFile(timer);
 	}
 }
 

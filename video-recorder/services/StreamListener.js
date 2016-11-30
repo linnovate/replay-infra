@@ -177,4 +177,4 @@ function StreamListener() {
 util.inherits(StreamListener, event);
 
 // export out service.
-module.exports = StreamListener;
+module.exports = new StreamListener();
