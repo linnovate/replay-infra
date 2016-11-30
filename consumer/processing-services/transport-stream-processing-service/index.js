@@ -40,6 +40,36 @@ module.exports.start = function(params, error, done) {
 		});
 };
 
+// validate the params.
+function paramsIsValid(params) {
+	// check required process environment.
+	if (!process.env.STORAGE_PATH) {
+		return false;
+	}
+
+	// check the minimal requires for the message that send to the next job.
+	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
+		return false;
+	}
+
+	// check if there is start time and end time.
+	if (!params.startTime || !params.endTime) {
+		return false;
+	}
+
+	// check the require for the receiving method.
+	if (!params.receivingMethod || !params.receivingMethod.standard || !params.receivingMethod.version) {
+		return false;
+	}
+
+	// check the require file path for processing.
+	if (!params.fileRelativePath) {
+		return false;
+	}
+
+	return true;
+}
+
 function performProcessingChain(params) {
 	return proccesTS(params)
 		.then(function(paths) {
@@ -81,36 +111,6 @@ function finishProcessingChain(params, paths) {
 			console.error(err);
 			return Promise.reject(err);
 		});
-}
-
-// validate the params.
-function paramsIsValid(params) {
-	// check required process environment.
-	if (!process.env.STORAGE_PATH) {
-		return false;
-	}
-
-	// check the minimal requires for the message that send to the next job.
-	if (!params || !params.sourceId || !params.receivingMethod || !params.transactionId || !params.sourceType) {
-		return false;
-	}
-
-	// check if there is start time and end time.
-	if (!params.startTime || !params.endTime) {
-		return false;
-	}
-
-	// check the require for the receiving method.
-	if (!params.receivingMethod || !params.receivingMethod.standard || !params.receivingMethod.version) {
-		return false;
-	}
-
-	// check the require file path for processing.
-	if (!params.fileRelativePath) {
-		return false;
-	}
-
-	return true;
 }
 
 // understand what ts file we deal (video/data/video and data) and manipulate it.
@@ -167,11 +167,11 @@ function generateSmil(params, paths) {
 
 	videosArray.push(videoPathParse.base);
 	paths.additionalPaths.forEach(function(flavor) {
-		videosArray.push(path.parse(flavor).base);
+		videosArray.push(path.basename(flavor));
 	});
 	var paramsForGenerator = {
 		folderPath: videoPathParse.dir,
-		smilFileName: path.parse(changePathExtention(paths.videoPath, SMIL_POSFIX)).base,
+		smilFileName: path.basename(changePathExtention(paths.videoPath, SMIL_POSFIX)),
 		title: videoPathParse.name + ' adaptive stream',
 		video: videosArray
 	};
@@ -203,27 +203,28 @@ function uploadToS3(dirPath) {
 
 function rmDir(dirPath) {
 	return new Promise(function(resolve, reject) {
-		dirPath = resolveDirPath(process.env.STORAGE_PATH, dirPath);
+		// dirPath = resolveDirPath(process.env.STORAGE_PATH, dirPath);
+		var fullDirPath = path.join(process.env.STORAGE_PATH, dirPath);
 
-		fse.remove(dirPath, function(err) {
+		fse.remove(fullDirPath, function(err) {
 			if (err) {
-				console.error('Unable to removed %s directory from the file system: %s', dirPath, err);
+				console.error('Unable to removed %s directory from the file system: %s', fullDirPath, err);
 				reject(err);
 			}
-			console.log('Directory %s successfully removed from the file system', dirPath);
+			console.log('Directory %s successfully removed from the file system', fullDirPath);
 			resolve();
 		});
 	});
 }
 
-function resolveDirPath(storagePath, dirPath) {
-	// find root directory from the given storagePath
-	dirPath = path.join(storagePath, dirPath);
-	while (path.relative(storagePath, path.dirname(dirPath))) {
-		dirPath = path.dirname(dirPath);
-	}
-	return dirPath;
-}
+// function resolveDirPath(storagePath, dirPath) {
+// 	// find root directory from the given storagePath
+// 	dirPath = path.join(storagePath, dirPath);
+// 	while (path.relative(storagePath, path.dirname(dirPath))) {
+// 		dirPath = path.dirname(dirPath);
+// 	}
+// 	return dirPath;
+// }
 
 // update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
@@ -278,7 +279,7 @@ function receivedVideo(message, paths) {
 	paths.additionalPaths.push(paths.videoPath);
 	if (paths.additionalPaths && paths.additionalPaths.length > 1) {
 		message.flavors = paths.additionalPaths.map(function(currentPath) {
-			return path.parse(currentPath).base;
+			return path.basename(currentPath);
 		});
 	}
 	if (paths.smilPath) {
