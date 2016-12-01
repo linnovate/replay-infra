@@ -9,7 +9,7 @@ var path = require('path');
 var _transactionId,
 	_jobStatusTag = 'parsed-metadata';
 
-module.exports.start = function (params, error, done) {
+module.exports.start = function(params, error, done) {
 	console.log('MetadataParserService started.');
 
 	if (!validateInput(params)) {
@@ -20,7 +20,7 @@ module.exports.start = function (params, error, done) {
 	_transactionId = params.transactionId;
 
 	JobsService.findJobStatus(_transactionId)
-		.then(function (jobStatus) {
+		.then(function(jobStatus) {
 			if (jobStatus.statuses.indexOf(_jobStatusTag) > -1) {
 				// case we've already performed the action, ack the message
 				return Promise.resolve();
@@ -28,11 +28,11 @@ module.exports.start = function (params, error, done) {
 			return performParseChain(params)
 				.then(updateJobStatus);
 		})
-		.then(function () {
+		.then(function() {
 			done();
 			return Promise.resolve();
 		})
-		.catch(function (err) {
+		.catch(function(err) {
 			if (err) {
 				console.log(err);
 				error();
@@ -66,10 +66,10 @@ function performParseChain(params) {
 	var dataPath = path.join(contentDirectoryPath, dataFileName);
 
 	return downloadDataFromS3(dataPath)
-		.then(function (data) {
+		.then(function(data) {
 			return dataToObjects(method, data, params);
 		})
-		.then(function (videoMetadatas) {
+		.then(function(videoMetadatas) {
 			return produceNextJobs(params, videoMetadatas);
 		});
 }
@@ -92,7 +92,7 @@ function downloadDataFromS3(dataPath) {
 
 // apply specific logic to parse the different standards of metadatas
 function dataToObjects(method, data, params) {
-	return new Promise(function (resolve, reject) {
+	return new Promise(function(resolve, reject) {
 		var standardHandler;
 		switch (method.standard) {
 			case 'VideoStandard':
@@ -170,7 +170,7 @@ function produceAttachVideoToMetadataJob(videoMetadatas, params) {
 // update job status, swallaw errors so they won't invoke error() on message
 function updateJobStatus() {
 	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
-		.catch(function (err) {
+		.catch(function(err) {
 			if (err) {
 				console.log(err);
 			}
