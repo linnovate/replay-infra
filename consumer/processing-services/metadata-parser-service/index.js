@@ -1,12 +1,12 @@
 var Promise = require('bluebird'),
-	rabbit = require('replay-rabbitmq'),
 	_ = require('lodash'),
+	rabbit = require('replay-rabbitmq'),
+	S3 = require('replay-aws-s3'),
 	JobsService = require('replay-jobs-service');
 
 var path = require('path');
 
-var fs = Promise.promisifyAll(require('fs')),
-	_transactionId,
+var _transactionId,
 	_jobStatusTag = 'parsed-metadata';
 
 module.exports.start = function (params, error, done) {
@@ -47,7 +47,7 @@ function validateInput(params) {
 	var transactionId = params.transactionId;
 
 	// validate params
-	if (_.isUndefined(dataFileName) || _.isUndefined(contentDirectoryPath) || _.isUndefined(process.env.STORAGE_PATH) ||
+	if (_.isUndefined(dataFileName) || _.isUndefined(contentDirectoryPath) || _.isUndefined(process.env.AWS_BUCKET) ||
 		_.isUndefined(method) || _.isUndefined(method.standard) || _.isUndefined(method.version) || _.isUndefined(transactionId)) {
 		return false;
 	}
@@ -63,9 +63,9 @@ function performParseChain(params) {
 	var method = params.receivingMethod;
 
 	// concat full path
-	var pathToData = path.join(process.env.STORAGE_PATH, contentDirectoryPath, dataFileName);
+	var dataPath = path.join(contentDirectoryPath, dataFileName);
 
-	return readDataAsString(pathToData)
+	return downloadDataFromS3(dataPath)
 		.then(function (data) {
 			return dataToObjects(method, data, params);
 		})
@@ -74,8 +74,20 @@ function performParseChain(params) {
 		});
 }
 
-function readDataAsString(path) {
-	return fs.readFileAsync(path);
+function downloadDataFromS3(dataPath) {
+	var bucket = process.env.AWS_BUCKET;
+	var key = dataPath;
+
+	return S3.downloadBuffer(bucket, key)
+		.then(function(buffer) {
+			console.log('Data successfully download from S3');
+			var data = buffer.toString();
+			return Promise.resolve(data);
+		})
+		.catch(function(err) {
+			console.error('Unable to download data from S3:', err);
+			return Promise.reject(err);
+		});
 }
 
 // apply specific logic to parse the different standards of metadatas
