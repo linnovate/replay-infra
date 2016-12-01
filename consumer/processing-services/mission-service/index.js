@@ -8,30 +8,29 @@
 var Promise = require('bluebird');
 var MissionHandler = require('./services/handle-mission');
 var JobsService = require('replay-jobs-service');
-
+var logger = require('./services/service-helper').logger;
 var _transactionId;
-var _jobStatusTag = 'attached-video-to-mission';
+var _jobStatusTag = 'attache-video-to-mission';
 
 module.exports.start = function(params, error, done) {
-	console.log('AttachVideoToMission service started.');
-
+	logger.info('AttachVideoToMission service started for parameters: %s', params);
 	if (!validateInput(params)) {
-		console.log('Some parameters are missing.');
+		logger.error('Some paramertes are missing: %s', params);
 		return error();
 	}
 
 	_transactionId = params.transactionId;
 
 	attachVideoToMission(params)
-		.then(updateJobStatus)
+		.then(() => updateJobStatus())
 		.then(function() {
-			console.log('Calling done and updating job status...');
+			logger.info('Calling done and updating job status');
 			done();
 			return Promise.resolve();
 		})
 		.catch(function(err) {
 			if (err) {
-				console.log(err);
+				logger.error(err);
 				error();
 			}
 		});
@@ -52,7 +51,7 @@ function validateInput(params) {
 }
 
 function attachVideoToMission(params) {
-	console.log('attach video to mission...');
+	logger.info('attach video to mission.');
 
 	switch (params.type) {
 		case 'mission':
@@ -86,7 +85,7 @@ function updateJobStatus() {
 	return JobsService.updateJobStatus(_transactionId, _jobStatusTag)
 		.catch(function(err) {
 			if (err) {
-				console.log(err);
+				logger.error(err);
 			}
 		});
 }

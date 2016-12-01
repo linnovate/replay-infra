@@ -1,5 +1,6 @@
 var Promise = require('bluebird');
 var MissionData = require('./mission-data');
+var logger = require('./service-helper').logger;
 
 module.exports = {
 	handleNewMission: function(missionId) {
@@ -70,7 +71,7 @@ module.exports = {
 
 function setVideoCompartment(missionObj, videos) {
 	if (videos.length === 0) {
-		console.log('no videos found for mission ', missionObj.missionName);
+		logger.info('no videos found for mission ', missionObj.missionName);
 		Promise.resolve();
 	} else {
 		var promises = [];
@@ -87,7 +88,7 @@ function setVideoCompartment(missionObj, videos) {
 
 function attachNewVideoToMissions(videoObj, missions) {
 	if (missions.length === 0) {
-		console.log('no missions found for video ', videoObj._id);
+		logger.info('no missions found for video ', videoObj._id);
 		Promise.resolve();
 	} else {
 		var promises = [];
