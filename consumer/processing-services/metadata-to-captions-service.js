@@ -12,8 +12,6 @@ const LAST_CAPTIONS_TIME = 1; // in seconds
 var _transactionId;
 var _jobStatusTag = 'created-captions-from-metadata';
 
-// wrap the fs.writeFile nodeFunction to return a promise instead of taking a callback
-// var fsWriteFile = Promise.promisify(fs.outputFile);
 var fse = Promise.promisifyAll(require('fs-extra'));
 
 module.exports.start = function(params, error, done) {
