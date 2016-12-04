@@ -107,4 +107,4 @@ var FileWatcher = function() {
 util.inherits(FileWatcher, event);
 
 // export out service.
-module.exports = new FileWatcher();
+module.exports = FileWatcher;
