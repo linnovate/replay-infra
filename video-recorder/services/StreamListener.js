@@ -47,31 +47,6 @@ function StreamListener() {
 		}
 	}
 
-	function _tryBinding(maxRetries) {
-		const METHOD_NAME = 'StartListen';
-		if (maxRetries > 0) {
-			console.log('inside mehtod');
-			// Try again if we haven't reached maxRetries yet
-			return _bindToTheAddress().delay(TIME_TO_WAIT_AFTER_FAILED)
-				.then(function() {
-					// check if the ip is not 0.0.0.0
-					if (_ip !== LOCALHOST) {
-						_server.addMembership(_ip);
-					}
-					console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
-					_finishedBind = true;
-					return Promise.resolve({ ip: _ip, port: _port, numOfAttempts: _bindingAttemptsCounts });
-				})
-				.catch(function(err) {
-					console.log('binding attempt no.' +
-						(MAX_BINDING_TRIES + 1 - maxRetries) +
-						' failed with error' + err);
-					return _tryBinding(maxRetries - 1);
-				});
-		}
-		return Promise.reject(SERVICE_NAME + ' Error on ' + METHOD_NAME + ' : Binding to source failed');
-	}
-
 	// bind to the address.
 	function _bindToTheAddress() {
 		var bindPromise = new Promise(function(resolve, reject) {
@@ -82,6 +57,7 @@ function StreamListener() {
 		return bindPromise;
 	}
 
+	// validation for the parameters.
 	function _handleParamsValidation(params) {
 		var doesParamsExists = (params !== undefined && params.port !== undefined && params.ip !== undefined);
 		if (!doesParamsExists) {
@@ -96,6 +72,7 @@ function StreamListener() {
 		return Promise.reject('error');
 	}
 
+	// handle the 'message' event, that emit when there is data streaming on the host.
 	function _handleMessageEvent() {
 		console.log(SERVICE_NAME, 'Stop listening, Data Was detected at ', _ip, ':', _port, ' !');
 		// close the server so that the port will be open for the ffmpeg process to recording
@@ -104,6 +81,7 @@ function StreamListener() {
 		self.emit('StreamingData');
 	}
 
+	// handle unexcepted error on stream listener.
 	function _handleErrorEvent(err) {
 		if (_finishedBind) {
 			self.emit('unexceptedError_StreamListener', SERVICE_NAME + ' Unexcepted Error eccured while trying listen to the address ' +
@@ -129,29 +107,69 @@ function StreamListener() {
 		_server.on('error', _handleErrorEvent);
 	}
 
+	// condition for the promise loop.
+	var checkMaxTries = function() {
+		return _bindingAttemptsCounts < MAX_BINDING_TRIES;
+	};
+
+	// perform the binding to the host.
+	var tryToBind = function() {
+		return _bindToTheAddress()
+			.then(function() {
+				// check if the ip is not 0.0.0.0
+				if (_ip !== LOCALHOST) {
+					_server.addMembership(_ip);
+				}
+				console.log(SERVICE_NAME, 'Binding To : ', _ip, ':', _port, ' succeed');
+				_finishedBind = true;
+				return Promise.resolve({ ip: _ip, port: _port, numOfAttempts: _bindingAttemptsCounts });
+			})
+			.catch(function(err) {
+				// returning promise to wait little to the next try.
+				return new Promise(function(resolve, reject) {
+					console.log('could not bind the address, try again...');
+					_bindingAttemptsCounts++;
+					setTimeout(function() {
+						reject(err);
+					}, TIME_TO_WAIT_AFTER_FAILED);
+				});
+			});
+	};
+
+	var promiseWhile = function(condition, action) {
+		return new Promise(function(resolve, reject) {
+			var loop = function() {
+				if (condition()) {
+					return action()
+						.then(resolve)
+						.catch(loop);
+				}
+				reject(new Error('max attempts of binding reached to maximum'));
+			};
+			process.nextTick(loop);
+		});
+	};
+
 	self.startListen = function(params) {
 		const METHOD_NAME = 'StartListen';
 		_finishedBind = false;
 		_bindingAttemptsCounts = 0;
 		console.log(SERVICE_NAME, METHOD_NAME, ' start running...\n params: ', JSON.stringify(params));
-		var promise = new Promise(function(resolve, reject) {
-			// check params
-			_handleParamsValidation(params)
-				.then(function(ip) {
-					_initProperties(ip, params.port);
-				})
-				.then(function() {
-					console.log('first bind');
-					return _tryBinding(MAX_BINDING_TRIES);
-				})
-				.then(function(res) {
-					return resolve(res);
-				})
-				.catch(function(err) {
-					return reject(err);
-				});
-		});
-		return promise;
+		// check params
+		return _handleParamsValidation(params)
+			.then(function(ip) {
+				_initProperties(ip, params.port);
+			})
+			.then(function() {
+				console.log('first bind');
+				return promiseWhile(checkMaxTries, tryToBind);
+			})
+			.then(function(res) {
+				return Promise.resolve(res);
+			})
+			.catch(function(err) {
+				return Promise.reject(err);
+			});
 	};
 }
 
@@ -159,4 +177,4 @@ function StreamListener() {
 util.inherits(StreamListener, event);
 
 // export out service.
-module.exports = new StreamListener();
+module.exports = StreamListener;
