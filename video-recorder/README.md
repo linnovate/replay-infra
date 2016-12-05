@@ -66,6 +66,39 @@ RABBITMQ_PASSWORD
 INDEX=102 STORAGE_PATH=/home/$USER/vod_storge_data MONGO_HOST=localhost MONGO_PORT=27017 MONGO_DATABASE=replay_dev node index.js
 ```
 
+Dockerizing
+------------------------------
+
+#### 1. you should have docker installed and ready to use on your machine https://docs.docker.com/engine/installation/linux/ubuntulinux/
+
+#### 2. From the project's folder build a docker image from the docker file that's included in the repository
+``` bash
+docker build -t replay/video-recorder:1.0 .
+```
+** you might need to adjust the Dockerfile enviroment variables
+
+#### 2.5. if you are self streaming to your capture docker make sure you have a route configured for the streaming sources
+e.g
+``` bash 
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+238.0.0.0       *               255.255.255.0   U     0      0        0 docker0
+```
+to add routing use 
+e.g 
+``` bash 
+route add -net 238.0.0.0 netmask 255.255.255.0 docker0
+```
+
+#### 3. Run the container from the image you have just created with bash shell
+``` bash
+docker run -it -p <SourcePort>:<SourcePort>/udp -v </mnt/your-vod-storage/path>:<relevante/path/in/docker> replay/video-recorder:1.0 /bin/bash
+```
+
+#### 4. From the shell run the capture process
+``` bash
+node index.js
+```
 
 Tests
 ------------------------------

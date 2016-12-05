@@ -1,9 +1,10 @@
-var mainRoutine = require('./mainRoutine');
+var MainRoutine = require('./MainRoutine');
 
 var index = parseInt(process.env.INDEX, 10);
 
 if (isNaN(index)) {
 	throw new Error('Process index specified is not a number!');
 } else {
-	mainRoutine();
+	var mainRoutine = new MainRoutine();
+	mainRoutine.begin();
 }
