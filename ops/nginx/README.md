@@ -8,7 +8,8 @@ Therefore if you use nginx you must obtain yourself a valid JWT before accessing
 At the moment you can interact directly with the backend services if you're not passing through nginx.  
 
 ## Setup
-In order to run the nginx proxy, you must put an appropriate certificate and keys in /etc/nginx/ssl directory: cert.pem and privkey.pem.  
+In order to run the nginx proxy, you must put an appropriate certificate and keys (cert.pem and privkey.pem.) in ssl/ directory near the .conf file.  
+Also, modify the IPs in proxy.conf file to match the either the docker interface IP (on localhost), or the environment's IP.    
 
 ## Local installation
 Install nginx from [here (Ubuntu PPA installation)](https://www.nginx.com/resources/wiki/start/topics/tutorials/install/#ubuntu-ppa).
