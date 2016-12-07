@@ -2,28 +2,30 @@ var VideoMetadata = require('replay-schemas/VideoMetadata'),
 	Mission = require('replay-schemas/Mission');
 var Promise = require('bluebird');
 var turf = require('turf-merge');
+var logger = require('./service-helper').logger;
 
 module.exports = {
 
 	// function that return a bounding polygon of video
 	createBoundingPolygon: function(videoId, startTime, endTime) {
-		console.log('find video in mongo by:', videoId);
+		logger.info('find video in mongo by: %s', videoId);
 		// retrive all metada of video from db
 		return VideoMetadata.find({ $and: [{ videoId: videoId }, { timestamp: { $gte: startTime, $lte: endTime } }] })
 			// pass to merging function of geometries
 			.then(mergeMetadataPolygons)
 			.catch(function(err) {
-				console.log(err);
+				logger.error(err, 'failed retrive video metadata');
+				return Promise.reject(err);
 			});
 	},
 
 	compartmentsBoundingPolygon: function(missionId) {
-		console.log('create mission bounding polygon from videos compartments for id', missionId);
+		logger.info('create mission bounding polygon from videos compartments for id %s', missionId);
 
 		return Mission.findOne({ _id: missionId })
 			.then(mergeCompartmentsPolygons)
 			.catch(function(err) {
-				console.log('failed retrive video compartment: ');
+				logger.error(err, 'failed retrive video compartment');
 				return Promise.reject(err);
 			});
 	}
@@ -31,7 +33,7 @@ module.exports = {
 
 // function that merges sensor trace of metadata
 function mergeCompartmentsPolygons(mission) {
-	console.log('merging polygons');
+	logger.info('merging polygons');
 	if (!mission) {
 		return Promise.reject('No mission found');
 	}
@@ -58,8 +60,8 @@ function mergeCompartmentsPolygons(mission) {
 
 // function that merges sensor trace of metadata
 function mergeMetadataPolygons(metadatas) {
-	console.log('merging polygons');
-	if (!metadatas || metadatas.length === 0) {
+	logger.info('merging polygons');
+	if (!metadatas) {
 		return Promise.reject('No metadatas found');
 	}
 	// initiate a GeoJson feature collection

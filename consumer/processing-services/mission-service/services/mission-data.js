@@ -1,16 +1,23 @@
 var Mission = require('replay-schemas/Mission'),
-	Video = require('replay-schemas/Video');
-var BoundingPolygonService = require('./BoundingPolygonService');
+	Video = require('replay-schemas/Video'),
+	VideoMetadata = require('replay-schemas/VideoMetadata');
+var BoundingPolygonService = require('./bounding-polygon');
+var logger = require('./service-helper').logger;
+var Promise = require('bluebird');
 
 module.exports = {
-	getMissionsByStatus: function(status) {
-		console.log('query %s missions', status);
-		return Mission.find({ videoStatus: status });
+	getMissionById: function(id) {
+		logger.info('query mission %s', id);
+		return Mission.findOne({ _id: id });
+	},
+
+	getVideoById: function(id) {
+		logger.info('query video %s', id);
+		return Video.findOne({ _id: id });
 	},
 
 	getMissionVideos: function(missionObj) {
-		console.log('get Mission video');
-
+		logger.info('get Mission %s videos', missionObj.missionName);
 		return Video.find({
 			$and: [{ endTime: { $gte: missionObj.startTime } },
 				{ startTime: { $lte: missionObj.endTime } },
@@ -20,50 +27,50 @@ module.exports = {
 	},
 
 	removeVideoCompartment: function(missionObj) {
-		console.log('Remove video comartment for Mission', missionObj.missionName);
-		return Mission.update({ _id: missionObj._id }, { $set: { videoCompartments: [] } });
-	},
-
-	setMissionStatus: function(missionObj, status) {
-		console.log('set handled status to', missionObj.missionName);
+		logger.info('Remove video comartment for Mission', missionObj.missionName);
 		return Mission.update({ _id: missionObj._id }, {
-			$set: {
-				videoStatus: status
-			}
-		}, function(err) {
-			if (err) {
-				console.log(err);
-			}
+			$set: { videoCompartments: [] },
+			$unset: { boundingPolygon: 1 }
 		});
 	},
 
-	setHandledStatus: function(missionObj, status) {
-		console.log('set handled status to', missionObj.missionName);
+	setBoundingPolygon: function(missionObj) {
+		logger.info('set bounding polygon to mission ', missionObj.missionName);
 		return BoundingPolygonService.compartmentsBoundingPolygon(missionObj._id)
 			.then(function(compartmentBoundingPolygon) {
 				return Mission.update({ _id: missionObj._id }, {
 					$set: {
-						videoStatus: status,
 						boundingPolygon: compartmentBoundingPolygon
-					}
-				}, function(err) {
-					if (err) {
-						console.log(err);
 					}
 				});
 			});
 	},
 
+	deleteMissionVideoCompartment: function(missionObj, videoObj) {
+		logger.info('remove video compartment if exist.');
+		return Mission.update({ _id: missionObj._id }, { $pull: { videoCompartments: { videoId: videoObj._id } } });
+	},
+
 	addNewVideoCompartment: function(missionObj, videoObj) {
-		console.log('Adding new video compartment...');
+		logger.info('Adding new video compartment.');
 		return prepareCompartmentObject(missionObj, videoObj)
 			.then(function(compartmentObj) {
-				console.log('Inserted video compartment to the database');
 				return Mission.update({ _id: missionObj._id }, { $push: { videoCompartments: compartmentObj } });
 			});
 	},
 
+	updateMetadataMission: function(missionObj, videoObj) {
+		logger.info('Set mission id to metadata objects.');
+		return VideoMetadata.update({ videoId: videoObj._id.toString() }, { $set: { missionId: missionObj._id } }, { multi: true });
+	},
+
+	removeMetadataMission: function(mission) {
+		logger.info('Remove mission id to metadata objects.');
+		return VideoMetadata.update({ missionId: mission }, { $unset: { missionId: 1 } }, { multi: true });
+	},
+
 	getVideoMissions: function(videoObj) {
+		logger.info('Query new video missions.');
 		return Mission.find({
 			$and: [{ endTime: { $gte: videoObj.startTime } },
 				{ startTime: { $lte: videoObj.endTime } },
@@ -77,15 +84,13 @@ function prepareCompartmentObject(missionObj, videoObj) {
 	return BoundingPolygonService.createBoundingPolygon(videoObj._id, missionObj.startTime, missionObj.endTime)
 		.then(function(boundingPolygon) {
 			var relativeStartTime = calculateRelativeStartTime(missionObj.startTime, videoObj.startTime);
-			var startTime = getMaximumDate(new Date(missionObj.startTime), new Date(videoObj.startTime));
-			var endTime = getMinimumDate(new Date(missionObj.endTime), new Date(videoObj.endTime));
-			// VideoCompartment Object by mongo schema
 			var compartmentObj = {
-				durationInSeconds: ((endTime.getTime() - startTime.getTime()) / 1000),
 				boundingPolygon: boundingPolygon,
 				videoId: videoObj._id,
-				startTime: startTime,
-				endTime: endTime,
+				startTime: getMaximumDate(new Date(missionObj.startTime),
+					new Date(videoObj.startTime)),
+				endTime: getMinimumDate(new Date(missionObj.endTime),
+					new Date(videoObj.endTime)),
 				relativeStartTime: relativeStartTime
 			};
 			return Promise.resolve(compartmentObj);
