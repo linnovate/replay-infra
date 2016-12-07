@@ -1,0 +1,18 @@
+{
+  "name": "express-producer",
+  "version": "1.0.0",
+  "description": "express that preduce message to start all the flow of the replay project",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "din seligman",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "express": "^4.14.0",
+    "fs-extra": "^1.0.0",
+    "replay-jobs-service": "^1.0.19",
+    "replay-rabbitmq": "^1.1.0"
+  }
+}
